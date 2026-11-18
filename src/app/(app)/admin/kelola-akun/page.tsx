@@ -152,8 +152,7 @@ export default async function ManageAccountsPage({
       },
       staffProfile: {
         select: {
-          nip: true,
-          canBeMentor: true,
+          nip: true
         },
       },
     },

@@ -18,6 +18,7 @@ import {
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { ROLE_LABELS, type AppRole } from "@/lib/auth/roles";
 import {
   Card,
   CardContent,
@@ -52,6 +53,7 @@ type Requester = {
 type MentorOption = {
   id: string;
   fullName: string;
+  role: AppRole;
   nip: string | null;
 };
 
@@ -507,15 +509,15 @@ export function PermissionRequestForm({
             </option>
             {mentors.map((mentor) => (
               <option key={mentor.id} value={mentor.id}>
-                {mentor.fullName}
-                {mentor.nip ? ` · NIP ${mentor.nip}` : ""}
+                {mentor.fullName} ({ROLE_LABELS[mentor.role]}
+                {mentor.nip ? ` · NIP ${mentor.nip}` : ""})
               </option>
             ))}
           </select>
           <FieldError message={errors?.mentorId?.[0]} />
           {mentors.length === 0 ? (
             <p className="text-xs text-destructive">
-              Belum ada akun Pembina yang aktif. Hubungi administrator asrama.
+              Belum ada akun Pembina/Pendamping atau tenaga kependidikan yang aktif. Hubungi administrator asrama.
             </p>
           ) : null}
         </CardContent>

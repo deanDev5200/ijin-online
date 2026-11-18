@@ -141,7 +141,7 @@ export async function createAccountAction(
             ? {
                 create: {
                   nip: data.nip,
-                  canBeMentor: data.role === "PEMBINA",
+                  canBeMentor: true,
                 },
               }
             : undefined,
@@ -209,6 +209,7 @@ export async function updateAccountAction(
   }
 
   const fieldErrors: Record<string, string[]> = {};
+  let normalizedGrha = data.grha;
 
   if (account.role === "SISWA") {
     const nis = nisSchema.safeParse(data.nis);
@@ -220,6 +221,8 @@ export async function updateAccountAction(
     }
     if (!grha.success) {
       fieldErrors.grha = grha.error.issues.map((issue) => issue.message);
+    } else {
+      normalizedGrha = grha.data;
     }
     if (!kelas.success) {
       fieldErrors.kelas = kelas.error.issues.map((issue) => issue.message);
@@ -307,13 +310,13 @@ export async function updateAccountAction(
           where: { userId: account.id },
           update: {
             nis: data.nis,
-            grha: data.grha,
+            grha: normalizedGrha,
             kelas: data.kelas,
           },
           create: {
             userId: account.id,
             nis: data.nis,
-            grha: data.grha,
+            grha: normalizedGrha,
             kelas: data.kelas,
           },
         });
@@ -326,7 +329,7 @@ export async function updateAccountAction(
           create: {
             userId: account.id,
             nip: data.nip,
-            canBeMentor: account.role === "PEMBINA",
+            canBeMentor: true,
           },
         });
       }

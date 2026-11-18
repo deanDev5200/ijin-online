@@ -24,14 +24,6 @@ export const ROLE_LABELS: Record<AppRole, string> = {
   ADMIN: "Administrator",
 };
 
-export const ROLE_DESCRIPTIONS: Record<AppRole, string> = {
-  SISWA: "Mengajukan dan memantau izin asrama",
-  PEMBINA: "Menyetujui izin tahap pertama",
-  STAFF_ASRAMA: "Menyetujui izin tahap kedua",
-  KEPALA_ASRAMA: "Menyetujui izin tahap akhir",
-  ADMIN: "Mengelola akun dan pengaturan perizinan",
-};
-
 export function isAppRole(value: unknown): value is AppRole {
   return (
     typeof value === "string" &&

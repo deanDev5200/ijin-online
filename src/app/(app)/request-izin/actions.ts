@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 import { z } from "zod";
 
 import { requireRole } from "@/lib/auth/guards";
+import { STAFF_ROLES } from "@/lib/auth/roles";
 import { prisma } from "@/lib/db";
 import {
   addDaysToDateOnly,
@@ -140,13 +141,8 @@ export async function createPermissionRequestAction(
   const mentor = await prisma.user.findFirst({
     where: {
       id: data.mentorId,
-      role: "PEMBINA",
+      role: { in: [...STAFF_ROLES] },
       isActive: true,
-      staffProfile: {
-        is: {
-          canBeMentor: true,
-        },
-      },
     },
     select: {
       id: true,

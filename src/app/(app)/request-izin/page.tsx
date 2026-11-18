@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 
 import { PageHeader } from "@/components/page-header";
 import { requireRole } from "@/lib/auth/guards";
+import { STAFF_ROLES } from "@/lib/auth/roles";
 import { getTodayInJakarta } from "@/lib/permissions/dates";
 import { prisma } from "@/lib/db";
 import {
@@ -40,18 +41,14 @@ export default async function RequestPermissionPage() {
     }),
     prisma.user.findMany({
       where: {
-        role: "PEMBINA",
+        role: { in: [...STAFF_ROLES] },
         isActive: true,
-        staffProfile: {
-          is: {
-            canBeMentor: true,
-          },
-        },
       },
       orderBy: { fullName: "asc" },
       select: {
         id: true,
         fullName: true,
+        role: true,
         staffProfile: {
           select: {
             nip: true,
@@ -74,6 +71,7 @@ export default async function RequestPermissionPage() {
   const mentors = mentorUsers.map((mentor) => ({
     id: mentor.id,
     fullName: mentor.fullName,
+    role: mentor.role,
     nip: mentor.staffProfile?.nip ?? null,
   }));
 

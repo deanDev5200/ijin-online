@@ -116,7 +116,7 @@ async function main() {
       fullName: "Ahmad Fauzi",
       student: {
         nis: "24001",
-        grha: "Grha A",
+        grha: "Airsanya",
         kelas: "X IPA 1",
       },
     });
@@ -128,7 +128,7 @@ async function main() {
       fullName: "Bunga Lestari",
       student: {
         nis: "24002",
-        grha: "Grha A",
+        grha: "Daksina",
         kelas: "X IPA 1",
       },
     });

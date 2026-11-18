@@ -56,8 +56,7 @@ export default async function AccountDetailPage({
       },
       staffProfile: {
         select: {
-          nip: true,
-          canBeMentor: true,
+          nip: true
         },
       },
     },
@@ -138,12 +137,6 @@ export default async function AccountDetailPage({
               <CalendarClock className="size-3.5" />
               Dibuat {formatDateTime(account.createdAt)}
             </span>
-            {account.staffProfile?.canBeMentor && account.role === "PEMBINA" ? (
-              <span className="inline-flex items-center gap-1.5 text-primary sm:justify-end">
-                <ShieldCheck className="size-3.5" />
-                Dapat dipilih sebagai Pembina/Pendamping
-              </span>
-            ) : null}
           </div>
         </CardContent>
       </Card>
@@ -215,20 +208,6 @@ export default async function AccountDetailPage({
           </Card>
         </div>
       </div>
-
-      {account.role === "PEMBINA" ? (
-        <p className="text-xs text-muted-foreground">
-          Untuk mengatur apakah akun ini dapat dipilih pada pengajuan siswa,
-          buka{" "}
-          <Link
-            href="/admin/pengaturan-perizinan"
-            className="font-medium text-primary hover:underline"
-          >
-            Pengaturan Perizinan
-          </Link>
-          .
-        </p>
-      ) : null}
     </div>
   );
 }

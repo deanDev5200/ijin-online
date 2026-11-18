@@ -189,7 +189,12 @@ async function getStats(user: SessionUser): Promise<Stat[]> {
       where:
         user.role === "PEMBINA"
           ? { status: "PENDING_MENTOR", mentorId: user.id }
-          : { status: stageStatus },
+          : {
+              OR: [
+                { status: stageStatus },
+                { status: "PENDING_MENTOR", mentorId: user.id },
+              ],
+            },
     }),
     prisma.approval.count({
       where: { approverId: user.id, status: "APPROVED" },

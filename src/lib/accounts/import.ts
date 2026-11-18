@@ -3,7 +3,10 @@ import "server-only";
 import ExcelJS from "exceljs";
 
 import type { ImportIssue } from "@/lib/accounts/form-state";
-import { importStudentRowSchema } from "@/lib/validations/account";
+import {
+  GRHA_OPTIONS,
+  importStudentRowSchema,
+} from "@/lib/validations/account";
 
 export const IMPORT_MAX_ROWS = 200;
 
@@ -235,6 +238,8 @@ export async function buildStudentImportTemplate(): Promise<Buffer> {
   sheet.getColumn("nis").numFmt = "@";
   sheet.getColumn("username").numFmt = "@";
 
+  const grhaFormula = `"${GRHA_OPTIONS.join(",")}"`;
+
   for (let rowNumber = 2; rowNumber <= IMPORT_MAX_ROWS + 1; rowNumber += 1) {
     sheet.getCell(`A${rowNumber}`).dataValidation = {
       type: "textLength",
@@ -244,6 +249,14 @@ export async function buildStudentImportTemplate(): Promise<Buffer> {
       showErrorMessage: true,
       errorTitle: "Nama lengkap tidak valid",
       error: "Nama lengkap harus 3-100 karakter.",
+    };
+    sheet.getCell(`D${rowNumber}`).dataValidation = {
+      type: "list",
+      allowBlank: true,
+      formulae: [grhaFormula],
+      showErrorMessage: true,
+      errorTitle: "Grha tidak valid",
+      error: `Pilih salah satu dari: ${GRHA_OPTIONS.join(", ")}.`,
     };
     sheet.getCell(`F${rowNumber}`).dataValidation = {
       type: "textLength",
@@ -265,10 +278,10 @@ export async function buildStudentImportTemplate(): Promise<Buffer> {
     ["Nama Lengkap", "Wajib. Nama lengkap siswa, 3-100 karakter."],
     ["Username", "Wajib. 5-20 karakter, hanya huruf, angka, titik, dan garis bawah. Otomatis menjadi huruf kecil."],
     ["NIS", "Wajib. Nomor Induk Siswa, harus unik. Gunakan format teks agar angka nol di depan tidak hilang."],
-    ["Grha", "Wajib. Nama grha/asrama, 2-50 karakter."],
+    ["Grha", `Wajib. Pilih salah satu grha: ${GRHA_OPTIONS.join(", ")}.`],
     ["Kelas", "Wajib. Kelas siswa, maksimal 50 karakter."],
     ["Password", "Wajib. Password awal 6-72 karakter. Pengguna wajib mengganti password saat login pertama."],
-    ["Contoh baris", "Ahmad Fauzi | ahmad.fauzi | 24001 | Grha A | X IPA 1 | demo123"],
+    ["Contoh baris", "Ahmad Fauzi | ahmad.fauzi | 24001 | Airsanya | X IPA 1 | demo123"],
   ];
 
   for (const [label, description] of guideRows) {

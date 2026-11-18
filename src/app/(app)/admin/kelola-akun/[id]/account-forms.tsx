@@ -21,6 +21,7 @@ import {
   type AccountActionState,
 } from "@/lib/accounts/form-state";
 import { ROLE_LABELS } from "@/lib/auth/roles";
+import { GRHA_OPTIONS } from "@/lib/validations/account";
 
 import {
   resetAccountPasswordAction,
@@ -83,6 +84,12 @@ export function AccountDetailsForm({ account }: { account: AccountDetails }) {
     FormData
   >(updateAccountAction, INITIAL_ACCOUNT_ACTION_STATE);
   const errors = state.fieldErrors;
+  const currentGrha = state.values?.grha ?? account.grha;
+  const hasLegacyGrha =
+    Boolean(currentGrha) &&
+    !GRHA_OPTIONS.some(
+      (option) => option.toLowerCase() === currentGrha.toLowerCase(),
+    );
 
   return (
     <form action={formAction} className="space-y-4" noValidate>
@@ -151,14 +158,28 @@ export function AccountDetailsForm({ account }: { account: AccountDetails }) {
 
           <div className="space-y-2">
             <Label htmlFor="grha">Grha</Label>
-            <Input
+            <select
               id="grha"
               name="grha"
-              defaultValue={state.values?.grha ?? account.grha}
+              defaultValue={currentGrha}
               required
               aria-invalid={Boolean(errors?.grha?.[0])}
-              className="h-10"
-            />
+              className="h-10 w-full rounded-lg border border-input bg-transparent px-2.5 py-1 text-base transition-colors outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20 md:text-sm dark:bg-input/30"
+            >
+              <option value="" disabled>
+                Pilih Grha
+              </option>
+              {hasLegacyGrha ? (
+                <option value={currentGrha} disabled>
+                  {currentGrha} (pilih Grha baru)
+                </option>
+              ) : null}
+              {GRHA_OPTIONS.map((grha) => (
+                <option key={grha} value={grha}>
+                  {grha}
+                </option>
+              ))}
+            </select>
             <FieldError message={errors?.grha?.[0]} />
           </div>
         </div>

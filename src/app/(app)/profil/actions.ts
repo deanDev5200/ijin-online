@@ -6,23 +6,29 @@ import { z } from "zod";
 import { requireAppUser } from "@/lib/auth/guards";
 import { prisma } from "@/lib/db";
 import type { ActionState } from "@/lib/form-state";
+import { usernameSchema } from "@/lib/validations/auth";
 
-const updateNameSchema = z.object({
-  fullName: z
-    .string()
-    .trim()
-    .min(3, "Nama lengkap minimal 3 karakter.")
-    .max(100, "Nama lengkap maksimal 100 karakter."),
+const updateUsernameSchema = z.object({
+  username: usernameSchema,
 });
 
-export async function updateFullNameAction(
+function isUniqueConstraintError(error: unknown): boolean {
+  return (
+    typeof error === "object" &&
+    error !== null &&
+    "code" in error &&
+    error.code === "P2002"
+  );
+}
+
+export async function updateUsernameAction(
   _previousState: ActionState,
   formData: FormData,
 ): Promise<ActionState> {
   const user = await requireAppUser();
 
-  const parsed = updateNameSchema.safeParse({
-    fullName: formData.get("fullName") ?? "",
+  const parsed = updateUsernameSchema.safeParse({
+    username: formData.get("username") ?? "",
   });
 
   if (!parsed.success) {
@@ -32,16 +38,42 @@ export async function updateFullNameAction(
     };
   }
 
-  await prisma.user.update({
-    where: { id: user.id },
-    data: { fullName: parsed.data.fullName },
+  const existing = await prisma.user.findFirst({
+    where: {
+      username: parsed.data.username,
+      id: { not: user.id },
+    },
+    select: { id: true },
   });
+
+  if (existing) {
+    return {
+      status: "error",
+      fieldErrors: { username: ["Username sudah digunakan."] },
+    };
+  }
+
+  try {
+    await prisma.user.update({
+      where: { id: user.id },
+      data: { username: parsed.data.username },
+    });
+  } catch (error) {
+    if (isUniqueConstraintError(error)) {
+      return {
+        status: "error",
+        fieldErrors: { username: ["Username sudah digunakan."] },
+      };
+    }
+
+    throw error;
+  }
 
   revalidatePath("/profil");
   revalidatePath("/", "layout");
 
   return {
     status: "success",
-    message: "Nama lengkap berhasil diperbarui.",
+    message: "Username berhasil diperbarui.",
   };
 }

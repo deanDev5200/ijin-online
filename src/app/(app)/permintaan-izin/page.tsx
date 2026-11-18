@@ -41,10 +41,15 @@ export default async function PermissionRequestsPage() {
     redirect("/dashboard");
   }
 
-  const where = {
-    status: stage.pendingStatus,
-    ...(user.role === "PEMBINA" ? { mentorId: user.id } : {}),
-  };
+  const where =
+    user.role === "PEMBINA"
+      ? { status: "PENDING_MENTOR" as const, mentorId: user.id }
+      : {
+          OR: [
+            { status: stage.pendingStatus },
+            { status: "PENDING_MENTOR" as const, mentorId: user.id },
+          ],
+        };
 
   const [requests, total] = await Promise.all([
     prisma.permissionRequest.findMany({

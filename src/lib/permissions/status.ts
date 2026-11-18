@@ -1,4 +1,5 @@
 import type { RequestStatus, Role } from "@/generated/prisma/enums";
+import { isStaffRole } from "@/lib/auth/roles";
 
 export const PENDING_STATUSES = [
   "PENDING_MENTOR",
@@ -100,12 +101,16 @@ export function canUserActOnRequest(
 ): boolean {
   const stage = getStageByStatus(request.status);
 
-  if (!stage || stage.role !== user.role) {
+  if (!stage) {
     return false;
   }
 
   if (stage.step === 1) {
-    return request.mentorId === user.id;
+    return isStaffRole(user.role) && request.mentorId === user.id;
+  }
+
+  if (stage.role !== user.role) {
+    return false;
   }
 
   return true;
@@ -129,12 +134,8 @@ export function canUserViewStaffRequest(
 
   const stage = getStageByStatus(request.status);
 
-  if (!stage || stage.role !== user.role) {
+  if (!stage || stage.step === 1 || stage.role !== user.role) {
     return false;
-  }
-
-  if (stage.step === 1) {
-    return request.mentorId === user.id;
   }
 
   return true;

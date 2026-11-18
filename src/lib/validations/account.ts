@@ -48,11 +48,41 @@ export const nipSchema = z
     "NIP hanya boleh berisi huruf, angka, titik, garis bawah, dan tanda hubung.",
   );
 
+export const GRHA_OPTIONS = [
+  "Airsanya",
+  "Daksina",
+  "Genya",
+  "Madhya",
+  "Nairiti",
+  "Pascima",
+  "Purwa",
+  "Uttara",
+  "Wayabhya",
+] as const;
+
+export type GrhaOption = (typeof GRHA_OPTIONS)[number];
+
+const GRHA_LOOKUP = new Map<string, GrhaOption>(
+  GRHA_OPTIONS.map((grha) => [grha.toLowerCase(), grha]),
+);
+
 export const grhaSchema = z
   .string()
   .trim()
-  .min(2, "Grha minimal 2 karakter.")
-  .max(50, "Grha maksimal 50 karakter.");
+  .min(1, "Grha wajib dipilih.")
+  .transform((value, ctx) => {
+    const matched = GRHA_LOOKUP.get(value.toLowerCase());
+
+    if (!matched) {
+      ctx.addIssue({
+        code: "custom",
+        message: `Grha harus salah satu dari: ${GRHA_OPTIONS.join(", ")}.`,
+      });
+      return z.NEVER;
+    }
+
+    return matched;
+  });
 
 export const kelasSchema = z
   .string()
@@ -77,14 +107,36 @@ function requiredProfileFields(
         message: "NIS wajib diisi untuk akun siswa.",
         path: ["nis"],
       });
+    } else {
+      const nis = nisSchema.safeParse(data.nis);
+      if (!nis.success) {
+        for (const issue of nis.error.issues) {
+          ctx.addIssue({
+            code: "custom",
+            message: issue.message,
+            path: ["nis"],
+          });
+        }
+      }
     }
 
     if (!data.grha) {
       ctx.addIssue({
         code: "custom",
-        message: "Grha wajib diisi untuk akun siswa.",
+        message: "Grha wajib dipilih untuk akun siswa.",
         path: ["grha"],
       });
+    } else {
+      const grha = grhaSchema.safeParse(data.grha);
+      if (!grha.success) {
+        for (const issue of grha.error.issues) {
+          ctx.addIssue({
+            code: "custom",
+            message: issue.message,
+            path: ["grha"],
+          });
+        }
+      }
     }
 
     if (!data.kelas) {
@@ -93,6 +145,17 @@ function requiredProfileFields(
         message: "Kelas wajib diisi untuk akun siswa.",
         path: ["kelas"],
       });
+    } else {
+      const kelas = kelasSchema.safeParse(data.kelas);
+      if (!kelas.success) {
+        for (const issue of kelas.error.issues) {
+          ctx.addIssue({
+            code: "custom",
+            message: issue.message,
+            path: ["kelas"],
+          });
+        }
+      }
     }
 
     return;
@@ -104,6 +167,17 @@ function requiredProfileFields(
       message: "NIP wajib diisi untuk akun tenaga kependidikan.",
       path: ["nip"],
     });
+  } else {
+    const nip = nipSchema.safeParse(data.nip);
+    if (!nip.success) {
+      for (const issue of nip.error.issues) {
+        ctx.addIssue({
+          code: "custom",
+          message: issue.message,
+          path: ["nip"],
+        });
+      }
+    }
   }
 }
 
@@ -138,7 +212,14 @@ export const createAccountSchema = z
         path: ["confirmPassword"],
       });
     }
-  });
+  })
+  .transform((data) => ({
+    ...data,
+    grha:
+      data.role === "SISWA"
+        ? (GRHA_LOOKUP.get(data.grha.toLowerCase()) ?? data.grha)
+        : data.grha,
+  }));
 
 export const updateAccountSchema = z.object({
   accountId: z.string().min(1),
@@ -225,12 +306,6 @@ export const permissionSettingsSchema = z
     message: "Jam selesai harus setelah jam mulai.",
     path: ["defaultEndTime"],
   });
-
-export const mentorSelectionSchema = z.object({
-  mentorIds: z
-    .array(z.string().min(1))
-    .min(1, "Pilih minimal satu Pembina/Pendamping."),
-});
 
 export const permissionIndexFilterSchema = z.object({
   q: z.string().trim().max(100).optional().default(""),

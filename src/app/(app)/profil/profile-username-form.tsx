@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { INITIAL_ACTION_STATE } from "@/lib/form-state";
 
-import { updateFullNameAction } from "./actions";
+import { updateUsernameAction } from "./actions";
 
 function SubmitButton() {
   const { pending } = useFormStatus();
@@ -24,41 +24,44 @@ function SubmitButton() {
       ) : (
         <>
           <Save />
-          Simpan nama
+          Simpan username
         </>
       )}
     </Button>
   );
 }
 
-export function ProfileNameForm({ fullName }: { fullName: string }) {
+export function ProfileUsernameForm({ username }: { username: string }) {
   const [state, formAction] = useActionState(
-    updateFullNameAction,
+    updateUsernameAction,
     INITIAL_ACTION_STATE,
   );
 
-  const nameError = state.fieldErrors?.fullName?.[0];
+  const usernameError = state.fieldErrors?.username?.[0];
 
   return (
     <form action={formAction} className="space-y-2.5" noValidate>
-      <Label htmlFor="fullName">Nama lengkap</Label>
+      <Label htmlFor="username">Username</Label>
       <div className="flex flex-col gap-2 sm:flex-row">
         <Input
-          key={fullName}
-          id="fullName"
-          name="fullName"
-          defaultValue={fullName}
-          autoComplete="name"
+          key={username}
+          id="username"
+          name="username"
+          defaultValue={username}
+          autoComplete="username"
           required
-          minLength={3}
-          maxLength={100}
-          aria-invalid={Boolean(nameError)}
+          minLength={5}
+          maxLength={20}
+          aria-invalid={Boolean(usernameError)}
           className="h-9 sm:max-w-sm"
         />
         <SubmitButton />
       </div>
-      {nameError ? (
-        <p className="text-xs text-destructive">{nameError}</p>
+      <p className="text-xs text-muted-foreground">
+        5-20 karakter, huruf kecil, angka, titik, atau garis bawah.
+      </p>
+      {usernameError ? (
+        <p className="text-xs text-destructive">{usernameError}</p>
       ) : null}
       {state.status === "success" && state.message ? (
         <p className="text-xs text-primary">{state.message}</p>

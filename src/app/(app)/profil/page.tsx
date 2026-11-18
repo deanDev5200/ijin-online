@@ -20,9 +20,9 @@ import {
 } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { requireAppUser } from "@/lib/auth/guards";
-import { ROLE_DESCRIPTIONS, ROLE_LABELS } from "@/lib/auth/roles";
+import { ROLE_LABELS } from "@/lib/auth/roles";
 
-import { ProfileNameForm } from "./profile-name-form";
+import { ProfileUsernameForm } from "./profile-username-form";
 
 export const metadata: Metadata = {
   title: "Profil",
@@ -40,7 +40,7 @@ function InfoItem({
       <dt className="text-xs font-medium tracking-wide text-muted-foreground uppercase">
         {label}
       </dt>
-      <dd className="mt-1 text-sm font-medium">{value || "—"}</dd>
+      <dd className="mt-1 text-sm font-medium">{value || "â€”"}</dd>
     </div>
   );
 }
@@ -66,23 +66,19 @@ export default async function ProfilePage() {
           <CardHeader>
             <CardTitle className="text-base">Informasi pribadi</CardTitle>
             <CardDescription>
-              Nama lengkap dapat Anda ubah sendiri. Data lain dikelola oleh
+              Username dapat Anda ubah sendiri. Data lain dikelola oleh
               administrator asrama.
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-5">
-            <ProfileNameForm fullName={user.fullName} />
+            <ProfileUsernameForm username={user.username} />
             <Separator />
             <dl className="grid gap-4 sm:grid-cols-2">
-              <InfoItem label="Username" value={user.username} />
+              <InfoItem label="Nama lengkap" value={user.fullName} />
               <InfoItem label="Peran" value={ROLE_LABELS[user.role]} />
               <InfoItem
                 label="Status akun"
                 value={user.mustChangePassword ? "Perlu ganti password" : "Aktif"}
-              />
-              <InfoItem
-                label="Deskripsi peran"
-                value={ROLE_DESCRIPTIONS[user.role]}
               />
             </dl>
           </CardContent>
