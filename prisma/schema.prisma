@@ -1,0 +1,178 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum Role {
+  SISWA
+  PEMBINA
+  STAFF_ASRAMA
+  KEPALA_ASRAMA
+  ADMIN
+}
+
+enum RequestStatus {
+  PENDING_MENTOR
+  PENDING_DORM_STAFF
+  PENDING_DORM_HEAD
+  APPROVED
+  REJECTED
+  CANCELLED
+}
+
+enum ApprovalStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  CANCELLED
+}
+
+model User {
+  id                 String   @id @default(cuid())
+  username           String   @unique
+  passwordHash       String
+  role               Role
+  fullName           String
+  isActive           Boolean  @default(true)
+  mustChangePassword Boolean  @default(false)
+  sessionVersion     Int      @default(0)
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+
+  studentProfile     StudentProfile?
+  staffProfile       StaffProfile?
+  requestedRequests  PermissionRequest[]       @relation("RequestRequester")
+  mentoredRequests   PermissionRequest[]       @relation("RequestMentor")
+  approvals          Approval[]
+  notifications      Notification[]
+  includedInRequests PermissionRequestStudent[]
+
+  @@index([role, isActive])
+  @@index([fullName])
+}
+
+model StudentProfile {
+  userId String @id
+  nis    String @unique
+  grha   String
+  kelas  String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([kelas])
+  @@index([grha])
+}
+
+model StaffProfile {
+  userId      String  @id
+  nip         String  @unique
+  canBeMentor Boolean @default(true)
+  user        User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([canBeMentor])
+}
+
+model PermissionType {
+  id          String   @id @default(cuid())
+  name        String   @unique
+  description String?
+  isActive    Boolean  @default(true)
+  sortOrder   Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  requests PermissionRequest[]
+
+  @@index([isActive, sortOrder])
+}
+
+/// Singleton row (id = "default") holding the current request rules.
+model PermissionSetting {
+  id                    String   @id @default("default")
+  minLeadDays           Int      @default(0)
+  maxRangeDays          Int      @default(14)
+  maxStudentsPerRequest Int      @default(50)
+  approvalDeadlineDays  Int      @default(3)
+  defaultStartTime      String   @default("08:00")
+  defaultEndTime        String   @default("12:00")
+  updatedAt             DateTime @updatedAt
+}
+
+model PermissionRequest {
+  id              String        @id @default(cuid())
+  typeId          String
+  requesterId     String
+  mentorId        String
+  purpose         String
+  place           String
+  startDate       DateTime      @db.Date
+  endDate         DateTime      @db.Date
+  startTime       String
+  endTime         String
+  status          RequestStatus @default(PENDING_MENTOR)
+  rejectionReason String?
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  type          PermissionType             @relation(fields: [typeId], references: [id], onDelete: Restrict)
+  requester     User                       @relation("RequestRequester", fields: [requesterId], references: [id], onDelete: Restrict)
+  mentor        User                       @relation("RequestMentor", fields: [mentorId], references: [id], onDelete: Restrict)
+  students      PermissionRequestStudent[]
+  approvals     Approval[]
+  notifications Notification[]
+
+  @@index([typeId, status, createdAt])
+  @@index([status, createdAt])
+  @@index([mentorId, status])
+  @@index([requesterId, createdAt])
+  @@index([startDate, endDate])
+}
+
+model PermissionRequestStudent {
+  requestId   String
+  studentId   String
+  isRequester Boolean @default(false)
+
+  request PermissionRequest @relation(fields: [requestId], references: [id], onDelete: Cascade)
+  student User              @relation(fields: [studentId], references: [id], onDelete: Restrict)
+
+  @@id([requestId, studentId])
+  @@index([studentId, requestId])
+}
+
+model Approval {
+  id         String         @id @default(cuid())
+  requestId  String
+  step       Int
+  role       Role
+  approverId String?
+  status     ApprovalStatus @default(PENDING)
+  note       String?
+  actedAt    DateTime?
+  createdAt  DateTime       @default(now())
+
+  request  PermissionRequest @relation(fields: [requestId], references: [id], onDelete: Cascade)
+  approver User?             @relation(fields: [approverId], references: [id], onDelete: SetNull)
+
+  @@unique([requestId, step])
+  @@index([approverId, status])
+  @@index([requestId])
+}
+
+model Notification {
+  id        String   @id @default(cuid())
+  userId    String
+  title     String
+  message   String
+  requestId String?
+  isRead    Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  user    User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  request PermissionRequest? @relation(fields: [requestId], references: [id], onDelete: Cascade)
+
+  @@index([userId, isRead, createdAt])
+}
