@@ -296,7 +296,7 @@ export function AccountCreateForm() {
               </p>
               <p className="text-xs leading-relaxed">
                 Saat pertama kali masuk, pengguna akan diminta membuat username
-                pribadi (6 karakter) dan password sendiri. Perubahan
+                pribadi (3-6 karakter) dan password sendiri. Perubahan
                 tersebut langsung tersimpan di database.
               </p>
             </div>

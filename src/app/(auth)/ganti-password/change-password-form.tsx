@@ -68,9 +68,9 @@ export function ChangePasswordForm({
             id="username"
             name="username"
             autoComplete="username"
-            placeholder="Tepat 6 karakter"
+            placeholder="3-6 karakter"
             required
-            minLength={6}
+            minLength={3}
             maxLength={6}
             autoFocus
             aria-invalid={Boolean(errors?.username?.[0])}
@@ -79,7 +79,8 @@ export function ChangePasswordForm({
           <p className="text-xs text-muted-foreground">
             Username sementara Anda saat ini:{" "}
             <span className="font-medium">{currentUsername}</span>. Silakan
-            ganti dengan username pribadi 6 karakter.
+            ganti dengan username pribadi 3-6 karakter, misalnya dhika atau
+            kadek.
           </p>
           <FieldError message={errors?.username?.[0]} />
         </div>
