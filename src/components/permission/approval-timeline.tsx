@@ -7,9 +7,13 @@ import {
   X,
 } from "lucide-react";
 
+import { approvalLabelForRole } from "@/lib/permissions/config";
 import { formatDateTime } from "@/lib/permissions/dates";
 import type { PermissionRequestDetail } from "@/lib/permissions/queries";
-import { getStageFromApproval } from "@/lib/permissions/status";
+import {
+  getStageFromApproval,
+  isPendingStatus,
+} from "@/lib/permissions/status";
 import { cn } from "@/lib/utils";
 
 function stepStateClasses({
@@ -70,11 +74,8 @@ export function ApprovalTimeline({
   viewerRole?: Role;
 }) {
   const approvals = [...request.approvals].sort((a, b) => a.step - b.step);
-  const currentApproval = approvals.find(
-    (approval) => approval.status === "PENDING",
-  );
   const hasTerminalApproval = approvals.some(
-    (approval) => approval.status === "REJECTED" || approval.status === "CANCELLED",
+    (approval) => approval.status === "REJECTED",
   );
   const isComplete =
     request.status === "APPROVED" ||
@@ -90,8 +91,11 @@ export function ApprovalTimeline({
       {approvals.map((approval, index) => {
         const stage = getStageFromApproval(approval);
         const isCurrent =
-          currentApproval?.id === approval.id && !requestCancelled && !hasTerminalApproval;
-        const activeForViewer = isCurrent && stage?.role === viewerRole;
+          approval.status === "PENDING" &&
+          isPendingStatus(request.status) &&
+          !requestCancelled &&
+          !hasTerminalApproval;
+        const activeForViewer = isCurrent && approval.role === viewerRole;
         const isLast = index === approvals.length - 1;
         const isCompleteStep = approval.status === "APPROVED";
         const isRejectedStep = approval.status === "REJECTED";
@@ -127,7 +131,7 @@ export function ApprovalTimeline({
             <div className="min-w-0 flex-1 pt-0.5">
               <div className="flex flex-wrap items-center gap-2">
                 <p className="text-sm font-medium">
-                  {approval.label?.trim() || stage?.title || "Penyetuju izin"}
+                  {approvalLabelForRole(approval.role)}
                 </p>
                 {activeForViewer ? (
                   <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[11px] font-medium text-primary">

@@ -82,7 +82,7 @@ export function getStageFromApproval(
     step: approval.step,
     role,
     pendingStatus,
-    title: approval.label?.trim() || APPROVAL_ROLE_LABELS[role],
+    title: APPROVAL_ROLE_LABELS[role],
     description: APPROVAL_ROLE_DESCRIPTIONS[role],
   };
 }
@@ -100,72 +100,46 @@ export function getCurrentApproval(
   );
 }
 
-export function getNextApproval(
+export function getPendingApprovalForUser(
+  user: { role: Role },
   request: RequestApprovalLike,
-  currentStep: number,
 ): ApprovalRowLike | null {
   return (
     sortedApprovals(request).find(
-      (approval) => approval.step > currentStep && approval.status === "PENDING",
+      (approval) =>
+        approval.status === "PENDING" &&
+        approval.role === user.role &&
+        getStageFromApproval(approval) !== null,
     ) ?? null
   );
 }
 
-export function getNextStatusForApprovals(
-  request: RequestApprovalLike,
-  currentStep: number,
-): RequestStatus {
-  const nextApproval = getNextApproval(request, currentStep);
-
-  if (!nextApproval) {
-    return "APPROVED";
-  }
-
-  const stage = getStageFromApproval(nextApproval);
-
-  return stage?.pendingStatus ?? "APPROVED";
-}
-
 /**
- * Each request has exactly one approval row. Any active user with the
- * configured role may decide; the first decision wins.
+ * Multiple approvers work in parallel. Any active user whose role still has a
+ * pending approval row may decide; the first decision wins.
  */
 export function canUserActOnRequest(
   user: { id: string; role: Role },
   request: RequestApprovalLike,
 ): boolean {
-  const currentApproval = getCurrentApproval(request);
-
-  if (!currentApproval) {
+  if (!isPendingStatus(request.status)) {
     return false;
   }
 
-  const stage = getStageFromApproval(currentApproval);
-
-  if (!stage || stage.role !== user.role) {
-    return false;
-  }
-
-  return stage.pendingStatus === request.status;
+  return request.approvals.some(
+    (approval) =>
+      approval.status === "PENDING" &&
+      approval.role === user.role &&
+      getStageFromApproval(approval) !== null,
+  );
 }
 
 export function canUserViewStaffRequest(
   user: { id: string; role: Role },
   request: RequestApprovalLike,
 ): boolean {
-  if (
-    request.approvals.some(
-      (approval) =>
-        approval.approverId === user.id && approval.status !== "PENDING",
-    )
-  ) {
-    return true;
-  }
-
-  const currentApproval = getCurrentApproval(request);
-  const stage = currentApproval
-    ? getStageFromApproval(currentApproval)
-    : null;
-
-  return stage?.role === user.role;
+  return request.approvals.some(
+    (approval) =>
+      approval.role === user.role && getStageFromApproval(approval) !== null,
+  );
 }

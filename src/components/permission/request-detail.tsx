@@ -383,7 +383,8 @@ export function RequestDetail({
                 <span className="font-medium text-foreground">
                   {request.type.name}
                 </span>{" "}
-                cukup satu penyetuju.
+                dapat diputuskan oleh penyetuju yang ditentukan admin. Keputusan
+                pertama akan menyelesaikan pengajuan.
               </CardDescription>
             </CardHeader>
             <CardContent>

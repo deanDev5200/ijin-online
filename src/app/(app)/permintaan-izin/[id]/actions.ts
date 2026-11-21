@@ -7,12 +7,13 @@ import { z } from "zod";
 import { requireStaff } from "@/lib/auth/guards";
 import { prisma } from "@/lib/db";
 import type { ActionState } from "@/lib/form-state";
+import { approvalLabelForRole } from "@/lib/permissions/config";
 import { PermissionWorkflowError } from "@/lib/permissions/errors";
 import { createRequestNotifications } from "@/lib/permissions/notifications";
 import {
   canUserActOnRequest,
+  getPendingApprovalForUser,
   getStageFromApproval,
-  getCurrentApproval,
 } from "@/lib/permissions/status";
 import { decidePermissionSchema } from "@/lib/validations/permission";
 
@@ -80,7 +81,7 @@ export async function decidePermissionAction(
         throw new PermissionWorkflowError("Pengajuan tidak ditemukan.");
       }
 
-      const currentApproval = getCurrentApproval(request);
+      const currentApproval = getPendingApprovalForUser(user, request);
 
       if (!currentApproval) {
         throw new PermissionWorkflowError(
@@ -144,19 +145,18 @@ export async function decidePermissionAction(
         );
       }
 
-      if (isReject) {
-        await tx.approval.updateMany({
-          where: {
-            requestId: request.id,
-            status: "PENDING",
-          },
-          data: {
-            status: "CANCELLED",
-          },
-        });
-      }
+      // All approvers decide in parallel; the first decision closes the others.
+      await tx.approval.updateMany({
+        where: {
+          requestId: request.id,
+          status: "PENDING",
+        },
+        data: {
+          status: "CANCELLED",
+        },
+      });
 
-      const currentLabel = currentApproval.label?.trim() || stage.title;
+      const currentLabel = approvalLabelForRole(currentApproval.role);
 
       const notification = isReject
         ? {

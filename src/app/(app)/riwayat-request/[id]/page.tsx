@@ -7,11 +7,9 @@ import { PageHeader } from "@/components/page-header";
 import { RequestDetail } from "@/components/permission/request-detail";
 import { Button } from "@/components/ui/button";
 import { requireRole } from "@/lib/auth/guards";
+import { approvalLabelForRole } from "@/lib/permissions/config";
 import { findPermissionRequestDetail } from "@/lib/permissions/queries";
-import {
-  getStageFromApproval,
-  isPendingStatus,
-} from "@/lib/permissions/status";
+import { isPendingStatus } from "@/lib/permissions/status";
 
 import { CancelRequestCard } from "./cancel-request-card";
 
@@ -47,14 +45,13 @@ export default async function StudentRequestDetailPage({
   const canCancel =
     request.requesterId === user.id && isPendingStatus(request.status);
 
-  const firstApproval = [...request.approvals].sort(
-    (a, b) => a.step - b.step,
-  )[0];
-  const firstStageLabel = firstApproval
-    ? firstApproval.label?.trim() ||
-      getStageFromApproval(firstApproval)?.title ||
-      "penyetuju izin"
-    : "penyetuju izin";
+  const pendingApproverLabels = request.approvals
+    .filter((approval) => approval.status === "PENDING")
+    .map((approval) => approvalLabelForRole(approval.role));
+  const approverLabel =
+    pendingApproverLabels.length > 0
+      ? pendingApproverLabels.join(", ")
+      : "penyetuju izin";
 
   return (
     <div className="space-y-6">
@@ -78,7 +75,7 @@ export default async function StudentRequestDetailPage({
           <div>
             <p className="font-medium">Pengajuan berhasil dikirim</p>
             <p className="text-primary/80">
-              Pengajuan Anda sedang menunggu {firstStageLabel}.
+              Pengajuan Anda menunggu keputusan dari {approverLabel}.
             </p>
           </div>
         </div>

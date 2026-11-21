@@ -194,7 +194,8 @@ export function PermissionRequestForm({
           </CardTitle>
           <CardDescription>
             Pilih jenis izin yang sesuai. Kolom formulir akan menyesuaikan
-            jenis yang dipilih. Pengajuan cukup menunggu satu penyetuju.
+            jenis yang dipilih. Pengajuan dapat diputuskan oleh penyetuju yang
+            ditentukan admin.
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">

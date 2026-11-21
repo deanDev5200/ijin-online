@@ -7,9 +7,9 @@ import { requireRole } from "@/lib/auth/guards";
 import { prisma } from "@/lib/db";
 import type { ActionState } from "@/lib/form-state";
 import {
-  APPROVAL_ROLES,
   DEFAULT_APPROVAL_ROLES,
   DEFAULT_REQUIRED_FIELDS,
+  parseLabelMap,
   PERMISSION_FIELDS,
   serializeConfig,
   type PermissionTypeConfig,
@@ -33,8 +33,15 @@ type ConfigParseResult =
   | { ok: true; config: PermissionTypeConfig }
   | { ok: false; state: ActionState };
 
-function parseTypeConfig(formData: FormData): ConfigParseResult {
-  const roles = [getFormValue(formData, "approvalRole").trim()].filter(Boolean);
+function parseTypeConfig(
+  formData: FormData,
+  existingFieldLabels: PermissionTypeConfig["fieldLabels"] = {},
+): ConfigParseResult {
+  const roles = formData
+    .getAll("approvalRoles")
+    .filter((value): value is string => typeof value === "string")
+    .map((value) => value.trim())
+    .filter(Boolean);
   const fields = formData
     .getAll("requiredFields")
     .filter((value): value is string => typeof value === "string" && Boolean(value.trim()));
@@ -70,33 +77,14 @@ function parseTypeConfig(formData: FormData): ConfigParseResult {
     };
   }
 
-  const fieldLabels: Partial<Record<(typeof PERMISSION_FIELDS)[number], string>> = {};
-
-  for (const field of PERMISSION_FIELDS) {
-    const label = getFormValue(formData, `fieldLabel_${field}`).trim();
-
-    if (label) {
-      fieldLabels[field] = label;
-    }
-  }
-
-  const approvalLabels: Partial<Record<(typeof APPROVAL_ROLES)[number], string>> = {};
-
-  for (const role of APPROVAL_ROLES) {
-    const label = getFormValue(formData, `approvalLabel_${role}`).trim();
-
-    if (label) {
-      approvalLabels[role] = label;
-    }
-  }
-
   return {
     ok: true,
     config: {
       approvalRoles: rolesResult.data,
       requiredFields: fieldsResult.data,
-      fieldLabels,
-      approvalLabels,
+      // The label editor was removed, so existing form labels are preserved.
+      fieldLabels: existingFieldLabels,
+      approvalLabels: {},
       formGuide: getFormValue(formData, "formGuide").trim() || null,
     },
   };
@@ -216,7 +204,6 @@ export async function updatePermissionTypeAction(
     isActive: getFormValue(formData, "isActive") || "true",
     sortOrder: getFormValue(formData, "sortOrder") || "0",
   });
-  const configResult = parseTypeConfig(formData);
 
   if (!parsed.success) {
     return {
@@ -226,21 +213,26 @@ export async function updatePermissionTypeAction(
     };
   }
 
-  if (!configResult.ok) {
-    return configResult.state;
-  }
-
   if (!parsed.data.typeId) {
     return { status: "error", message: "Jenis izin tidak ditemukan." };
   }
 
   const type = await prisma.permissionType.findUnique({
     where: { id: parsed.data.typeId },
-    select: { id: true, isActive: true },
+    select: { id: true, isActive: true, fieldLabels: true },
   });
 
   if (!type) {
     return { status: "error", message: "Jenis izin tidak ditemukan." };
+  }
+
+  const configResult = parseTypeConfig(
+    formData,
+    parseLabelMap(type.fieldLabels, PERMISSION_FIELDS),
+  );
+
+  if (!configResult.ok) {
+    return configResult.state;
   }
 
   const existing = await prisma.permissionType.findFirst({

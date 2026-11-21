@@ -7,15 +7,12 @@ import { requireRole } from "@/lib/auth/guards";
 import { prisma } from "@/lib/db";
 import type { ActionState } from "@/lib/form-state";
 import { PermissionWorkflowError } from "@/lib/permissions/errors";
+import { parseApprovalRoles } from "@/lib/permissions/config";
 import {
   createRequestNotifications,
   getActiveUserIdsByRole,
 } from "@/lib/permissions/notifications";
-import {
-  getCurrentApproval,
-  getStageFromApproval,
-  isPendingStatus,
-} from "@/lib/permissions/status";
+import { isPendingStatus } from "@/lib/permissions/status";
 import { cancelPermissionSchema } from "@/lib/validations/permission";
 
 export async function cancelPermissionRequestAction(
@@ -47,6 +44,11 @@ export async function cancelPermissionRequestAction(
           requesterId: true,
           purpose: true,
           status: true,
+          type: {
+            select: {
+              approvalRoles: true,
+            },
+          },
           students: {
             select: {
               studentId: true,
@@ -76,11 +78,6 @@ export async function cancelPermissionRequestAction(
         );
       }
 
-      const currentApproval = getCurrentApproval(request);
-      const stage = currentApproval
-        ? getStageFromApproval(currentApproval)
-        : null;
-
       const claimed = await tx.permissionRequest.updateMany({
         where: {
           id: request.id,
@@ -108,16 +105,18 @@ export async function cancelPermissionRequestAction(
         },
       });
 
-      const stageUserIds =
-        currentApproval && stage
-          ? await getActiveUserIdsByRole(tx, stage.role)
-          : [];
+      const approverRoleLists = await Promise.all(
+        parseApprovalRoles(request.type.approvalRoles).map((role) =>
+          getActiveUserIdsByRole(tx, role),
+        ),
+      );
+      const approverUserIds = [...new Set(approverRoleLists.flat())];
 
       const message = `${user.fullName} membatalkan pengajuan "${request.purpose}".`;
 
       await createRequestNotifications(tx, [
         ...new Set([
-          ...stageUserIds,
+          ...approverUserIds,
           ...request.students
             .filter((student) => student.studentId !== user.id)
             .map((student) => student.studentId),

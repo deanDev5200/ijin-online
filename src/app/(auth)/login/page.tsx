@@ -29,7 +29,7 @@ const features = [
     icon: Route,
     title: "Alur persetujuan yang jelas",
     description:
-      "Pantau persetujuan Pembina, Staff Asrama, hingga Kepala Asrama.",
+      "Pantau keputusan Guru dan Staff Pegawai pada setiap jenis izin.",
   },
   {
     icon: History,

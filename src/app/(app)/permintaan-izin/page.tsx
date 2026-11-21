@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import { redirect } from "next/navigation";
 import { ClipboardCheck, Inbox } from "lucide-react";
 
 import { PageHeader } from "@/components/page-header";
@@ -14,7 +13,7 @@ import {
 } from "@/components/ui/card";
 import { requireStaff } from "@/lib/auth/guards";
 import { prisma } from "@/lib/db";
-import { pendingStatusForRole } from "@/lib/permissions/config";
+import { PENDING_STATUSES } from "@/lib/permissions/status";
 import { permissionRequestListSelect } from "@/lib/permissions/queries";
 
 export const metadata: Metadata = {
@@ -23,11 +22,11 @@ export const metadata: Metadata = {
 
 function getDescription(role: string): string {
   if (role === "PEMBINA") {
-    return "Pengajuan yang menunggu keputusan Anda sebagai penyetuju jenis izin.";
+    return "Pengajuan yang menunggu keputusan Anda sebagai Guru penyetuju jenis izin.";
   }
 
   if (role === "STAFF_ASRAMA") {
-    return "Pengajuan yang menunggu keputusan Anda sebagai Staf Asrama atau Matta Pitta.";
+    return "Pengajuan yang menunggu keputusan Anda sebagai Staff Pegawai penyetuju jenis izin.";
   }
 
   if (role === "KEPALA_ASRAMA") {
@@ -39,13 +38,16 @@ function getDescription(role: string): string {
 
 export default async function PermissionRequestsPage() {
   const user = await requireStaff();
-  const status = pendingStatusForRole(user.role);
 
-  if (!status) {
-    redirect("/dashboard");
-  }
-
-  const where = { status };
+  const where = {
+    status: { in: [...PENDING_STATUSES] },
+    approvals: {
+      some: {
+        role: user.role,
+        status: "PENDING" as const,
+      },
+    },
+  };
 
   const [requests, total] = await Promise.all([
     prisma.permissionRequest.findMany({

@@ -212,9 +212,9 @@ export async function createPermissionRequestAction(
   const storedEndTime = hasField(config, "returnTime")
     ? data.returnTime
     : data.endTime;
-  const firstRole = config.approvalRoles[0];
-  const initialStatus = firstRole
-    ? pendingStatusForRole(firstRole) ?? "PENDING_MENTOR"
+  const primaryRole = config.approvalRoles[0];
+  const initialStatus = primaryRole
+    ? pendingStatusForRole(primaryRole) ?? "PENDING_MENTOR"
     : "PENDING_MENTOR";
 
   const request = await prisma.$transaction(async (tx) => {
@@ -257,13 +257,17 @@ export async function createPermissionRequestAction(
       },
     });
 
-    const firstStageLabel = firstRole ? approvalLabel(config, firstRole) : "penyetuju";
-    const firstApproverIds = firstRole
-      ? await getActiveUserIdsByRole(tx, firstRole)
-      : [];
+    const approverLabel =
+      config.approvalRoles
+        .map((role) => approvalLabel(config, role))
+        .join(", ") || "penyetuju";
+    const approverRoleLists = await Promise.all(
+      config.approvalRoles.map((role) => getActiveUserIdsByRole(tx, role)),
+    );
+    const approverIds = [...new Set(approverRoleLists.flat())];
 
     await createRequestNotifications(tx, [
-      ...firstApproverIds
+      ...approverIds
         .filter((userId) => userId !== user.id)
         .map((userId) => ({
           userId,
@@ -274,7 +278,7 @@ export async function createPermissionRequestAction(
       {
         userId: user.id,
         title: "Pengajuan izin terkirim",
-        message: `Pengajuan "${data.purpose}" berhasil dikirim dan menunggu persetujuan ${firstStageLabel}.`,
+        message: `Pengajuan "${data.purpose}" berhasil dikirim dan menunggu keputusan dari ${approverLabel}.`,
         requestId: created.id,
       },
       ...students

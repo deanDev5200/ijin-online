@@ -5,7 +5,6 @@ import {
   parsePermissionIndexFilters,
 } from "@/lib/admin/permission-index";
 import { getCurrentUser } from "@/lib/auth/current-user";
-import { ROLE_LABELS } from "@/lib/auth/roles";
 import { prisma } from "@/lib/db";
 import {
   formatDateRange,
@@ -14,6 +13,7 @@ import {
   getTodayInJakarta,
 } from "@/lib/permissions/dates";
 import {
+  approvalLabelForRole,
   getPermissionTypeConfig,
   hasField,
 } from "@/lib/permissions/config";
@@ -174,7 +174,7 @@ export async function GET(request: Request) {
     const config = getPermissionTypeConfig(requestItem.type);
     const approvalTrail = requestItem.approvals
       .map((approval) => {
-        const roleLabel = ROLE_LABELS[approval.role];
+        const roleLabel = approvalLabelForRole(approval.role);
         const statusLabel = APPROVAL_STATUS_LABELS[approval.status];
         const approver = approval.approver?.fullName ?? "-";
         const actedAt = approval.actedAt

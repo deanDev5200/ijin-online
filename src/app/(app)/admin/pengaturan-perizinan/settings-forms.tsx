@@ -100,27 +100,35 @@ function PermissionTypeConfigFields({
           <p className="text-sm font-medium">Penyetuju izin</p>
         </div>
         <p className="text-xs leading-relaxed text-muted-foreground">
-          Pilih satu peran yang berwenang menyetujui jenis izin ini. Setiap
-          pengajuan cukup satu persetujuan.
+          Pilih satu atau lebih penyetuju jenis izin ini. Keputusan pertama yang
+          masuk akan menyelesaikan pengajuan.
         </p>
-        <div className="grid gap-3 sm:grid-cols-2">
-          <div className="space-y-2">
-            <Label htmlFor={`${idPrefix}-approval-role`}>Peran penyetuju</Label>
-            <select
-              id={`${idPrefix}-approval-role`}
-              name="approvalRole"
-              defaultValue={config.approvalRoles[0] ?? DEFAULT_APPROVAL_ROLES[0]}
-              className={selectClassName}
+        <div className="grid gap-2 sm:grid-cols-2">
+          {APPROVAL_ROLES.map((role) => (
+            <label
+              key={role}
+              htmlFor={`${idPrefix}-approval-${role}`}
+              className="flex cursor-pointer items-center gap-2 rounded-lg border bg-background px-3 py-2 text-xs transition-colors hover:bg-accent"
             >
-              {APPROVAL_ROLES.map((role) => (
-                <option key={role} value={role}>
-                  {APPROVAL_ROLE_LABELS[role]}
-                </option>
-              ))}
-            </select>
-            <FieldError message={errors?.approvalRoles?.[0]} />
-          </div>
+              <input
+                id={`${idPrefix}-approval-${role}`}
+                type="checkbox"
+                name="approvalRoles"
+                value={role}
+                defaultChecked={
+                  config.approvalRoles.length > 0
+                    ? config.approvalRoles.includes(role)
+                    : DEFAULT_APPROVAL_ROLES.includes(role)
+                }
+                className="size-4 shrink-0 accent-primary"
+              />
+              <span className="min-w-0 flex-1 font-medium">
+                {APPROVAL_ROLE_LABELS[role]}
+              </span>
+            </label>
+          ))}
         </div>
+        <FieldError message={errors?.approvalRoles?.[0]} />
       </div>
 
       <Separator />
@@ -157,55 +165,6 @@ function PermissionTypeConfigFields({
         <FieldError message={errors?.requiredFields?.[0]} />
       </div>
 
-      <Separator />
-
-      <div className="space-y-3">
-        <p className="text-sm font-medium">Label field formulir</p>
-        <div className="grid gap-3 sm:grid-cols-2">
-          {PERMISSION_FIELDS.map((field) => (
-            <div key={field} className="space-y-1.5">
-              <Label htmlFor={`${idPrefix}-field-label-${field}`}>
-                {FIELD_LABELS[field]}
-              </Label>
-              <Input
-                id={`${idPrefix}-field-label-${field}`}
-                name={`fieldLabel_${field}`}
-                defaultValue={config.fieldLabels[field] ?? ""}
-                placeholder={FIELD_LABELS[field]}
-                maxLength={120}
-                className="h-9"
-              />
-            </div>
-          ))}
-        </div>
-      </div>
-
-      <Separator />
-
-      <div className="space-y-3">
-        <p className="text-sm font-medium">Label penyetuju</p>
-        <div className="grid gap-3 sm:grid-cols-3">
-          {APPROVAL_ROLES.map((role) => (
-            <div key={role} className="space-y-1.5">
-              <Label htmlFor={`${idPrefix}-approval-label-${role}`}>
-                {APPROVAL_ROLE_LABELS[role]}
-              </Label>
-              <Input
-                id={`${idPrefix}-approval-label-${role}`}
-                name={`approvalLabel_${role}`}
-                defaultValue={config.approvalLabels[role] ?? ""}
-                placeholder={APPROVAL_ROLE_LABELS[role]}
-                maxLength={120}
-                className="h-9"
-              />
-            </div>
-          ))}
-        </div>
-        <p className="text-xs text-muted-foreground">
-          Kosongkan untuk memakai label bawaan peran.
-        </p>
-      </div>
-
       <div className="space-y-2">
         <Label htmlFor={`${idPrefix}-form-guide`}>Panduan formulir</Label>
         <textarea
@@ -223,7 +182,7 @@ function PermissionTypeConfigFields({
 
       <div className="flex flex-wrap gap-2">
         <Badge variant="secondary" className="text-[10px]">
-          1 penyetuju bawaan
+          {config.approvalRoles.length} penyetuju
         </Badge>
         <Badge variant="outline" className="text-[10px]">
           {config.requiredFields.length} field bawaan

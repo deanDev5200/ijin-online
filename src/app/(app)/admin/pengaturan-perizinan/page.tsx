@@ -63,7 +63,7 @@ export default async function PermissionSettingsPage() {
     <div className="space-y-6">
       <PageHeader
         title="Pengaturan Perizinan"
-        description="Atur jenis izin, ketentuan pengajuan, dan satu penyetuju untuk setiap jenis izin."
+        description="Atur jenis izin, ketentuan pengajuan, dan penyetuju untuk setiap jenis izin."
       />
 
       <div className="grid gap-6 lg:grid-cols-[1.15fr_0.85fr]">
@@ -99,8 +99,8 @@ export default async function PermissionSettingsPage() {
               Penyetuju per jenis izin
             </CardTitle>
             <CardDescription>
-              Setiap jenis izin cukup satu penyetuju. Ubah melalui panel jenis
-              izin di bawah.
+              Setiap jenis izin dapat memiliki beberapa penyetuju. Ubah melalui
+              panel jenis izin di bawah.
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">

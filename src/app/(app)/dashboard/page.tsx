@@ -77,22 +77,6 @@ function getGreeting(): string {
   return "Selamat malam";
 }
 
-function pendingStatusForRole(role: AppRole) {
-  if (role === "PEMBINA") {
-    return "PENDING_MENTOR" as const;
-  }
-
-  if (role === "STAFF_ASRAMA") {
-    return "PENDING_DORM_STAFF" as const;
-  }
-
-  if (role === "WAKASEK_KESISWAAN") {
-    return "PENDING_WAKASEK" as const;
-  }
-
-  return "PENDING_DORM_HEAD" as const;
-}
-
 async function getStats(user: SessionUser): Promise<Stat[]> {
   if (user.role === "SISWA") {
     const studentScope = {
@@ -168,11 +152,19 @@ async function getStats(user: SessionUser): Promise<Stat[]> {
     ];
   }
 
-  const stageStatus = pendingStatusForRole(user.role);
+  const pendingScope = {
+    status: { in: [...PENDING_STATUSES] },
+    approvals: {
+      some: {
+        role: user.role,
+        status: "PENDING" as const,
+      },
+    },
+  };
 
   const [waiting, approved, rejected] = await Promise.all([
     prisma.permissionRequest.count({
-      where: { status: stageStatus },
+      where: pendingScope,
     }),
     prisma.approval.count({
       where: { approverId: user.id, status: "APPROVED" },
@@ -433,7 +425,8 @@ export default async function DashboardPage({
           <CardHeader>
             <CardTitle className="text-base">Jenis izin & persetujuan</CardTitle>
             <CardDescription>
-              Setiap jenis izin memiliki satu penyetuju yang ditentukan admin.
+              Setiap jenis izin dapat memiliki beberapa penyetuju yang
+              ditentukan admin.
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-3">
