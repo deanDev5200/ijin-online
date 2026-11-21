@@ -23,7 +23,7 @@ const features = [
     icon: CalendarCheck2,
     title: "Ajukan izin dengan mudah",
     description:
-      "Buat dispensasi kegiatan asrama untuk satu atau beberapa siswa sekaligus.",
+      "Buat dispensasi kegiatan sekolah maupun asrama untuk satu atau beberapa siswa sekaligus.",
   },
   {
     icon: Route,
@@ -52,14 +52,30 @@ export default async function LoginPage({
     process.env.SEED_DEMO === "true" && process.env.NODE_ENV !== "production";
 
   return (
-    <div className="grid min-h-svh lg:grid-cols-[1.05fr_0.95fr]">
-      <aside className="relative hidden overflow-hidden bg-linear-to-br from-blue-700 via-blue-800 to-blue-950 p-10 text-blue-50 lg:flex lg:flex-col lg:justify-between xl:p-14">
-        <div className="absolute -top-24 -left-24 size-80 rounded-full bg-sky-300/25 blur-3xl" />
-        <div className="absolute -right-28 bottom-0 size-96 rounded-full bg-white/15 blur-3xl" />
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_20%,rgba(255,255,255,0.18),transparent_45%)]" />
+    <div className="grid min-h-svh bg-background lg:grid-cols-[1.05fr_0.95fr]">
+      <aside className="relative hidden overflow-hidden bg-linear-to-br from-[#0b2f8f] via-[#1d4ed8] to-[#4338ca] p-10 text-blue-50 lg:flex lg:flex-col lg:justify-between xl:p-14">
+        <div className="pointer-events-none absolute -top-32 -left-24 size-[28rem] rounded-full bg-sky-300/30 blur-[100px]" />
+        <div className="pointer-events-none absolute -right-32 -bottom-32 size-[30rem] rounded-full bg-indigo-300/25 blur-[110px]" />
+        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_18%_18%,rgba(255,255,255,0.16),transparent_45%)]" />
+        <div
+          className="pointer-events-none absolute inset-0 opacity-[0.06] [background-image:linear-gradient(rgba(255,255,255,0.7)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.7)_1px,transparent_1px)] [background-size:56px_56px]"
+          aria-hidden="true"
+        />
+        <div
+          className="pointer-events-none absolute -top-16 -right-24 size-[26rem] rotate-12 rounded-[3rem] border border-white/10"
+          aria-hidden="true"
+        />
+        <div
+          className="pointer-events-none absolute right-16 bottom-24 size-64 rounded-full border border-white/10"
+          aria-hidden="true"
+        />
+        <div
+          className="pointer-events-none absolute right-28 bottom-36 size-40 rounded-full border border-white/10"
+          aria-hidden="true"
+        />
 
         <div className="relative flex items-center gap-3">
-          <div className="flex size-11 items-center justify-center rounded-2xl bg-white/10 ring-1 ring-white/20 backdrop-blur">
+          <div className="flex size-11 items-center justify-center rounded-2xl bg-white/15 shadow-lg shadow-blue-950/20 ring-1 ring-white/25 backdrop-blur-xl">
             <GraduationCap className="size-6" />
           </div>
           <div>
@@ -71,32 +87,35 @@ export default async function LoginPage({
         </div>
 
         <div className="relative max-w-xl space-y-8 py-16">
-          <div className="inline-flex items-center gap-2 rounded-full border border-white/25 bg-white/10 px-3 py-1 text-xs font-medium text-blue-100">
+          <div className="inline-flex items-center gap-2 rounded-full border border-white/25 bg-white/12 px-3.5 py-1.5 text-xs font-medium text-blue-50 shadow-lg shadow-blue-950/10 backdrop-blur-xl">
             <ShieldCheck className="size-3.5" />
-            Sistem Perizinan Asrama Digital
+            Sistem Perizinan &amp; Dispensasi Digital
           </div>
 
           <div className="space-y-4">
-            <h1 className="text-4xl font-semibold tracking-tight text-white xl:text-5xl">
-              Izin asrama jadi lebih tertata.
+            <h1 className="text-4xl font-semibold tracking-tight text-balance text-white xl:text-5xl">
+              Perizinan sekolah &amp; asrama jadi lebih tertata.
             </h1>
             <p className="max-w-lg text-base leading-relaxed text-blue-100/80">
-              Ajukan dispensasi kegiatan, pantau persetujuan, dan simpan
-              riwayat izin dalam satu tempat.
+              Ajukan dispensasi kegiatan, pantau persetujuan, dan simpan riwayat
+              izin dalam satu tempat.
             </p>
           </div>
 
-          <ul className="space-y-4">
+          <ul className="space-y-3">
             {features.map((feature) => (
-              <li key={feature.title} className="flex gap-3">
-                <div className="mt-0.5 flex size-9 shrink-0 items-center justify-center rounded-xl bg-white/10 ring-1 ring-white/15">
-                  <feature.icon className="size-4 text-blue-100" />
+              <li
+                key={feature.title}
+                className="flex gap-3.5 rounded-2xl border border-white/15 bg-white/10 p-3.5 shadow-lg shadow-blue-950/10 backdrop-blur-xl transition-colors duration-200 hover:bg-white/15"
+              >
+                <div className="mt-0.5 flex size-9 shrink-0 items-center justify-center rounded-xl bg-white/15 ring-1 ring-white/20">
+                  <feature.icon className="size-4 text-blue-50" />
                 </div>
                 <div>
                   <p className="text-sm font-medium text-white">
                     {feature.title}
                   </p>
-                  <p className="mt-0.5 text-sm leading-relaxed text-blue-100/70">
+                  <p className="mt-0.5 text-sm leading-relaxed text-blue-100/75">
                     {feature.description}
                   </p>
                 </div>
@@ -105,16 +124,17 @@ export default async function LoginPage({
           </ul>
         </div>
 
-        <p className="relative text-xs text-blue-200/60">
+        <p className="relative text-xs text-blue-200/70">
           © {new Date().getFullYear()} {schoolName}. Seluruh hak cipta
           dilindungi.
         </p>
       </aside>
 
-      <main className="flex items-center justify-center bg-background px-5 py-10 sm:px-8">
-        <div className="w-full max-w-md">
+      <main className="relative flex items-center justify-center overflow-hidden bg-linear-to-br from-background via-background to-primary/[0.06] px-5 py-10 sm:px-8">
+        <div className="pointer-events-none absolute -top-28 -right-24 size-80 rounded-full bg-primary/10 blur-3xl" />
+        <div className="relative w-full max-w-md">
           <div className="mb-8 flex items-center gap-3 lg:hidden">
-            <div className="flex size-10 items-center justify-center rounded-xl bg-primary text-primary-foreground shadow-sm">
+            <div className="flex size-10 items-center justify-center rounded-xl bg-linear-to-br from-blue-600 to-indigo-600 text-primary-foreground shadow-md shadow-blue-600/25">
               <GraduationCap className="size-5" />
             </div>
             <div>
@@ -126,6 +146,7 @@ export default async function LoginPage({
           </div>
 
           <div className="mb-8 space-y-2">
+            <div className="mb-3 h-1 w-10 rounded-full bg-linear-to-r from-blue-600 to-indigo-500" />
             <p className="text-sm font-medium text-primary">
               Masuk ke akun Anda
             </p>
@@ -139,10 +160,12 @@ export default async function LoginPage({
             </p>
           </div>
 
-          <LoginForm next={next} showDemo={showDemo} />
+          <div className="rounded-2xl border border-border/70 bg-card/80 p-5 shadow-[0_24px_60px_-36px_rgba(37,99,235,0.5)] backdrop-blur-sm sm:p-6">
+            <LoginForm next={next} showDemo={showDemo} />
+          </div>
 
           <p className="mt-6 text-center text-xs text-muted-foreground">
-            Belum punya akun? Hubungi administrator asrama.
+            Belum punya akun? Hubungi administrator sekolah atau asrama.
           </p>
 
           <p className="mt-8 text-center text-[11px] text-muted-foreground lg:hidden">
