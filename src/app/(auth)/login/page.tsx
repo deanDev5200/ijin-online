@@ -52,8 +52,8 @@ export default async function LoginPage({
     process.env.SEED_DEMO === "true" && process.env.NODE_ENV !== "production";
 
   return (
-    <div className="grid min-h-svh bg-background lg:grid-cols-[1.05fr_0.95fr]">
-      <aside className="relative hidden overflow-hidden bg-linear-to-br from-[#0b2f8f] via-[#1d4ed8] to-[#4338ca] p-10 text-blue-50 lg:flex lg:flex-col lg:justify-between xl:p-14">
+    <div className="grid min-h-screen bg-background lg:h-screen lg:grid-cols-[1.05fr_0.95fr] lg:overflow-hidden">
+      <aside className="relative hidden overflow-hidden bg-linear-to-br from-[#0b2f8f] via-[#1d4ed8] to-[#4338ca] p-7 text-blue-50 lg:flex lg:flex-col lg:justify-between xl:px-12 xl:py-8">
         <div className="pointer-events-none absolute -top-32 -left-24 size-[28rem] rounded-full bg-sky-300/30 blur-[100px]" />
         <div className="pointer-events-none absolute -right-32 -bottom-32 size-[30rem] rounded-full bg-indigo-300/25 blur-[110px]" />
         <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_18%_18%,rgba(255,255,255,0.16),transparent_45%)]" />
@@ -75,8 +75,8 @@ export default async function LoginPage({
         />
 
         <div className="relative flex items-center gap-3">
-          <div className="flex size-11 items-center justify-center rounded-2xl bg-white/15 shadow-lg shadow-blue-950/20 ring-1 ring-white/25 backdrop-blur-xl">
-            <GraduationCap className="size-6" />
+          <div className="flex size-10 items-center justify-center rounded-2xl bg-white/15 shadow-lg shadow-blue-950/20 ring-1 ring-white/25 backdrop-blur-xl">
+            <GraduationCap className="size-5" />
           </div>
           <div>
             <p className="text-[11px] font-semibold tracking-[0.2em] text-blue-200 uppercase">
@@ -86,36 +86,36 @@ export default async function LoginPage({
           </div>
         </div>
 
-        <div className="relative max-w-xl space-y-8 py-16">
-          <div className="inline-flex items-center gap-2 rounded-full border border-white/25 bg-white/12 px-3.5 py-1.5 text-xs font-medium text-blue-50 shadow-lg shadow-blue-950/10 backdrop-blur-xl">
+        <div className="relative max-w-xl space-y-4">
+          <div className="inline-flex items-center gap-2 rounded-full border border-white/25 bg-white/12 px-3 py-1 text-xs font-medium text-blue-50 shadow-lg shadow-blue-950/10 backdrop-blur-xl">
             <ShieldCheck className="size-3.5" />
             Sistem Perizinan &amp; Dispensasi Digital
           </div>
 
-          <div className="space-y-4">
-            <h1 className="text-4xl font-semibold tracking-tight text-balance text-white xl:text-5xl">
+          <div className="space-y-2.5">
+            <h1 className="text-3xl leading-tight font-semibold tracking-tight text-balance text-white xl:text-4xl">
               Perizinan sekolah &amp; asrama jadi lebih tertata.
             </h1>
-            <p className="max-w-lg text-base leading-relaxed text-blue-100/80">
+            <p className="max-w-lg text-sm leading-relaxed text-blue-100/80">
               Ajukan dispensasi kegiatan, pantau persetujuan, dan simpan riwayat
               izin dalam satu tempat.
             </p>
           </div>
 
-          <ul className="space-y-3">
+          <ul className="space-y-2.5">
             {features.map((feature) => (
               <li
                 key={feature.title}
-                className="flex gap-3.5 rounded-2xl border border-white/15 bg-white/10 p-3.5 shadow-lg shadow-blue-950/10 backdrop-blur-xl transition-colors duration-200 hover:bg-white/15"
+                className="flex gap-3 rounded-xl border border-white/15 bg-white/10 p-2.5 shadow-lg shadow-blue-950/10 backdrop-blur-xl transition-colors duration-200 hover:bg-white/15"
               >
-                <div className="mt-0.5 flex size-9 shrink-0 items-center justify-center rounded-xl bg-white/15 ring-1 ring-white/20">
+                <div className="mt-0.5 flex size-8 shrink-0 items-center justify-center rounded-lg bg-white/15 ring-1 ring-white/20">
                   <feature.icon className="size-4 text-blue-50" />
                 </div>
                 <div>
                   <p className="text-sm font-medium text-white">
                     {feature.title}
                   </p>
-                  <p className="mt-0.5 text-sm leading-relaxed text-blue-100/75">
+                  <p className="mt-0.5 text-xs leading-relaxed text-blue-100/75">
                     {feature.description}
                   </p>
                 </div>
@@ -124,16 +124,16 @@ export default async function LoginPage({
           </ul>
         </div>
 
-        <p className="relative text-xs text-blue-200/70">
+        <p className="relative text-[11px] text-blue-200/70">
           © {new Date().getFullYear()} {schoolName}. Seluruh hak cipta
           dilindungi.
         </p>
       </aside>
 
-      <main className="relative flex items-center justify-center overflow-hidden bg-linear-to-br from-background via-background to-primary/[0.06] px-5 py-10 sm:px-8">
+      <main className="relative flex items-center justify-center overflow-hidden bg-linear-to-br from-background via-background to-primary/[0.06] px-5 py-8 sm:px-8 lg:py-4">
         <div className="pointer-events-none absolute -top-28 -right-24 size-80 rounded-full bg-primary/10 blur-3xl" />
         <div className="relative w-full max-w-md">
-          <div className="mb-8 flex items-center gap-3 lg:hidden">
+          <div className="mb-5 flex items-center gap-3 lg:hidden">
             <div className="flex size-10 items-center justify-center rounded-xl bg-linear-to-br from-blue-600 to-indigo-600 text-primary-foreground shadow-md shadow-blue-600/25">
               <GraduationCap className="size-5" />
             </div>
@@ -145,30 +145,30 @@ export default async function LoginPage({
             </div>
           </div>
 
-          <div className="mb-8 space-y-2">
-            <div className="mb-3 h-1 w-10 rounded-full bg-linear-to-r from-blue-600 to-indigo-500" />
+          <div className="mb-5 space-y-1.5">
+            <div className="mb-2 h-0.5 w-8 rounded-full bg-linear-to-r from-blue-600 to-indigo-500" />
             <p className="text-sm font-medium text-primary">
               Masuk ke akun Anda
             </p>
-            <h2 className="text-2xl font-semibold tracking-tight sm:text-3xl">
+            <h2 className="text-2xl font-semibold tracking-tight">
               Selamat datang kembali
             </h2>
-            <p className="text-sm leading-relaxed text-muted-foreground">
+            <p className="text-[13px] leading-snug text-muted-foreground">
               Gunakan username dan password yang Anda buat saat pertama kali
               masuk. Akun baru memakai password awal 123456 dan akan diminta
               membuat username serta password pribadi.
             </p>
           </div>
 
-          <div className="rounded-2xl border border-border/70 bg-card/80 p-5 shadow-[0_24px_60px_-36px_rgba(37,99,235,0.5)] backdrop-blur-sm sm:p-6">
+          <div className="rounded-2xl border border-border/70 bg-card/80 p-4 shadow-[0_24px_60px_-36px_rgba(37,99,235,0.5)] backdrop-blur-sm sm:p-5">
             <LoginForm next={next} showDemo={showDemo} />
           </div>
 
-          <p className="mt-6 text-center text-xs text-muted-foreground">
+          <p className="mt-4 text-center text-xs text-muted-foreground">
             Belum punya akun? Hubungi administrator sekolah atau asrama.
           </p>
 
-          <p className="mt-8 text-center text-[11px] text-muted-foreground lg:hidden">
+          <p className="mt-5 text-center text-[11px] text-muted-foreground lg:hidden">
             © {new Date().getFullYear()} {schoolName}
           </p>
         </div>

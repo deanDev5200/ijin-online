@@ -19,7 +19,7 @@ function SubmitButton() {
     <Button
       type="submit"
       size="lg"
-      className="h-11 w-full rounded-xl shadow-lg shadow-blue-600/25 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-xl hover:shadow-blue-600/30 active:translate-y-0"
+      className="h-10 w-full rounded-xl shadow-lg shadow-blue-600/25 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-xl hover:shadow-blue-600/30 active:translate-y-0"
       disabled={pending}
     >
       {pending ? (
@@ -53,11 +53,11 @@ export function LoginForm({
   const passwordError = state.fieldErrors?.password?.[0];
 
   return (
-    <div className="space-y-5">
-      <form action={formAction} className="space-y-5" noValidate>
+    <div className="space-y-4">
+      <form action={formAction} className="space-y-4" noValidate>
         {next ? <input type="hidden" name="next" value={next} /> : null}
 
-        <div className="space-y-2">
+        <div className="space-y-1.5">
           <Label htmlFor="username" className="font-medium">
             Username
           </Label>
@@ -76,7 +76,7 @@ export function LoginForm({
               minLength={3}
               maxLength={20}
               aria-invalid={Boolean(usernameError)}
-              className="h-11 rounded-xl bg-primary/[0.03] pl-10 hover:border-primary/30 focus-visible:border-primary/60 focus-visible:ring-4 focus-visible:ring-primary/20"
+              className="h-10 rounded-xl bg-primary/[0.03] pl-10 hover:border-primary/30 focus-visible:border-primary/60 focus-visible:ring-4 focus-visible:ring-primary/20"
             />
           </div>
           {usernameError ? (
@@ -84,7 +84,7 @@ export function LoginForm({
           ) : null}
         </div>
 
-        <div className="space-y-2">
+        <div className="space-y-1.5">
           <div className="flex items-center justify-between gap-3">
             <Label htmlFor="password" className="font-medium">
               Password
@@ -101,7 +101,7 @@ export function LoginForm({
             required
             maxLength={72}
             aria-invalid={Boolean(passwordError)}
-            className="h-11 rounded-xl bg-primary/[0.03] pr-11 hover:border-primary/30 focus-visible:border-primary/60 focus-visible:ring-4 focus-visible:ring-primary/20"
+            className="h-10 rounded-xl bg-primary/[0.03] pr-11 hover:border-primary/30 focus-visible:border-primary/60 focus-visible:ring-4 focus-visible:ring-primary/20"
           />
           {passwordError ? (
             <p className="text-xs text-destructive">{passwordError}</p>
@@ -111,7 +111,7 @@ export function LoginForm({
         {state.status === "error" && state.message ? (
           <div
             role="alert"
-            className="rounded-xl border border-destructive/20 bg-destructive/10 px-3.5 py-2.5 text-sm text-destructive"
+            className="rounded-xl border border-destructive/20 bg-destructive/10 px-3 py-2 text-xs text-destructive"
           >
             {state.message}
           </div>
@@ -121,7 +121,7 @@ export function LoginForm({
       </form>
 
       {showDemo ? (
-        <div className="rounded-2xl border border-dashed border-primary/30 bg-linear-to-br from-primary/[0.07] to-transparent p-4">
+        <div className="rounded-2xl border border-dashed border-primary/30 bg-linear-to-br from-primary/[0.07] to-transparent p-3">
           <p className="text-xs font-semibold text-foreground">Akun demo</p>
           <dl className="mt-2 grid gap-1 text-xs text-muted-foreground">
             <div className="flex justify-between gap-3">
