@@ -35,7 +35,7 @@ type ConfigParseResult =
   | { ok: false; state: ActionState };
 
 function parseTypeConfig(formData: FormData): ConfigParseResult {
-  const roles = [1, 2, 3]
+  const roles = [1, 2, 3, 4]
     .map((step) => getFormValue(formData, `approvalRole${step}`).trim())
     .filter(Boolean);
   const fields = formData

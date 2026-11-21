@@ -117,11 +117,16 @@ Roles are `SISWA`, `PEMBINA`, `STAFF_ASRAMA`, `KEPALA_ASRAMA`,
 `WAKASEK_KESISWAAN`, and `ADMIN`.
 
 - A student creates a request for themselves and optionally other students.
-  Kunjungan Keluarga and Titipan Siswa only list the requester, so the
-  additional-student picker is hidden. Titipan Siswa uses a 1-10 item table with
-  Nama, Jumlah, Satuan, and Keterangan. The visible fields, labels, and guide
-  come from the selected permission type; the system only asks for data required
-  by that type.
+  Kunjungan Keluarga, Izin Pulang, and Titipan Siswa only list the requester, so
+  the additional-student picker is hidden. Izin Pulang asks for depart/arrival
+  dates plus Jam pulang and Jam kedatangan. Titipan Siswa uses a 1-10 item table
+  with Nama, Jumlah, Satuan, and Keterangan. The visible fields, labels, and
+  guide come from the selected permission type; the system only asks for data
+  required by that type.
+- Requests must be submitted at least one day before the dispensation
+  ("pengajuan dapat diajukan paling lambat 1 hari sebelum akan melakukan
+  dispensasi"). The dashboard's "Jenis izin & persetujuan" card keeps the list
+  collapsed until the "Lihat jenis izin yang tersedia" button is clicked.
 - Approvals are generated per type in the configured order: Pembina/Matta Pitta
   first, asrama staff/head next, and Wakasek Kesiswaan last where required.
   Wakasek Kesiswaan is required for Izin Penggunaan HP and Izin Pulang only.
@@ -159,6 +164,9 @@ Administrators (`ADMIN`) manage the system through these pages:
 - On first login, the user must create a personal username (minimum 6
   characters) and password. The setup page updates both values in the database;
   later logins use the new credentials.
+- Students can add, replace, and remove a profile photo on `/profil` (JPG, PNG,
+  or WebP, up to 2 MB). The image is stored in the database as a data URL and is
+  never placed in the session token.
 - Identity data can be edited, passwords reset, and accounts deactivated or
   reactivated. Accounts are never deleted, so request history and approval
   trails remain intact. Deactivation and password resets end active sessions.

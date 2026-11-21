@@ -62,6 +62,8 @@ export function createPermissionSchema(config: PermissionTypeConfig) {
       endDate: dateOnlySchema,
       startTime: z.string(),
       endTime: z.string(),
+      departureTime: z.string(),
+      returnTime: z.string(),
       mentorId: z.string(),
       depositItems: z.array(depositItemSchema).max(10, "Maksimal 10 barang."),
       studentIds: z
@@ -169,6 +171,45 @@ export function createPermissionSchema(config: PermissionTypeConfig) {
           code: "custom",
           message: `${fieldLabel(config, "endDate")} tidak boleh sebelum ${fieldLabel(config, "startDate")}.`,
           path: ["endDate"],
+        });
+      }
+
+      if (hasField(config, "departureTime")) {
+        const parsed = timeOfDaySchema.safeParse(data.departureTime);
+
+        if (!parsed.success) {
+          ctx.addIssue({
+            code: "custom",
+            message: `${fieldLabel(config, "departureTime")} menggunakan format HH:MM.`,
+            path: ["departureTime"],
+          });
+        }
+      }
+
+      if (hasField(config, "returnTime")) {
+        const parsed = timeOfDaySchema.safeParse(data.returnTime);
+
+        if (!parsed.success) {
+          ctx.addIssue({
+            code: "custom",
+            message: `${fieldLabel(config, "returnTime")} menggunakan format HH:MM.`,
+            path: ["returnTime"],
+          });
+        }
+      }
+
+      if (
+        hasField(config, "departureTime") &&
+        hasField(config, "returnTime") &&
+        data.startDate === data.endDate &&
+        data.returnTime &&
+        data.departureTime &&
+        data.returnTime <= data.departureTime
+      ) {
+        ctx.addIssue({
+          code: "custom",
+          message: `${fieldLabel(config, "returnTime")} harus setelah ${fieldLabel(config, "departureTime")}.`,
+          path: ["returnTime"],
         });
       }
 

@@ -41,6 +41,7 @@ model User {
   fullName           String
   isActive           Boolean  @default(true)
   mustChangePassword Boolean  @default(false)
+  avatarUrl          String?
   sessionVersion     Int      @default(0)
   createdAt          DateTime @default(now())
   updatedAt          DateTime @updatedAt
@@ -99,7 +100,7 @@ model PermissionType {
 /// Singleton row (id = "default") holding the current request rules.
 model PermissionSetting {
   id                    String   @id @default("default")
-  minLeadDays           Int      @default(0)
+  minLeadDays           Int      @default(1)
   maxRangeDays          Int      @default(14)
   maxStudentsPerRequest Int      @default(50)
   approvalDeadlineDays  Int      @default(3)

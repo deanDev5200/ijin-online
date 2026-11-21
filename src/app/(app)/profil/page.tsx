@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import {
+  Camera,
   GraduationCap,
   KeyRound,
   LockKeyhole,
@@ -22,8 +23,10 @@ import {
 import { Separator } from "@/components/ui/separator";
 import { requireAppUser } from "@/lib/auth/guards";
 import { ROLE_DESCRIPTIONS, ROLE_LABELS } from "@/lib/auth/roles";
+import { prisma } from "@/lib/db";
 
 import { ProfileNameForm } from "./profile-name-form";
+import { ProfilePhotoForm } from "./profile-photo-form";
 
 export const metadata: Metadata = {
   title: "Profil",
@@ -49,6 +52,10 @@ function InfoItem({
 export default async function ProfilePage() {
   const user = await requireAppUser();
   const isStudent = user.role === "SISWA";
+  const profile = await prisma.user.findUnique({
+    where: { id: user.id },
+    select: { avatarUrl: true },
+  });
 
   return (
     <div className="space-y-6">
@@ -61,6 +68,29 @@ export default async function ProfilePage() {
           {ROLE_LABELS[user.role]}
         </Badge>
       </PageHeader>
+
+      {isStudent ? (
+        <Card className="bg-linear-to-br from-primary/5 via-background to-background">
+          <CardHeader className="grid-cols-[auto_1fr] items-start gap-3">
+            <div className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
+              <Camera className="size-4" />
+            </div>
+            <div className="min-w-0 flex-1 space-y-1">
+              <CardTitle className="text-base">Foto profil</CardTitle>
+              <CardDescription>
+                Tambahkan, ganti, atau hapus foto profil Anda. Foto hanya
+                digunakan untuk identitas akun siswa.
+              </CardDescription>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <ProfilePhotoForm
+              fullName={user.fullName}
+              avatarUrl={profile?.avatarUrl ?? null}
+            />
+          </CardContent>
+        </Card>
+      ) : null}
 
       <div className="grid gap-6 lg:grid-cols-[1.15fr_0.85fr]">
         <Card>

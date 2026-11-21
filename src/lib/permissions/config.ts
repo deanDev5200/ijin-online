@@ -15,6 +15,8 @@ export const PERMISSION_FIELDS = [
   "startDate",
   "endDate",
   "time",
+  "departureTime",
+  "returnTime",
   "visitorName",
   "phoneUse",
   "additionalNotes",
@@ -56,6 +58,8 @@ export const FIELD_LABELS: Record<PermissionField, string> = {
   startDate: "Hari / tanggal",
   endDate: "Tanggal selesai",
   time: "Waktu",
+  departureTime: "Jam pulang",
+  returnTime: "Jam kedatangan",
   visitorName: "Yang datang",
   phoneUse: "Keperluan penggunaan HP",
   additionalNotes: "Catatan tambahan",
@@ -179,7 +183,12 @@ export function requiresMentor(config: PermissionTypeConfig): boolean {
  * picker is hidden and ignored by the server action for these types.
  */
 export function requiresSingleStudent(config: PermissionTypeConfig): boolean {
-  return hasField(config, "visitorName") || hasField(config, "depositItems");
+  return (
+    hasField(config, "visitorName") ||
+    hasField(config, "depositItems") ||
+    hasField(config, "departureTime") ||
+    hasField(config, "returnTime")
+  );
 }
 
 export function fieldLabel(
@@ -318,11 +327,19 @@ export const PDF_PERMISSION_TYPES: PdfPermissionType[] = [
     sortOrder: 40,
     config: {
       approvalRoles: ["PEMBINA", "STAFF_ASRAMA", "WAKASEK_KESISWAAN"],
-      requiredFields: ["purpose", "startDate", "endDate"],
+      requiredFields: [
+        "purpose",
+        "startDate",
+        "endDate",
+        "departureTime",
+        "returnTime",
+      ],
       fieldLabels: {
         startDate: "Hari / tanggal kepulangan",
         endDate: "Hari / tanggal kedatangan",
         purpose: "Alasan / keperluan",
+        departureTime: "Jam pulang",
+        returnTime: "Jam kedatangan",
       },
       approvalLabels: {
         PEMBINA: "Yang memberi izin",
@@ -330,7 +347,7 @@ export const PDF_PERMISSION_TYPES: PdfPermissionType[] = [
         WAKASEK_KESISWAAN: "Wakasek Kesiswaan",
       },
       formGuide:
-        "Isi Nama, Kelas, Grha, Hari/Tanggal Kepulangan, Hari/Tanggal Kedatangan, dan Alasan/Keperluan. Formulir diketahui Yang memberi izin dan Matta Pitta/Kepala Urusan Asrama, lalu disetujui Wakasek Kesiswaan.",
+        "Isi Nama, Kelas, Grha, Hari/Tanggal Kepulangan, Jam Pulang, Hari/Tanggal Kedatangan, Jam Kedatangan, dan Alasan/Keperluan. Pengajuan dapat diajukan paling lambat 1 hari sebelum akan melakukan dispensasi. Formulir diketahui Yang memberi izin dan Matta Pitta/Kepala Urusan Asrama, lalu disetujui Wakasek Kesiswaan.",
     },
   },
   {

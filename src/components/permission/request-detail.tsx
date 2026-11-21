@@ -144,8 +144,11 @@ export function RequestDetail({
     return hasField(config, field) || hasValue(text);
   });
 
+  const usesSplitTimes =
+    hasField(config, "departureTime") || hasField(config, "returnTime");
   const showTime =
-    hasField(config, "time") || Boolean(request.startTime || request.endTime);
+    !usesSplitTimes &&
+    (hasField(config, "time") || Boolean(request.startTime || request.endTime));
   const showStartDate = hasField(config, "startDate") || Boolean(request.startDate);
   const hasDateRange =
     Boolean(request.endDate) &&
@@ -211,6 +214,20 @@ export function RequestDetail({
                 icon={Clock3}
                 label={fieldLabel(config, "time")}
                 value={formatTimeRange(request.startTime, request.endTime)}
+              />
+            ) : null}
+            {usesSplitTimes && request.startTime ? (
+              <InfoItem
+                icon={Clock3}
+                label={fieldLabel(config, "departureTime")}
+                value={request.startTime}
+              />
+            ) : null}
+            {usesSplitTimes && request.endTime ? (
+              <InfoItem
+                icon={Clock3}
+                label={fieldLabel(config, "returnTime")}
+                value={request.endTime}
               />
             ) : null}
             {needsMentor && request.mentor ? (

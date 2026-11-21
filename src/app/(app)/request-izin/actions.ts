@@ -105,6 +105,12 @@ export async function createPermissionRequestAction(
     endDate: endDateValue,
     startTime: hasField(config, "time") ? getFormValue(formData, "startTime") : "",
     endTime: hasField(config, "time") ? getFormValue(formData, "endTime") : "",
+    departureTime: hasField(config, "departureTime")
+      ? getFormValue(formData, "departureTime")
+      : "",
+    returnTime: hasField(config, "returnTime")
+      ? getFormValue(formData, "returnTime")
+      : "",
     mentorId: requiresMentor(config) ? getFormValue(formData, "mentorId") : "",
     studentIds,
     depositItems,
@@ -231,6 +237,13 @@ export async function createPermissionRequestAction(
   const startDate = toDateOnly(data.startDate);
   const endDate = needsRange ? toDateOnly(data.endDate) : startDate;
   const dateLabel = formatDateRange(startDate, endDate);
+  // Izin Pulang stores its departure/arrival clocks in the shared time columns.
+  const storedStartTime = hasField(config, "departureTime")
+    ? data.departureTime
+    : data.startTime;
+  const storedEndTime = hasField(config, "returnTime")
+    ? data.returnTime
+    : data.endTime;
   const firstRole = config.approvalRoles[0];
   const initialStatus = firstRole
     ? pendingStatusForRole(firstRole) ?? "PENDING_MENTOR"
@@ -246,8 +259,8 @@ export async function createPermissionRequestAction(
         place: data.place,
         startDate,
         endDate,
-        startTime: data.startTime,
-        endTime: data.endTime,
+        startTime: storedStartTime,
+        endTime: storedEndTime,
         visitorName: data.visitorName || null,
         phoneUse: data.phoneUse || null,
         additionalNotes: data.additionalNotes || null,

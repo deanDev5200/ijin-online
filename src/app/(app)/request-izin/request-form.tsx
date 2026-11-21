@@ -179,13 +179,16 @@ export function PermissionRequestForm({
   const needsStartDate = hasField(config, "startDate");
   const needsEndDate = hasField(config, "endDate");
   const needsTime = hasField(config, "time");
+  const needsDepartureTime = hasField(config, "departureTime");
+  const needsReturnTime = hasField(config, "returnTime");
   const needsVisitorName = hasField(config, "visitorName");
   const needsPhoneUse = hasField(config, "phoneUse");
   const needsAdditionalNotes = hasField(config, "additionalNotes");
   const needsDepositItems = hasField(config, "depositItems");
   const singleStudent = requiresSingleStudent(config);
   const needsMentor = requiresMentor(config);
-  const showStartDate = needsStartDate || needsEndDate;
+  const showStartDate =
+    needsStartDate || needsEndDate || needsDepartureTime || needsReturnTime;
   const hasApprovalFields =
     needsPurpose ||
     needsPlace ||
@@ -515,17 +518,16 @@ export function PermissionRequestForm({
               Jadwal izin
             </CardTitle>
             <CardDescription>
-              {needsEndDate
-                ? "Tentukan tanggal mulai dan tanggal selesai sesuai formulir."
-                : "Tentukan tanggal dan waktu berlakunya izin."}
+              {needsDepartureTime || needsReturnTime
+                ? "Tentukan tanggal dan jam kepulangan serta kedatangan sesuai formulir."
+                : needsEndDate
+                  ? "Tentukan tanggal mulai dan tanggal selesai sesuai formulir."
+                  : "Tentukan tanggal dan waktu berlakunya izin."}
             </CardDescription>
             <div className="rounded-lg border bg-muted/40 px-3 py-2 text-xs text-muted-foreground">
               <p>
-                Pengajuan paling cepat{" "}
-                {settings.minLeadDays === 0
-                  ? "pada hari yang sama"
-                  : `${settings.minLeadDays} hari sebelum tanggal mulai`}{" "}
-                dan durasi maksimal {settings.maxRangeDays} hari kalender.
+                pengajuan dapat diajukan paling lambat 1 hari sebelum akan
+                melakukan dispensasi
               </p>
             </div>
           </CardHeader>
@@ -615,6 +617,50 @@ export function PermissionRequestForm({
                   />
                   <FieldError message={errors?.endTime?.[0]} />
                 </div>
+              </div>
+            ) : null}
+
+            {needsDepartureTime || needsReturnTime ? (
+              <div className="grid gap-4 sm:grid-cols-2">
+                {needsDepartureTime ? (
+                  <div className="space-y-2">
+                    <Label htmlFor="departureTime">
+                      {fieldLabel(config, "departureTime")}
+                    </Label>
+                    <Input
+                      id="departureTime"
+                      name="departureTime"
+                      type="time"
+                      defaultValue={
+                        state.values?.departureTime ?? settings.defaultStartTime
+                      }
+                      required
+                      aria-invalid={Boolean(errors?.departureTime?.[0])}
+                      className="h-10"
+                    />
+                    <FieldError message={errors?.departureTime?.[0]} />
+                  </div>
+                ) : null}
+
+                {needsReturnTime ? (
+                  <div className="space-y-2">
+                    <Label htmlFor="returnTime">
+                      {fieldLabel(config, "returnTime")}
+                    </Label>
+                    <Input
+                      id="returnTime"
+                      name="returnTime"
+                      type="time"
+                      defaultValue={
+                        state.values?.returnTime ?? settings.defaultEndTime
+                      }
+                      required
+                      aria-invalid={Boolean(errors?.returnTime?.[0])}
+                      className="h-10"
+                    />
+                    <FieldError message={errors?.returnTime?.[0]} />
+                  </div>
+                ) : null}
               </div>
             ) : null}
           </CardContent>

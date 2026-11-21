@@ -105,8 +105,8 @@ function PermissionTypeConfigFields({
           Tentukan peran penyetuju secara berurutan. Biarkan kosong untuk
           menghapus tahap.
         </p>
-        <div className="grid gap-3 sm:grid-cols-3">
-          {[0, 1, 2].map((index) => (
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+          {[0, 1, 2, 3].map((index) => (
             <div key={index} className="space-y-2">
               <Label htmlFor={`${idPrefix}-approval-role-${index}`}>
                 Tahap {index + 1}

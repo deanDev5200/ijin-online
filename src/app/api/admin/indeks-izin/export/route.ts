@@ -13,6 +13,10 @@ import {
   formatTimeRange,
   getTodayInJakarta,
 } from "@/lib/permissions/dates";
+import {
+  getPermissionTypeConfig,
+  hasField,
+} from "@/lib/permissions/config";
 import { parseDepositItems } from "@/lib/permissions/deposit-items";
 import {
   APPROVAL_STATUS_LABELS,
@@ -60,6 +64,11 @@ export async function GET(request: Request) {
         type: {
           select: {
             name: true,
+            approvalRoles: true,
+            requiredFields: true,
+            fieldLabels: true,
+            approvalLabels: true,
+            formGuide: true,
           },
         },
         requester: {
@@ -145,6 +154,8 @@ export async function GET(request: Request) {
     { header: "Daftar Titipan", key: "depositItems", width: 48 },
     { header: "Tanggal Izin", key: "dates", width: 30 },
     { header: "Jam", key: "times", width: 16 },
+    { header: "Jam pulang", key: "departureTime", width: 16 },
+    { header: "Jam kedatangan", key: "returnTime", width: 18 },
     { header: "Pembina/Pendamping", key: "mentor", width: 26 },
     { header: "NIP Pembina", key: "mentorNip", width: 22 },
     { header: "Jejak Persetujuan", key: "approvals", width: 60 },
@@ -172,6 +183,7 @@ export async function GET(request: Request) {
       return a.student.fullName.localeCompare(b.student.fullName, "id");
     });
 
+    const config = getPermissionTypeConfig(requestItem.type);
     const approvalTrail = requestItem.approvals
       .map((approval) => {
         const roleLabel =
@@ -230,6 +242,10 @@ export async function GET(request: Request) {
         .join("\n"),
       dates: formatDateRange(requestItem.startDate, requestItem.endDate),
       times: formatTimeRange(requestItem.startTime, requestItem.endTime),
+      departureTime: hasField(config, "departureTime")
+        ? requestItem.startTime
+        : "",
+      returnTime: hasField(config, "returnTime") ? requestItem.endTime : "",
       mentor: requestItem.mentor?.fullName ?? "",
       mentorNip: requestItem.mentor?.staffProfile?.nip ?? "",
       approvals: approvalTrail,
@@ -239,7 +255,7 @@ export async function GET(request: Request) {
 
   sheet.autoFilter = {
     from: "A1",
-    to: `U${Math.max(1, requests.length + 1)}`,
+    to: `W${Math.max(1, requests.length + 1)}`,
   };
 
   sheet.eachRow((row, rowNumber) => {
