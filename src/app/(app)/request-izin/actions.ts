@@ -19,7 +19,6 @@ import {
   getPermissionTypeConfig,
   hasField,
   pendingStatusForRole,
-  requiresMentor,
   requiresSingleStudent,
 } from "@/lib/permissions/config";
 import {
@@ -111,7 +110,6 @@ export async function createPermissionRequestAction(
     returnTime: hasField(config, "returnTime")
       ? getFormValue(formData, "returnTime")
       : "",
-    mentorId: requiresMentor(config) ? getFormValue(formData, "mentorId") : "",
     studentIds,
     depositItems,
     visitorName: hasField(config, "visitorName")
@@ -181,36 +179,6 @@ export async function createPermissionRequestAction(
     };
   }
 
-  const mentor = requiresMentor(config)
-    ? await prisma.user.findFirst({
-        where: {
-          id: data.mentorId,
-          role: "PEMBINA",
-          isActive: true,
-          staffProfile: {
-            is: {
-              canBeMentor: true,
-            },
-          },
-        },
-        select: {
-          id: true,
-          fullName: true,
-        },
-      })
-    : null;
-
-  if (requiresMentor(config) && !mentor) {
-    return {
-      status: "error",
-      message: "Pembina/Pendamping yang dipilih tidak tersedia.",
-      fieldErrors: {
-        mentorId: ["Pilih Pembina/Pendamping yang aktif."],
-      },
-      values,
-    };
-  }
-
   const students = await prisma.user.findMany({
     where: {
       id: { in: data.studentIds },
@@ -254,7 +222,7 @@ export async function createPermissionRequestAction(
       data: {
         typeId: type.id,
         requesterId: user.id,
-        mentorId: mentor?.id ?? null,
+        mentorId: null,
         purpose: data.purpose,
         place: data.place,
         startDate,
@@ -279,7 +247,7 @@ export async function createPermissionRequestAction(
             step: index + 1,
             role,
             label: approvalLabel(config, role),
-            approverId: role === "PEMBINA" ? (mentor?.id ?? null) : null,
+            approverId: null,
             status: "PENDING",
           })),
         },
@@ -290,14 +258,9 @@ export async function createPermissionRequestAction(
     });
 
     const firstStageLabel = firstRole ? approvalLabel(config, firstRole) : "penyetuju";
-    const firstApproverIds =
-      firstRole === "PEMBINA"
-        ? mentor
-          ? [mentor.id]
-          : []
-        : firstRole
-          ? await getActiveUserIdsByRole(tx, firstRole)
-          : [];
+    const firstApproverIds = firstRole
+      ? await getActiveUserIdsByRole(tx, firstRole)
+      : [];
 
     await createRequestNotifications(tx, [
       ...firstApproverIds

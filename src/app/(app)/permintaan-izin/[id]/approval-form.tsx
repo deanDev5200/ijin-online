@@ -58,8 +58,8 @@ export function ApprovalForm({ requestId }: { requestId: string }) {
       <CardHeader>
         <CardTitle className="text-base">Keputusan Anda</CardTitle>
         <CardDescription>
-          Setujui untuk meneruskan pengajuan ke tahap berikutnya, atau tolak
-          dengan menyertakan alasan yang jelas.
+          Setujui untuk menyelesaikan pengajuan, atau tolak dengan menyertakan
+          alasan yang jelas.
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -77,7 +77,7 @@ export function ApprovalForm({ requestId }: { requestId: string }) {
               id="note"
               name="note"
               maxLength={500}
-              placeholder="Tambahkan catatan untuk pengaju atau penyetuju berikutnya..."
+              placeholder="Tambahkan catatan untuk pengaju..."
               aria-invalid={Boolean(noteError)}
               className={textareaClassName}
             />

@@ -31,7 +31,7 @@ export default async function AdminRequestDetailPage({
     <div className="space-y-6">
       <PageHeader
         title="Detail Izin"
-        description="Lihat informasi lengkap pengajuan dan jejak persetujuan dari seluruh tahap."
+        description="Lihat informasi lengkap pengajuan dan keputusan penyetujunya."
       >
         <Button variant="outline" asChild>
           <Link href="/admin/indeks-izin">

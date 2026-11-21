@@ -11,7 +11,6 @@ import {
   Loader2,
   LockKeyhole,
   Save,
-  ShieldCheck,
   UserRound,
   UsersRound,
 } from "lucide-react";
@@ -30,11 +29,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import {
-  APPROVAL_ROLE_DESCRIPTIONS,
-  approvalLabel,
   fieldLabel,
   hasField,
-  requiresMentor,
   requiresSingleStudent,
   type PermissionTypeConfig,
 } from "@/lib/permissions/config";
@@ -57,12 +53,6 @@ type Requester = {
   nis: string | null;
   kelas: string | null;
   grha: string | null;
-};
-
-type MentorOption = {
-  id: string;
-  fullName: string;
-  nip: string | null;
 };
 
 type PermissionTypeOption = {
@@ -143,14 +133,12 @@ const EMPTY_CONFIG: PermissionTypeConfig = {
 export function PermissionRequestForm({
   requester,
   students,
-  mentors,
   types,
   settings,
   today,
 }: {
   requester: Requester;
   students: SelectableStudent[];
-  mentors: MentorOption[];
   types: PermissionTypeOption[];
   settings: RequestRules;
   today: string;
@@ -186,20 +174,15 @@ export function PermissionRequestForm({
   const needsAdditionalNotes = hasField(config, "additionalNotes");
   const needsDepositItems = hasField(config, "depositItems");
   const singleStudent = requiresSingleStudent(config);
-  const needsMentor = requiresMentor(config);
   const showStartDate =
     needsStartDate || needsEndDate || needsDepartureTime || needsReturnTime;
-  const hasApprovalFields =
+  const hasFormFields =
     needsPurpose ||
     needsPlace ||
     needsVisitorName ||
     needsPhoneUse ||
     needsAdditionalNotes ||
     needsDepositItems;
-
-  const mentorDefault =
-    state.values?.mentorId ??
-    (mentors.length === 1 ? mentors[0]?.id ?? "" : "");
 
   return (
     <form action={formAction} className="space-y-6" noValidate>
@@ -210,8 +193,8 @@ export function PermissionRequestForm({
             Jenis izin
           </CardTitle>
           <CardDescription>
-            Pilih jenis izin yang sesuai. Kolom formulir dan persetujuan akan
-            menyesuaikan jenis yang dipilih.
+            Pilih jenis izin yang sesuai. Kolom formulir akan menyesuaikan
+            jenis yang dipilih. Pengajuan cukup menunggu satu penyetuju.
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -260,45 +243,10 @@ export function PermissionRequestForm({
             </div>
           )}
 
-          {selectedType ? (
-            <div className="space-y-3 rounded-xl border bg-background/80 p-4">
-              <div className="flex items-center gap-2">
-                <ShieldCheck className="size-4 text-primary" />
-                <p className="text-sm font-medium">
-                  Persetujuan yang diperlukan
-                </p>
-              </div>
-              <div className="flex flex-wrap gap-2">
-                {config.approvalRoles.length > 0 ? (
-                  config.approvalRoles.map((role, index) => (
-                    <Badge
-                      key={role}
-                      variant="secondary"
-                      className="gap-1.5 py-1 text-[11px]"
-                    >
-                      <span className="flex size-4 items-center justify-center rounded-full bg-primary/15 text-[10px] font-semibold text-primary">
-                        {index + 1}
-                      </span>
-                      {approvalLabel(config, role)}
-                    </Badge>
-                  ))
-                ) : (
-                  <p className="text-xs text-muted-foreground">
-                    Belum ada tahap persetujuan yang dikonfigurasi.
-                  </p>
-                )}
-              </div>
-              {config.approvalRoles.length > 0 ? (
-                <p className="text-xs leading-relaxed text-muted-foreground">
-                  {APPROVAL_ROLE_DESCRIPTIONS[config.approvalRoles[0]]}
-                </p>
-              ) : null}
-              {config.formGuide ? (
-                <div className="flex items-start gap-2 rounded-lg border bg-muted/40 px-3 py-2 text-xs leading-relaxed text-muted-foreground">
-                  <Info className="mt-0.5 size-3.5 shrink-0 text-primary" />
-                  <span>{config.formGuide}</span>
-                </div>
-              ) : null}
+          {config.formGuide ? (
+            <div className="flex items-start gap-2 rounded-xl border bg-background/80 px-3 py-2 text-xs leading-relaxed text-muted-foreground">
+              <Info className="mt-0.5 size-3.5 shrink-0 text-primary" />
+              <span>{config.formGuide}</span>
             </div>
           ) : null}
         </CardContent>
@@ -372,7 +320,7 @@ export function PermissionRequestForm({
         </CardContent>
       </Card>
 
-      {hasApprovalFields ? (
+      {hasFormFields ? (
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-base">
@@ -672,49 +620,6 @@ export function PermissionRequestForm({
         </>
       )}
 
-      {needsMentor ? (
-        <Card className="bg-linear-to-br from-primary/5 to-card">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-base">
-              <UserRound className="size-4 text-primary" />
-              Pembina / Pendamping
-            </CardTitle>
-            <CardDescription>
-              {`Pembina/Pendamping bertindak sebagai penyetuju tahap ${
-                config.approvalRoles.indexOf("PEMBINA") + 1
-              } untuk jenis izin ini.`}
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-2">
-            <Label htmlFor="mentorId">Pilih Pembina/Pendamping</Label>
-            <select
-              id="mentorId"
-              name="mentorId"
-              defaultValue={mentorDefault}
-              required
-              aria-invalid={Boolean(errors?.mentorId?.[0])}
-              className={selectClassName}
-            >
-              <option value="" disabled>
-                Pilih Pembina/Pendamping
-              </option>
-              {mentors.map((mentor) => (
-                <option key={mentor.id} value={mentor.id}>
-                  {mentor.fullName}
-                  {mentor.nip ? ` · NIP ${mentor.nip}` : ""}
-                </option>
-              ))}
-            </select>
-            <FieldError message={errors?.mentorId?.[0]} />
-            {mentors.length === 0 ? (
-              <p className="text-xs text-destructive">
-                Belum ada akun Pembina yang aktif. Hubungi administrator asrama.
-              </p>
-            ) : null}
-          </CardContent>
-        </Card>
-      ) : null}
-
       {state.status === "error" && state.message ? (
         <Alert variant="destructive">
           <AlertTriangle />
@@ -727,9 +632,7 @@ export function PermissionRequestForm({
         <Button type="button" variant="outline" size="lg" className="h-10" asChild>
           <Link href="/dashboard">Batal</Link>
         </Button>
-        <SubmitButton
-          disabled={types.length === 0 || (needsMentor && mentors.length === 0)}
-        />
+        <SubmitButton disabled={types.length === 0} />
       </div>
     </form>
   );

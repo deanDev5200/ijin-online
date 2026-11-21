@@ -84,7 +84,7 @@ model PermissionType {
   description    String?
   isActive       Boolean  @default(true)
   sortOrder      Int      @default(0)
-  approvalRoles  String   @default("[\"PEMBINA\",\"STAFF_ASRAMA\",\"KEPALA_ASRAMA\"]")
+  approvalRoles  String   @default("[\"STAFF_ASRAMA\"]")
   requiredFields String   @default("[\"purpose\",\"startDate\",\"time\"]")
   fieldLabels    String?
   approvalLabels String?

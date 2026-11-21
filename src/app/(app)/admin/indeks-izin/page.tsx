@@ -293,7 +293,6 @@ export default async function PermissionIndexPage({
               key={request.id}
               request={request}
               href={`/admin/indeks-izin/${request.id}`}
-              showRequester
               deadlineDays={settings.approvalDeadlineDays}
               now={now}
             />

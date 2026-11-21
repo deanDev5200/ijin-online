@@ -14,8 +14,8 @@ import {
 } from "@/components/ui/card";
 import { requireStaff } from "@/lib/auth/guards";
 import { prisma } from "@/lib/db";
+import { pendingStatusForRole } from "@/lib/permissions/config";
 import { permissionRequestListSelect } from "@/lib/permissions/queries";
-import { getStageByRole } from "@/lib/permissions/status";
 
 export const metadata: Metadata = {
   title: "Permintaan Izin",
@@ -23,32 +23,29 @@ export const metadata: Metadata = {
 
 function getDescription(role: string): string {
   if (role === "PEMBINA") {
-    return "Pengajuan yang memilih Anda sebagai Pembina/Pendamping dan menunggu keputusan Anda sesuai alur jenis izin.";
+    return "Pengajuan yang menunggu keputusan Anda sebagai penyetuju jenis izin.";
   }
 
   if (role === "STAFF_ASRAMA") {
-    return "Pengajuan yang menunggu verifikasi Anda pada tahap Staf Asrama atau Matta Pitta sesuai alur jenis izin.";
+    return "Pengajuan yang menunggu keputusan Anda sebagai Staf Asrama atau Matta Pitta.";
   }
 
   if (role === "KEPALA_ASRAMA") {
-    return "Pengajuan yang menunggu persetujuan Anda pada tahap Kepala Asrama sesuai alur jenis izin.";
+    return "Pengajuan yang menunggu keputusan Anda sebagai Kepala Asrama.";
   }
 
-  return "Pengajuan yang menunggu persetujuan terakhir Anda sebagai Wakasek Kesiswaan sesuai alur jenis izin.";
+  return "Pengajuan yang menunggu keputusan Anda sebagai Wakasek Kesiswaan.";
 }
 
 export default async function PermissionRequestsPage() {
   const user = await requireStaff();
-  const stage = getStageByRole(user.role);
+  const status = pendingStatusForRole(user.role);
 
-  if (!stage) {
+  if (!status) {
     redirect("/dashboard");
   }
 
-  const where = {
-    status: stage.pendingStatus,
-    ...(user.role === "PEMBINA" ? { mentorId: user.id } : {}),
-  };
+  const where = { status };
 
   const [requests, total] = await Promise.all([
     prisma.permissionRequest.findMany({
@@ -93,8 +90,8 @@ export default async function PermissionRequestsPage() {
                 Tidak ada permintaan yang menunggu
               </p>
               <p className="mt-1 max-w-md text-sm text-muted-foreground">
-                Pengajuan yang masuk ke tahap persetujuan Anda akan muncul di
-                sini. Anda akan menerima notifikasi saat ada permintaan baru.
+                Pengajuan yang menunggu keputusan Anda akan muncul di sini.
+                Anda akan menerima notifikasi saat ada permintaan baru.
               </p>
             </div>
           </CardContent>
@@ -109,8 +106,8 @@ export default async function PermissionRequestsPage() {
               <div className="min-w-0 flex-1 space-y-1">
                 <CardTitle className="text-sm">Antrean persetujuan</CardTitle>
                 <CardDescription>
-                  Diurutkan dari pengajuan paling lama. Keputusan pertama pada
-                  tahap yang sama akan menghentikan antrean.
+                  Diurutkan dari pengajuan paling lama. Keputusan pertama akan
+                  menyelesaikan pengajuan.
                 </CardDescription>
               </div>
               <Badge variant="outline" className="hidden shrink-0 sm:inline-flex">
@@ -124,7 +121,6 @@ export default async function PermissionRequestsPage() {
               key={request.id}
               request={request}
               href={`/permintaan-izin/${request.id}`}
-              showRequester
             />
           ))}
         </div>

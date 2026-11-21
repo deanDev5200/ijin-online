@@ -107,7 +107,6 @@ export default async function RequestHistoryPage() {
               key={request.id}
               request={request}
               href={`/riwayat-request/${request.id}`}
-              showRequester
             />
           ))}
         </div>

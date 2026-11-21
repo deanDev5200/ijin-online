@@ -127,7 +127,7 @@ export function ApprovalTimeline({
             <div className="min-w-0 flex-1 pt-0.5">
               <div className="flex flex-wrap items-center gap-2">
                 <p className="text-sm font-medium">
-                  {approval.label?.trim() || stage?.title || `Tahap ${approval.step}`}
+                  {approval.label?.trim() || stage?.title || "Penyetuju izin"}
                 </p>
                 {activeForViewer ? (
                   <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[11px] font-medium text-primary">
@@ -138,7 +138,7 @@ export function ApprovalTimeline({
 
               <p className="mt-0.5 text-xs leading-relaxed text-muted-foreground">
                 {stage?.description ??
-                  "Meninjau pengajuan pada tahap ini."}
+                  "Meninjau pengajuan ini."}
               </p>
 
               {approval.approver?.fullName ? (
@@ -163,7 +163,7 @@ export function ApprovalTimeline({
       {isComplete ? (
         <div className="mt-1 flex items-center gap-2 rounded-lg border border-primary/20 bg-primary/5 px-3 py-2 text-xs font-medium text-primary">
           <Check className="size-4" />
-          Semua tahap persetujuan telah selesai.
+          Persetujuan telah selesai.
         </div>
       ) : null}
     </div>

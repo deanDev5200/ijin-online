@@ -119,11 +119,6 @@ export const permissionRequestListSelect = {
       fullName: true,
     },
   },
-  mentor: {
-    select: {
-      fullName: true,
-    },
-  },
   students: {
     select: {
       studentId: true,

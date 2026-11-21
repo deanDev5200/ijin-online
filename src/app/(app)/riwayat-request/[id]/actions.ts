@@ -45,7 +45,6 @@ export async function cancelPermissionRequestAction(
         select: {
           id: true,
           requesterId: true,
-          mentorId: true,
           purpose: true,
           status: true,
           students: {
@@ -111,11 +110,7 @@ export async function cancelPermissionRequestAction(
 
       const stageUserIds =
         currentApproval && stage
-          ? stage.role === "PEMBINA"
-            ? currentApproval.approverId
-              ? [currentApproval.approverId]
-              : []
-            : await getActiveUserIdsByRole(tx, stage.role)
+          ? await getActiveUserIdsByRole(tx, stage.role)
           : [];
 
       const message = `${user.fullName} membatalkan pengajuan "${request.purpose}".`;

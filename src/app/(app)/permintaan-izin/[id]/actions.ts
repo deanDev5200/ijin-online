@@ -8,14 +8,9 @@ import { requireStaff } from "@/lib/auth/guards";
 import { prisma } from "@/lib/db";
 import type { ActionState } from "@/lib/form-state";
 import { PermissionWorkflowError } from "@/lib/permissions/errors";
-import {
-  createRequestNotifications,
-  getActiveUserIdsByRole,
-} from "@/lib/permissions/notifications";
+import { createRequestNotifications } from "@/lib/permissions/notifications";
 import {
   canUserActOnRequest,
-  getNextApproval,
-  getNextStatusForApprovals,
   getStageFromApproval,
   getCurrentApproval,
 } from "@/lib/permissions/status";
@@ -56,7 +51,6 @@ export async function decidePermissionAction(
         select: {
           id: true,
           status: true,
-          mentorId: true,
           purpose: true,
           requester: {
             select: {
@@ -97,25 +91,17 @@ export async function decidePermissionAction(
       const stage = getStageFromApproval(currentApproval);
 
       if (!stage) {
-        throw new PermissionWorkflowError("Tahap persetujuan tidak valid.");
+        throw new PermissionWorkflowError("Penyetuju izin tidak valid.");
       }
 
       if (!canUserActOnRequest(user, request)) {
         throw new PermissionWorkflowError(
-          "Anda tidak berwenang memberikan keputusan pada tahap ini.",
+          "Anda tidak berwenang memberikan keputusan pada pengajuan ini.",
         );
       }
 
       const isReject = decision === "REJECT";
-      const nextApproval = isReject
-        ? null
-        : getNextApproval(request, currentApproval.step);
-      const nextStage = nextApproval
-        ? getStageFromApproval(nextApproval)
-        : null;
-      const nextStatus = isReject
-        ? "REJECTED"
-        : getNextStatusForApprovals(request, currentApproval.step);
+      const nextStatus = isReject ? "REJECTED" : "APPROVED";
 
       const claimed = await tx.permissionRequest.updateMany({
         where: {
@@ -154,7 +140,7 @@ export async function decidePermissionAction(
 
       if (stepClaim.count === 0) {
         throw new PermissionWorkflowError(
-          "Tahap persetujuan ini sudah diproses. Muat ulang halaman.",
+          "Persetujuan ini sudah diproses. Muat ulang halaman.",
         );
       }
 
@@ -170,61 +156,31 @@ export async function decidePermissionAction(
         });
       }
 
-      const currentLabel =
-        currentApproval.label?.trim() || stage.title;
-      const nextLabel =
-        nextApproval?.label?.trim() || nextStage?.title || null;
+      const currentLabel = currentApproval.label?.trim() || stage.title;
 
       const notification = isReject
         ? {
             title: "Pengajuan izin ditolak",
             message: `Pengajuan "${request.purpose}" ditolak oleh ${currentLabel}. Alasan: ${note}`,
           }
-        : nextLabel
-          ? {
-              title: "Izin disetujui tahap ini",
-              message: `Pengajuan "${request.purpose}" disetujui oleh ${currentLabel} dan diteruskan ke ${nextLabel}.`,
-            }
-          : {
-              title: "Izin disetujui",
-              message: `Pengajuan "${request.purpose}" telah disetujui oleh ${currentLabel}. Izin dinyatakan berlaku.`,
-            };
+        : {
+            title: "Izin disetujui",
+            message: `Pengajuan "${request.purpose}" telah disetujui oleh ${currentLabel}. Izin dinyatakan berlaku.`,
+          };
 
-      const recipientIds = [
-        ...request.students.map((student) => student.studentId),
-        request.mentorId,
-      ].filter(
-        (userId): userId is string => Boolean(userId) && userId !== user.id,
+      const recipientIds = request.students
+        .map((student) => student.studentId)
+        .filter((userId) => userId !== user.id);
+
+      await createRequestNotifications(
+        tx,
+        recipientIds.map((userId) => ({
+          userId,
+          title: notification.title,
+          message: notification.message,
+          requestId: request.id,
+        })),
       );
-
-      const notifications = recipientIds.map((userId) => ({
-        userId,
-        title: notification.title,
-        message: notification.message,
-        requestId: request.id,
-      }));
-
-      if (!isReject && nextApproval && nextStage) {
-        const nextApproverIds =
-          nextStage.role === "PEMBINA"
-            ? nextApproval.approverId
-              ? [nextApproval.approverId]
-              : []
-            : await getActiveUserIdsByRole(tx, nextStage.role);
-
-        notifications.push(
-          ...nextApproverIds
-            .filter((userId) => userId !== user.id)
-            .map((userId) => ({
-              userId,
-              title: "Permintaan izin menunggu persetujuan",
-              message: `Pengajuan "${request.purpose}" dari ${request.requester.fullName} menunggu persetujuan ${nextLabel}.`,
-              requestId: request.id,
-            })),
-        );
-      }
-
-      await createRequestNotifications(tx, notifications);
     });
   } catch (error) {
     if (error instanceof PermissionWorkflowError) {

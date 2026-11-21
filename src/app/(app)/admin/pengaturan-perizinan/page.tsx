@@ -6,7 +6,6 @@ import {
   PlusCircle,
   Settings2,
   ShieldCheck,
-  UserRoundCheck,
 } from "lucide-react";
 
 import { PageHeader } from "@/components/page-header";
@@ -24,7 +23,6 @@ import { approvalLabel, getPermissionTypeConfig } from "@/lib/permissions/config
 import { getPermissionSettings } from "@/lib/permissions/settings";
 
 import {
-  MentorSelectionForm,
   PermissionSettingsForm,
   PermissionTypeCreateForm,
   PermissionTypeEditForm,
@@ -37,7 +35,7 @@ export const metadata: Metadata = {
 export default async function PermissionSettingsPage() {
   await requireRole("ADMIN");
 
-  const [settings, types, mentorUsers] = await Promise.all([
+  const [settings, types] = await Promise.all([
     getPermissionSettings(),
     prisma.permissionType.findMany({
       orderBy: [{ sortOrder: "asc" }, { name: "asc" }],
@@ -59,39 +57,13 @@ export default async function PermissionSettingsPage() {
         },
       },
     }),
-    prisma.user.findMany({
-      where: {
-        role: "PEMBINA",
-        isActive: true,
-      },
-      orderBy: { fullName: "asc" },
-      select: {
-        id: true,
-        fullName: true,
-        staffProfile: {
-          select: {
-            nip: true,
-            canBeMentor: true,
-          },
-        },
-      },
-    }),
   ]);
-
-  const mentors = mentorUsers
-    .filter((mentor) => mentor.staffProfile !== null)
-    .map((mentor) => ({
-      id: mentor.id,
-      fullName: mentor.fullName,
-      nip: mentor.staffProfile?.nip ?? "",
-      canBeMentor: mentor.staffProfile?.canBeMentor ?? false,
-    }));
 
   return (
     <div className="space-y-6">
       <PageHeader
         title="Pengaturan Perizinan"
-        description="Atur jenis izin, ketentuan pengajuan, batas waktu persetujuan, dan Pembina yang dapat dipilih siswa."
+        description="Atur jenis izin, ketentuan pengajuan, dan satu penyetuju untuk setiap jenis izin."
       />
 
       <div className="grid gap-6 lg:grid-cols-[1.15fr_0.85fr]">
@@ -124,11 +96,11 @@ export default async function PermissionSettingsPage() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-base">
               <ShieldCheck className="size-4 text-primary" />
-              Alur persetujuan per jenis izin
+              Penyetuju per jenis izin
             </CardTitle>
             <CardDescription>
-              Setiap jenis izin memiliki urutan dan label penyetuju sendiri.
-              Ubah melalui panel jenis izin di bawah.
+              Setiap jenis izin cukup satu penyetuju. Ubah melalui panel jenis
+              izin di bawah.
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -140,13 +112,13 @@ export default async function PermissionSettingsPage() {
                   <div key={type.id} className="rounded-xl border bg-background p-3">
                     <p className="text-sm font-medium">{type.name}</p>
                     <div className="mt-2 flex flex-wrap gap-1.5">
-                      {config.approvalRoles.map((role, index) => (
+                      {config.approvalRoles.map((role) => (
                         <Badge
                           key={role}
                           variant="secondary"
                           className="text-[10px]"
                         >
-                          {index + 1}. {approvalLabel(config, role)}
+                          {approvalLabel(config, role)}
                         </Badge>
                       ))}
                     </div>
@@ -247,22 +219,6 @@ export default async function PermissionSettingsPage() {
               <PermissionTypeCreateForm />
             </div>
           </details>
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-base">
-            <UserRoundCheck className="size-4 text-primary" />
-            Pembina/Pendamping yang dapat dipilih
-          </CardTitle>
-          <CardDescription>
-            Centang akun Pembina yang boleh dipilih siswa sebagai penyetuju
-            tahap pertama. Akun nonaktif tidak dapat dipilih.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <MentorSelectionForm mentors={mentors} />
         </CardContent>
       </Card>
     </div>

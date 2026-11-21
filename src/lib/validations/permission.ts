@@ -27,14 +27,7 @@ export const timeOfDaySchema = z
 
 export const approvalRolesSchema = z
   .array(z.enum(APPROVAL_ROLES))
-  .min(1, "Pilih minimal satu tahap persetujuan.")
-  .max(4, "Maksimal empat tahap persetujuan.")
-  .refine((roles) => new Set(roles).size === roles.length, {
-    message: "Peran persetujuan tidak boleh berulang.",
-  })
-  .refine((roles) => !roles.includes("WAKASEK_KESISWAAN") || roles.at(-1) === "WAKASEK_KESISWAAN", {
-    message: "Wakasek Kesiswaan harus menjadi tahap persetujuan terakhir.",
-  });
+  .length(1, "Pilih tepat satu penyetuju izin.");
 
 export const requiredFieldsSchema = z
   .array(z.enum(PERMISSION_FIELDS))
@@ -64,7 +57,6 @@ export function createPermissionSchema(config: PermissionTypeConfig) {
       endTime: z.string(),
       departureTime: z.string(),
       returnTime: z.string(),
-      mentorId: z.string(),
       depositItems: z.array(depositItemSchema).max(10, "Maksimal 10 barang."),
       studentIds: z
         .array(z.string().min(1))
@@ -84,14 +76,6 @@ export function createPermissionSchema(config: PermissionTypeConfig) {
         .max(1000, "Catatan maksimal 1000 karakter."),
     })
     .superRefine((data, ctx) => {
-      if (config.approvalRoles.includes("PEMBINA") && !data.mentorId) {
-        ctx.addIssue({
-          code: "custom",
-          message: "Pilih Pembina/Pendamping.",
-          path: ["mentorId"],
-        });
-      }
-
       if (hasField(config, "depositItems")) {
         const filledItems = compactDepositItems(data.depositItems);
 

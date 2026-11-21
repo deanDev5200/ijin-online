@@ -11,7 +11,6 @@ export type PermissionRequestFormValues = {
   endTime: string;
   departureTime: string;
   returnTime: string;
-  mentorId: string;
   studentIds: string[];
   visitorName: string;
   phoneUse: string;

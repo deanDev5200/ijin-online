@@ -8,7 +8,6 @@ import {
   Loader2,
   Plus,
   Save,
-  UsersRound,
 } from "lucide-react";
 
 import { FormFeedback } from "@/components/form-feedback";
@@ -30,7 +29,6 @@ import {
 
 import {
   createPermissionTypeAction,
-  updateMentorSelectionAction,
   updatePermissionSettingsAction,
   updatePermissionTypeAction,
 } from "./actions";
@@ -99,35 +97,30 @@ function PermissionTypeConfigFields({
       <div className="space-y-3">
         <div className="flex items-center gap-2">
           <ClipboardCheck className="size-4 text-primary" />
-          <p className="text-sm font-medium">Urutan persetujuan</p>
+          <p className="text-sm font-medium">Penyetuju izin</p>
         </div>
         <p className="text-xs leading-relaxed text-muted-foreground">
-          Tentukan peran penyetuju secara berurutan. Biarkan kosong untuk
-          menghapus tahap.
+          Pilih satu peran yang berwenang menyetujui jenis izin ini. Setiap
+          pengajuan cukup satu persetujuan.
         </p>
-        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-          {[0, 1, 2, 3].map((index) => (
-            <div key={index} className="space-y-2">
-              <Label htmlFor={`${idPrefix}-approval-role-${index}`}>
-                Tahap {index + 1}
-              </Label>
-              <select
-                id={`${idPrefix}-approval-role-${index}`}
-                name={`approvalRole${index + 1}`}
-                defaultValue={config.approvalRoles[index] ?? ""}
-                className={selectClassName}
-              >
-                <option value="">Tidak ada</option>
-                {APPROVAL_ROLES.map((role) => (
-                  <option key={role} value={role}>
-                    {APPROVAL_ROLE_LABELS[role]}
-                  </option>
-                ))}
-              </select>
-            </div>
-          ))}
+        <div className="grid gap-3 sm:grid-cols-2">
+          <div className="space-y-2">
+            <Label htmlFor={`${idPrefix}-approval-role`}>Peran penyetuju</Label>
+            <select
+              id={`${idPrefix}-approval-role`}
+              name="approvalRole"
+              defaultValue={config.approvalRoles[0] ?? DEFAULT_APPROVAL_ROLES[0]}
+              className={selectClassName}
+            >
+              {APPROVAL_ROLES.map((role) => (
+                <option key={role} value={role}>
+                  {APPROVAL_ROLE_LABELS[role]}
+                </option>
+              ))}
+            </select>
+            <FieldError message={errors?.approvalRoles?.[0]} />
+          </div>
         </div>
-        <FieldError message={errors?.approvalRoles?.[0]} />
       </div>
 
       <Separator />
@@ -190,7 +183,7 @@ function PermissionTypeConfigFields({
       <Separator />
 
       <div className="space-y-3">
-        <p className="text-sm font-medium">Label tahap persetujuan</p>
+        <p className="text-sm font-medium">Label penyetuju</p>
         <div className="grid gap-3 sm:grid-cols-3">
           {APPROVAL_ROLES.map((role) => (
             <div key={role} className="space-y-1.5">
@@ -230,7 +223,7 @@ function PermissionTypeConfigFields({
 
       <div className="flex flex-wrap gap-2">
         <Badge variant="secondary" className="text-[10px]">
-          {config.approvalRoles.length} tahap bawaan
+          1 penyetuju bawaan
         </Badge>
         <Badge variant="outline" className="text-[10px]">
           {config.requiredFields.length} field bawaan
@@ -556,76 +549,6 @@ export function PermissionTypeEditForm({
       <div className="flex justify-end">
         <SubmitButton
           label="Simpan perubahan"
-          pendingLabel="Menyimpan..."
-          icon={<Save />}
-        />
-      </div>
-    </form>
-  );
-}
-
-export function MentorSelectionForm({
-  mentors,
-}: {
-  mentors: Array<{
-    id: string;
-    fullName: string;
-    nip: string;
-    canBeMentor: boolean;
-  }>;
-}) {
-  const [state, formAction] = useActionState<ActionState, FormData>(
-    updateMentorSelectionAction,
-    INITIAL_ACTION_STATE,
-  );
-
-  if (mentors.length === 0) {
-    return (
-      <p className="rounded-lg border border-dashed px-3 py-6 text-center text-sm text-muted-foreground">
-        Belum ada akun Pembina yang aktif. Tambahkan akun Pembina terlebih
-        dahulu melalui Kelola Akun.
-      </p>
-    );
-  }
-
-  return (
-    <form action={formAction} className="space-y-4">
-      <div className="divide-y rounded-xl border">
-        {mentors.map((mentor) => (
-          <label
-            key={mentor.id}
-            className="flex cursor-pointer items-start gap-3 p-3 transition-colors hover:bg-muted/50"
-          >
-            <input
-              type="checkbox"
-              name="mentorIds"
-              value={mentor.id}
-              defaultChecked={mentor.canBeMentor}
-              className="mt-0.5 size-4 shrink-0 accent-primary"
-            />
-            <span className="min-w-0 flex-1">
-              <span className="block truncate text-sm font-medium">
-                {mentor.fullName}
-              </span>
-              <span className="block truncate text-xs text-muted-foreground">
-                NIP {mentor.nip}
-              </span>
-            </span>
-          </label>
-        ))}
-      </div>
-
-      <p className="flex items-center gap-1.5 text-xs text-muted-foreground">
-        <UsersRound className="size-3.5" />
-        Hanya akun yang dicentang yang muncul pada pilihan Pembina/Pendamping
-        saat siswa mengajukan izin.
-      </p>
-
-      <FormFeedback state={state} />
-
-      <div className="flex justify-end">
-        <SubmitButton
-          label="Simpan pilihan Pembina"
           pendingLabel="Menyimpan..."
           icon={<Save />}
         />

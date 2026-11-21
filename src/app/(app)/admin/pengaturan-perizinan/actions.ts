@@ -15,7 +15,6 @@ import {
   type PermissionTypeConfig,
 } from "@/lib/permissions/config";
 import {
-  mentorSelectionSchema,
   permissionSettingsSchema,
   permissionTypeSchema,
 } from "@/lib/validations/account";
@@ -35,9 +34,7 @@ type ConfigParseResult =
   | { ok: false; state: ActionState };
 
 function parseTypeConfig(formData: FormData): ConfigParseResult {
-  const roles = [1, 2, 3, 4]
-    .map((step) => getFormValue(formData, `approvalRole${step}`).trim())
-    .filter(Boolean);
+  const roles = [getFormValue(formData, "approvalRole").trim()].filter(Boolean);
   const fields = formData
     .getAll("requiredFields")
     .filter((value): value is string => typeof value === "string" && Boolean(value.trim()));
@@ -297,82 +294,5 @@ export async function updatePermissionTypeAction(
   return {
     status: "success",
     message: "Jenis izin berhasil diperbarui.",
-  };
-}
-
-export async function updateMentorSelectionAction(
-  _previousState: ActionState,
-  formData: FormData,
-): Promise<ActionState> {
-  await requireRole("ADMIN");
-
-  const mentorIds = Array.from(
-    new Set(
-      formData
-        .getAll("mentorIds")
-        .filter((value): value is string => typeof value === "string"),
-    ),
-  );
-
-  const parsed = mentorSelectionSchema.safeParse({ mentorIds });
-
-  if (!parsed.success) {
-    return {
-      status: "error",
-      message: parsed.error.issues[0]?.message ?? "Pilihan tidak valid.",
-    };
-  }
-
-  if (parsed.data.mentorIds.length > 0) {
-    const validMentors = await prisma.user.count({
-      where: {
-        id: { in: parsed.data.mentorIds },
-        role: "PEMBINA",
-        isActive: true,
-      },
-    });
-
-    if (validMentors !== parsed.data.mentorIds.length) {
-      return {
-        status: "error",
-        message:
-          "Beberapa akun Pembina tidak ditemukan atau sudah tidak aktif. Muat ulang halaman.",
-      };
-    }
-  }
-
-  const activeMentors = await prisma.user.findMany({
-    where: {
-      role: "PEMBINA",
-      isActive: true,
-    },
-    select: { id: true },
-  });
-
-  const activeMentorIds = activeMentors.map((mentor) => mentor.id);
-
-  await prisma.$transaction(async (tx) => {
-    await tx.staffProfile.updateMany({
-      where: {
-        userId: { in: activeMentorIds },
-      },
-      data: { canBeMentor: false },
-    });
-
-    await tx.staffProfile.updateMany({
-      where: {
-        userId: { in: parsed.data.mentorIds },
-      },
-      data: { canBeMentor: true },
-    });
-  });
-
-  revalidatePath("/admin/pengaturan-perizinan");
-  revalidatePath("/admin/kelola-akun");
-  revalidatePath("/request-izin");
-
-  return {
-    status: "success",
-    message: `Daftar Pembina/Pendamping yang dapat dipilih berhasil diperbarui (${parsed.data.mentorIds.length} akun).`,
   };
 }

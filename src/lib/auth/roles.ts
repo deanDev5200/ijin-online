@@ -29,10 +29,10 @@ export const ROLE_LABELS: Record<AppRole, string> = {
 
 export const ROLE_DESCRIPTIONS: Record<AppRole, string> = {
   SISWA: "Mengajukan dan memantau izin asrama",
-  PEMBINA: "Menyetujui izin tahap pertama",
-  STAFF_ASRAMA: "Menyetujui izin tahap kedua",
-  KEPALA_ASRAMA: "Menyetujui izin tahap asrama",
-  WAKASEK_KESISWAAN: "Menyetujui izin tahap akhir kesiswaan",
+  PEMBINA: "Dapat ditentukan sebagai penyetuju izin",
+  STAFF_ASRAMA: "Dapat ditentukan sebagai penyetuju izin",
+  KEPALA_ASRAMA: "Dapat ditentukan sebagai penyetuju izin",
+  WAKASEK_KESISWAAN: "Dapat ditentukan sebagai penyetuju izin",
   ADMIN: "Mengelola akun dan pengaturan perizinan",
 };
 

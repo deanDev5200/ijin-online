@@ -53,8 +53,8 @@ export default async function StudentRequestDetailPage({
   const firstStageLabel = firstApproval
     ? firstApproval.label?.trim() ||
       getStageFromApproval(firstApproval)?.title ||
-      "tahap persetujuan pertama"
-    : "tahap persetujuan pertama";
+      "penyetuju izin"
+    : "penyetuju izin";
 
   return (
     <div className="space-y-6">
@@ -78,7 +78,7 @@ export default async function StudentRequestDetailPage({
           <div>
             <p className="font-medium">Pengajuan berhasil dikirim</p>
             <p className="text-primary/80">
-              Pengajuan Anda sudah diteruskan ke {firstStageLabel}.
+              Pengajuan Anda sedang menunggu {firstStageLabel}.
             </p>
           </div>
         </div>

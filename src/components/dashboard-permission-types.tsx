@@ -74,15 +74,13 @@ export function DashboardPermissionTypes({
                   </div>
                 </div>
                 <div className="mt-3 flex flex-wrap gap-1.5">
-                  {type.config.approvalRoles.map((role, stageIndex) => (
+                  {type.config.approvalRoles.map((role) => (
                     <Badge
                       key={role}
                       variant="secondary"
                       className="gap-1 py-0.5 text-[10px]"
                     >
-                      <span>{stageIndex + 1}</span>
-                      <span className="text-muted-foreground">·</span>
-                      <span>{approvalLabel(type.config, role)}</span>
+                      Penyetuju: {approvalLabel(type.config, role)}
                     </Badge>
                   ))}
                 </div>
@@ -90,12 +88,7 @@ export function DashboardPermissionTypes({
             ))
           )}
         </div>
-      ) : (
-        <p className="rounded-xl border border-dashed px-3 py-4 text-center text-xs leading-relaxed text-muted-foreground">
-          Klik tombol di atas untuk melihat daftar jenis izin dan alur
-          persetujuannya.
-        </p>
-      )}
+      ) : null}
     </div>
   );
 }

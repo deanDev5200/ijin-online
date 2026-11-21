@@ -30,7 +30,6 @@ import {
   fieldLabel,
   getPermissionTypeConfig,
   hasField,
-  requiresMentor,
   type PermissionField,
 } from "@/lib/permissions/config";
 import { parseDepositItems } from "@/lib/permissions/deposit-items";
@@ -95,8 +94,6 @@ export function RequestDetail({
   });
 
   const config = getPermissionTypeConfig(request.type);
-  const needsMentor = requiresMentor(config);
-  const mentorNip = request.mentor?.staffProfile?.nip;
   const depositItems = parseDepositItems(request.depositItems);
   const approvalCount = request.approvals.length;
 
@@ -166,7 +163,7 @@ export function RequestDetail({
               {request.type.name}
             </Badge>
             <Badge variant="secondary" className="text-[10px]">
-              {approvalCount} tahap persetujuan
+              {approvalCount} penyetuju
             </Badge>
           </div>
 
@@ -228,13 +225,6 @@ export function RequestDetail({
                 icon={Clock3}
                 label={fieldLabel(config, "returnTime")}
                 value={request.endTime}
-              />
-            ) : null}
-            {needsMentor && request.mentor ? (
-              <InfoItem
-                icon={UserRound}
-                label="Pembina/Pendamping"
-                value={request.mentor.fullName}
               />
             ) : null}
           </dl>
@@ -325,22 +315,6 @@ export function RequestDetail({
                     className={field === "additionalNotes" || field === "phoneUse" ? "sm:col-span-2" : undefined}
                   />
                 ))}
-                {needsMentor && request.mentor ? (
-                  <InfoItem
-                    icon={UserRound}
-                    label="Pembina/Pendamping"
-                    value={
-                      <span>
-                        {request.mentor.fullName}
-                        {mentorNip ? (
-                          <span className="block text-xs font-normal text-muted-foreground">
-                            NIP {mentorNip}
-                          </span>
-                        ) : null}
-                      </span>
-                    }
-                  />
-                ) : null}
                 <InfoItem
                   icon={Clock3}
                   label="Diajukan pada"
@@ -403,13 +377,13 @@ export function RequestDetail({
         <div className="space-y-6">
           <Card>
             <CardHeader>
-              <CardTitle className="text-base">Alur persetujuan</CardTitle>
+              <CardTitle className="text-base">Penyetuju izin</CardTitle>
               <CardDescription>
-                Persetujuan mengikuti konfigurasi jenis izin{" "}
+                Jenis izin{" "}
                 <span className="font-medium text-foreground">
                   {request.type.name}
-                </span>
-                .
+                </span>{" "}
+                cukup satu penyetuju.
               </CardDescription>
             </CardHeader>
             <CardContent>

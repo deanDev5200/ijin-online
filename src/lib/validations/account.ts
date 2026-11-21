@@ -202,12 +202,6 @@ export const permissionSettingsSchema = z
     path: ["defaultEndTime"],
   });
 
-export const mentorSelectionSchema = z.object({
-  mentorIds: z
-    .array(z.string().min(1))
-    .min(1, "Pilih minimal satu Pembina/Pendamping."),
-});
-
 export const permissionIndexFilterSchema = z.object({
   q: z.string().trim().max(100).optional().default(""),
   status: z

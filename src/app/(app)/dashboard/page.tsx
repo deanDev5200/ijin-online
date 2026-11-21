@@ -172,10 +172,7 @@ async function getStats(user: SessionUser): Promise<Stat[]> {
 
   const [waiting, approved, rejected] = await Promise.all([
     prisma.permissionRequest.count({
-      where:
-        user.role === "PEMBINA"
-          ? { status: "PENDING_MENTOR", mentorId: user.id }
-          : { status: stageStatus },
+      where: { status: stageStatus },
     }),
     prisma.approval.count({
       where: { approverId: user.id, status: "APPROVED" },
@@ -187,7 +184,7 @@ async function getStats(user: SessionUser): Promise<Stat[]> {
 
   return [
     {
-      label: "Menunggu Tahap Anda",
+      label: "Menunggu Persetujuan Anda",
       value: waiting,
       hint: "Perlu ditinjau dan diputuskan",
       icon: Clock3,
@@ -254,7 +251,7 @@ function getQuickActions(role: AppRole): QuickAction[] {
       {
         href: "/admin/pengaturan-perizinan",
         label: "Pengaturan",
-        description: "Atur jenis izin dan alur approval",
+        description: "Atur jenis izin dan penyetujunya",
         icon: Settings2,
       },
       {
@@ -436,9 +433,7 @@ export default async function DashboardPage({
           <CardHeader>
             <CardTitle className="text-base">Jenis izin & persetujuan</CardTitle>
             <CardDescription>
-              {isStudent
-                ? "Persetujuan mengikuti jenis izin yang dipilih saat pengajuan."
-                : "Ringkasan alur persetujuan pada setiap jenis izin aktif."}
+              Setiap jenis izin memiliki satu penyetuju yang ditentukan admin.
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-3">

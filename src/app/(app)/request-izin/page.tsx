@@ -18,7 +18,7 @@ export const metadata: Metadata = {
 export default async function RequestPermissionPage() {
   const user = await requireRole("SISWA");
 
-  const [studentUsers, mentorUsers, types, settings] = await Promise.all([
+  const [studentUsers, types, settings] = await Promise.all([
     prisma.user.findMany({
       where: {
         role: "SISWA",
@@ -38,27 +38,6 @@ export default async function RequestPermissionPage() {
         },
       },
     }),
-    prisma.user.findMany({
-      where: {
-        role: "PEMBINA",
-        isActive: true,
-        staffProfile: {
-          is: {
-            canBeMentor: true,
-          },
-        },
-      },
-      orderBy: { fullName: "asc" },
-      select: {
-        id: true,
-        fullName: true,
-        staffProfile: {
-          select: {
-            nip: true,
-          },
-        },
-      },
-    }),
     getActivePermissionTypes(),
     getPermissionSettings(),
   ]);
@@ -71,17 +50,11 @@ export default async function RequestPermissionPage() {
     grha: student.studentProfile?.grha ?? null,
   }));
 
-  const mentors = mentorUsers.map((mentor) => ({
-    id: mentor.id,
-    fullName: mentor.fullName,
-    nip: mentor.staffProfile?.nip ?? null,
-  }));
-
   return (
     <div className="space-y-6">
       <PageHeader
         title="Ajukan Izin"
-        description="Buat pengajuan sesuai formulir jenis izin. Kolom isian dan tahap persetujuan akan menyesuaikan jenis izin yang Anda pilih."
+        description="Buat pengajuan sesuai formulir jenis izin. Kolom isian menyesuaikan jenis izin yang Anda pilih, lalu pengajuan tinggal menunggu penyetuju."
       />
 
       <PermissionRequestForm
@@ -93,7 +66,6 @@ export default async function RequestPermissionPage() {
           grha: user.grha,
         }}
         students={students}
-        mentors={mentors}
         types={types}
         settings={{
           minLeadDays: settings.minLeadDays,

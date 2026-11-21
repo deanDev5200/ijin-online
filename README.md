@@ -2,7 +2,7 @@
 
 A school dormitory permission-request system with a Bahasa Indonesia interface.
 Students choose a permission type; each type has its own form fields, labels,
-guide, and approval chain. Defaults follow _Formulir Ijin Asrama.pdf_ for six
+guide, and one approver chosen by an admin. Defaults follow _Formulir Ijin Asrama.pdf_ for six
 types: Dispensasi Kegiatan Asrama, Kunjungan Keluarga, Izin Keluar Asrama, Izin
 Penggunaan HP, Izin Pulang, and Titipan Siswa.
 
@@ -127,20 +127,16 @@ Roles are `SISWA`, `PEMBINA`, `STAFF_ASRAMA`, `KEPALA_ASRAMA`,
   ("pengajuan dapat diajukan paling lambat 1 hari sebelum akan melakukan
   dispensasi"). The dashboard's "Jenis izin & persetujuan" card keeps the list
   collapsed until the "Lihat jenis izin yang tersedia" button is clicked.
-- Approvals are generated per type in the configured order: Pembina/Matta Pitta
-  first, asrama staff/head next, and Wakasek Kesiswaan last where required.
-  Wakasek Kesiswaan is required for Izin Penggunaan HP and Izin Pulang only.
-  Kunjungan Keluarga and Titipan Siswa start directly at Matta Pitta and do not
-  ask for Pembina/Pendamping.
-- A PEMBINA approval belongs to the specific Pembina/Pendamping selected on the
-  request. Other roles use a shared role queue where the first decision wins.
-- The next request status is derived from the approval rows, so a type with two
-  stages moves directly to `APPROVED` after its second approval. A type ending in
-  Wakasek moves to `PENDING_WAKASEK` before approval.
-- Rejection requires a note. Remaining approval steps are cancelled.
-- A requester can cancel while the request is still pending.
-- Every stage change creates notifications for the students, the mentor, and
-  the next approvers, using labels captured on the approval rows.
+- Each permission type has exactly one approver role. Admins choose the role
+  per type; students never pick a Pembina, Matta Pitta, or any other approver.
+- The configured role uses a shared queue: any active user with that role may
+  decide, and the first decision wins.
+- One approval finishes the request: approve moves it directly to `APPROVED`,
+  reject moves it to `REJECTED`.
+- Rejection requires a note. A requester can cancel while the request is still
+  pending.
+- Creation, decision, and cancellation create notifications for the students
+  and the configured approvers, using the label captured on the approval row.
 
 ## Admin pages
 
@@ -151,7 +147,7 @@ Administrators (`ADMIN`) manage the system through these pages:
 | Dashboard                | Summary of requests, accounts, and pending approvals          |
 | Indeks Izin              | Search, filter, inspect, and export every request              |
 | Kelola Akun              | Create, edit, import, deactivate, and reset account passwords |
-| Pengaturan Perizinan     | Permission types, request rules, and selectable Pembina        |
+| Pengaturan Perizinan     | Permission types, request rules, and one approver per type     |
 | Notifikasi               | Account notifications                                         |
 
 ### Kelola Akun
@@ -207,14 +203,10 @@ approval deadline are marked as overdue.
   These settings drive the student form and are re-validated on submit.
 - **Jenis izin**: create, edit, and deactivate permission types. At least one
   type must stay active. Deactivated types remain on historical requests.
-- **Konfigurasi per jenis izin**: for each type, set the ordered approval roles
-  (up to four; Wakasek Kesiswaan must be last), the displayed/required form
-  fields, custom field labels, custom approval labels, and the form guide shown
-  to students. Changes apply to new requests; historical approval labels are
-  kept on each request.
-- **Alur persetujuan**: Pembina/Pendamping, Staff Asrama, Kepala Asrama, and
-  Wakasek Kesiswaan can be ordered or omitted per type. A PEMBINA stage goes to
-  the mentor selected on the request; other stages use the relevant role and the
-  first decision wins.
-- **Pembina/Pendamping yang dapat dipilih**: only checked, active staff
-  accounts appear as mentor choices on the student form.
+- **Konfigurasi per jenis izin**: for each type, choose exactly one approver
+  role (Pembina, Staff Asrama, Kepala Asrama, or Wakasek Kesiswaan), plus the
+  displayed/required form fields, custom field labels, the approver label, and
+  the form guide shown to students. Changes apply to new requests; historical
+  approval labels are kept on each request.
+- **Penyetuju izin**: every request has one approval row. Any active user with
+  the configured role can decide, and the first decision finishes the request.

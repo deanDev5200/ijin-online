@@ -149,12 +149,6 @@ export default async function AccountDetailPage({
               <CalendarClock className="size-3.5" />
               Dibuat {formatDateTime(account.createdAt)}
             </span>
-            {account.staffProfile?.canBeMentor && account.role === "PEMBINA" ? (
-              <span className="inline-flex items-center gap-1.5 text-primary sm:justify-end">
-                <ShieldCheck className="size-3.5" />
-                Dapat dipilih sebagai Pembina/Pendamping
-              </span>
-            ) : null}
           </div>
         </CardContent>
       </Card>

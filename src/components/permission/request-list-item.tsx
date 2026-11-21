@@ -23,14 +23,12 @@ import { cn } from "@/lib/utils";
 export function RequestListItem({
   request,
   href,
-  showRequester = false,
   deadlineDays,
   now,
   className,
 }: {
   request: PermissionRequestListEntry;
   href: string;
-  showRequester?: boolean;
   deadlineDays?: number;
   now?: Date;
   className?: string;
@@ -104,17 +102,8 @@ export function RequestListItem({
                 {request.students.length} siswa
               </span>
               <span className="inline-flex items-center gap-1.5">
-                {showRequester ? (
-                  <>
-                    <UserRound className="size-3.5 shrink-0" />
-                    Pengaju: {request.requester.fullName}
-                  </>
-                ) : (
-                  <>
-                    <UserRound className="size-3.5 shrink-0" />
-                    Pembina: {request.mentor?.fullName ?? "-"}
-                  </>
-                )}
+                <UserRound className="size-3.5 shrink-0" />
+                Pengaju: {request.requester.fullName}
               </span>
             </div>
           </div>

@@ -22,10 +22,10 @@ export const PENDING_STATUSES = [
 export type PendingStatus = (typeof PENDING_STATUSES)[number];
 
 export const REQUEST_STATUS_LABELS: Record<RequestStatus, string> = {
-  PENDING_MENTOR: "Menunggu Pembina",
-  PENDING_DORM_STAFF: "Menunggu Staff Asrama",
-  PENDING_DORM_HEAD: "Menunggu Kepala Asrama",
-  PENDING_WAKASEK: "Menunggu Wakasek",
+  PENDING_MENTOR: "Menunggu Penyetuju",
+  PENDING_DORM_STAFF: "Menunggu Penyetuju",
+  PENDING_DORM_HEAD: "Menunggu Penyetuju",
+  PENDING_WAKASEK: "Menunggu Penyetuju",
   APPROVED: "Disetujui",
   REJECTED: "Ditolak",
   CANCELLED: "Dibatalkan",
@@ -46,37 +46,6 @@ export type ApprovalStepConfig = {
   description: string;
 };
 
-export const APPROVAL_STEPS: readonly ApprovalStepConfig[] = [
-  {
-    step: 1,
-    role: "PEMBINA",
-    pendingStatus: "PENDING_MENTOR",
-    title: APPROVAL_ROLE_LABELS.PEMBINA,
-    description: APPROVAL_ROLE_DESCRIPTIONS.PEMBINA,
-  },
-  {
-    step: 2,
-    role: "STAFF_ASRAMA",
-    pendingStatus: "PENDING_DORM_STAFF",
-    title: APPROVAL_ROLE_LABELS.STAFF_ASRAMA,
-    description: APPROVAL_ROLE_DESCRIPTIONS.STAFF_ASRAMA,
-  },
-  {
-    step: 3,
-    role: "KEPALA_ASRAMA",
-    pendingStatus: "PENDING_DORM_HEAD",
-    title: APPROVAL_ROLE_LABELS.KEPALA_ASRAMA,
-    description: APPROVAL_ROLE_DESCRIPTIONS.KEPALA_ASRAMA,
-  },
-  {
-    step: 4,
-    role: "WAKASEK_KESISWAAN",
-    pendingStatus: "PENDING_WAKASEK",
-    title: APPROVAL_ROLE_LABELS.WAKASEK_KESISWAAN,
-    description: APPROVAL_ROLE_DESCRIPTIONS.WAKASEK_KESISWAAN,
-  },
-] as const;
-
 export type ApprovalRowLike = {
   id: string;
   step: number;
@@ -88,7 +57,6 @@ export type ApprovalRowLike = {
 
 export type RequestApprovalLike = {
   status: RequestStatus;
-  mentorId: string | null;
   approvals: ApprovalRowLike[];
 };
 
@@ -98,43 +66,6 @@ function toApprovalRole(role: Role): ApprovalRole | null {
 
 export function isPendingStatus(status: RequestStatus): status is PendingStatus {
   return (PENDING_STATUSES as readonly RequestStatus[]).includes(status);
-}
-
-/** Kept for callers that only know the generic request status. */
-export function getStageByStatus(
-  status: RequestStatus,
-): ApprovalStepConfig | null {
-  return APPROVAL_STEPS.find((stage) => stage.pendingStatus === status) ?? null;
-}
-
-/** Kept for callers that only know a staff role. */
-export function getStageByRole(role: Role): ApprovalStepConfig | null {
-  const approvalRole = toApprovalRole(role);
-
-  return approvalRole
-    ? APPROVAL_STEPS.find((stage) => stage.role === approvalRole) ?? null
-    : null;
-}
-
-/** Legacy single-flow helper. Dynamic flows use getNextStatusForApprovals. */
-export function getNextStatusForStep(step: number): RequestStatus | null {
-  if (step === 1) {
-    return "PENDING_DORM_STAFF";
-  }
-
-  if (step === 2) {
-    return "PENDING_DORM_HEAD";
-  }
-
-  if (step === 3) {
-    return "PENDING_WAKASEK";
-  }
-
-  if (step === 4) {
-    return "APPROVED";
-  }
-
-  return null;
 }
 
 export function getStageFromApproval(
@@ -196,8 +127,8 @@ export function getNextStatusForApprovals(
 }
 
 /**
- * The selected Pembina/Pendamping is pinned to the PEMBINA approval row.
- * Other roles are shared role-based queues where the first decision wins.
+ * Each request has exactly one approval row. Any active user with the
+ * configured role may decide; the first decision wins.
  */
 export function canUserActOnRequest(
   user: { id: string; role: Role },
@@ -215,39 +146,26 @@ export function canUserActOnRequest(
     return false;
   }
 
-  if (stage.pendingStatus !== request.status) {
-    return false;
-  }
-
-  if (stage.role === "PEMBINA") {
-    return currentApproval.approverId === user.id;
-  }
-
-  return true;
+  return stage.pendingStatus === request.status;
 }
 
 export function canUserViewStaffRequest(
   user: { id: string; role: Role },
   request: RequestApprovalLike,
 ): boolean {
-  if (request.mentorId === user.id) {
-    return true;
-  }
-
   if (
     request.approvals.some(
-      (approval) => approval.approverId === user.id && approval.status !== "PENDING",
+      (approval) =>
+        approval.approverId === user.id && approval.status !== "PENDING",
     )
   ) {
     return true;
   }
 
-  const stage = getStageFromApproval(getCurrentApproval(request) ?? {
-    id: "fallback",
-    step: 0,
-    role: user.role,
-    status: "PENDING",
-  });
+  const currentApproval = getCurrentApproval(request);
+  const stage = currentApproval
+    ? getStageFromApproval(currentApproval)
+    : null;
 
-  return stage?.role === user.role && stage.role !== "PEMBINA";
+  return stage?.role === user.role;
 }

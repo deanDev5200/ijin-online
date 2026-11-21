@@ -76,16 +76,6 @@ export async function GET(request: Request) {
             fullName: true,
           },
         },
-        mentor: {
-          select: {
-            fullName: true,
-            staffProfile: {
-              select: {
-                nip: true,
-              },
-            },
-          },
-        },
         students: {
           select: {
             isRequester: true,
@@ -156,9 +146,7 @@ export async function GET(request: Request) {
     { header: "Jam", key: "times", width: 16 },
     { header: "Jam pulang", key: "departureTime", width: 16 },
     { header: "Jam kedatangan", key: "returnTime", width: 18 },
-    { header: "Pembina/Pendamping", key: "mentor", width: 26 },
-    { header: "NIP Pembina", key: "mentorNip", width: 22 },
-    { header: "Jejak Persetujuan", key: "approvals", width: 60 },
+    { header: "Penyetuju", key: "approvals", width: 60 },
     { header: "Alasan Penolakan", key: "rejection", width: 36 },
   ];
 
@@ -186,10 +174,7 @@ export async function GET(request: Request) {
     const config = getPermissionTypeConfig(requestItem.type);
     const approvalTrail = requestItem.approvals
       .map((approval) => {
-        const roleLabel =
-          approval.role === "PEMBINA"
-            ? "Pembina/Pendamping"
-            : ROLE_LABELS[approval.role];
+        const roleLabel = ROLE_LABELS[approval.role];
         const statusLabel = APPROVAL_STATUS_LABELS[approval.status];
         const approver = approval.approver?.fullName ?? "-";
         const actedAt = approval.actedAt
@@ -246,8 +231,6 @@ export async function GET(request: Request) {
         ? requestItem.startTime
         : "",
       returnTime: hasField(config, "returnTime") ? requestItem.endTime : "",
-      mentor: requestItem.mentor?.fullName ?? "",
-      mentorNip: requestItem.mentor?.staffProfile?.nip ?? "",
       approvals: approvalTrail,
       rejection: requestItem.rejectionReason ?? "",
     });
@@ -255,7 +238,7 @@ export async function GET(request: Request) {
 
   sheet.autoFilter = {
     from: "A1",
-    to: `W${Math.max(1, requests.length + 1)}`,
+    to: `U${Math.max(1, requests.length + 1)}`,
   };
 
   sheet.eachRow((row, rowNumber) => {
