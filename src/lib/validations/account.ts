@@ -1,6 +1,5 @@
 import { z } from "zod";
 
-import { passwordSchema, usernameSchema } from "./auth";
 import { timeOfDaySchema } from "./permission";
 
 export const ACCOUNT_ROLES = [
@@ -111,9 +110,6 @@ export const createAccountSchema = z
   .object({
     role: manageableRoleSchema,
     fullName: fullNameSchema,
-    username: usernameSchema,
-    password: passwordSchema,
-    confirmPassword: z.string().min(1, "Konfirmasi password wajib diisi."),
     nis: z.string().trim().optional().default(""),
     grha: z.string().trim().optional().default(""),
     kelas: z.string().trim().optional().default(""),
@@ -130,36 +126,16 @@ export const createAccountSchema = z
       },
       ctx,
     );
-
-    if (data.password !== data.confirmPassword) {
-      ctx.addIssue({
-        code: "custom",
-        message: "Konfirmasi password tidak cocok.",
-        path: ["confirmPassword"],
-      });
-    }
   });
 
 export const updateAccountSchema = z.object({
   accountId: z.string().min(1),
   fullName: fullNameSchema,
-  username: usernameSchema,
   nis: z.string().trim().optional().default(""),
   grha: z.string().trim().optional().default(""),
   kelas: z.string().trim().optional().default(""),
   nip: z.string().trim().optional().default(""),
 });
-
-export const resetAccountPasswordSchema = z
-  .object({
-    accountId: z.string().min(1),
-    password: passwordSchema,
-    confirmPassword: z.string().min(1, "Konfirmasi password wajib diisi."),
-  })
-  .refine((data) => data.password === data.confirmPassword, {
-    message: "Konfirmasi password tidak cocok.",
-    path: ["confirmPassword"],
-  });
 
 export const accountStatusSchema = z.object({
   accountId: z.string().min(1),
@@ -168,11 +144,9 @@ export const accountStatusSchema = z.object({
 
 export const importStudentRowSchema = z.object({
   fullName: fullNameSchema,
-  username: usernameSchema,
   nis: nisSchema,
   grha: grhaSchema,
   kelas: kelasSchema,
-  password: passwordSchema,
 });
 
 export const permissionTypeSchema = z.object({

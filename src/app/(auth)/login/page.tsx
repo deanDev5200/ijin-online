@@ -53,17 +53,17 @@ export default async function LoginPage({
 
   return (
     <div className="grid min-h-svh lg:grid-cols-[1.05fr_0.95fr]">
-      <aside className="relative hidden overflow-hidden bg-emerald-950 p-10 text-emerald-50 lg:flex lg:flex-col lg:justify-between xl:p-14">
-        <div className="absolute -top-24 -left-24 size-80 rounded-full bg-emerald-400/20 blur-3xl" />
-        <div className="absolute -right-28 bottom-0 size-96 rounded-full bg-teal-300/10 blur-3xl" />
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_20%,rgba(16,185,129,0.16),transparent_45%)]" />
+      <aside className="relative hidden overflow-hidden bg-linear-to-br from-blue-700 via-blue-800 to-blue-950 p-10 text-blue-50 lg:flex lg:flex-col lg:justify-between xl:p-14">
+        <div className="absolute -top-24 -left-24 size-80 rounded-full bg-sky-300/25 blur-3xl" />
+        <div className="absolute -right-28 bottom-0 size-96 rounded-full bg-white/15 blur-3xl" />
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_20%,rgba(255,255,255,0.18),transparent_45%)]" />
 
         <div className="relative flex items-center gap-3">
           <div className="flex size-11 items-center justify-center rounded-2xl bg-white/10 ring-1 ring-white/20 backdrop-blur">
             <GraduationCap className="size-6" />
           </div>
           <div>
-            <p className="text-[11px] font-semibold tracking-[0.2em] text-emerald-200 uppercase">
+            <p className="text-[11px] font-semibold tracking-[0.2em] text-blue-200 uppercase">
               {schoolName}
             </p>
             <p className="text-sm font-medium text-white">{appName}</p>
@@ -71,7 +71,7 @@ export default async function LoginPage({
         </div>
 
         <div className="relative max-w-xl space-y-8 py-16">
-          <div className="inline-flex items-center gap-2 rounded-full border border-emerald-300/20 bg-emerald-300/10 px-3 py-1 text-xs font-medium text-emerald-100">
+          <div className="inline-flex items-center gap-2 rounded-full border border-white/25 bg-white/10 px-3 py-1 text-xs font-medium text-blue-100">
             <ShieldCheck className="size-3.5" />
             Sistem Perizinan Asrama Digital
           </div>
@@ -80,7 +80,7 @@ export default async function LoginPage({
             <h1 className="text-4xl font-semibold tracking-tight text-white xl:text-5xl">
               Izin asrama jadi lebih tertata.
             </h1>
-            <p className="max-w-lg text-base leading-relaxed text-emerald-100/80">
+            <p className="max-w-lg text-base leading-relaxed text-blue-100/80">
               Ajukan dispensasi kegiatan, pantau persetujuan, dan simpan
               riwayat izin dalam satu tempat.
             </p>
@@ -90,13 +90,13 @@ export default async function LoginPage({
             {features.map((feature) => (
               <li key={feature.title} className="flex gap-3">
                 <div className="mt-0.5 flex size-9 shrink-0 items-center justify-center rounded-xl bg-white/10 ring-1 ring-white/15">
-                  <feature.icon className="size-4 text-emerald-100" />
+                  <feature.icon className="size-4 text-blue-100" />
                 </div>
                 <div>
                   <p className="text-sm font-medium text-white">
                     {feature.title}
                   </p>
-                  <p className="mt-0.5 text-sm leading-relaxed text-emerald-100/70">
+                  <p className="mt-0.5 text-sm leading-relaxed text-blue-100/70">
                     {feature.description}
                   </p>
                 </div>
@@ -105,7 +105,7 @@ export default async function LoginPage({
           </ul>
         </div>
 
-        <p className="relative text-xs text-emerald-200/60">
+        <p className="relative text-xs text-blue-200/60">
           © {new Date().getFullYear()} {schoolName}. Seluruh hak cipta
           dilindungi.
         </p>
@@ -133,8 +133,9 @@ export default async function LoginPage({
               Selamat datang kembali
             </h2>
             <p className="text-sm leading-relaxed text-muted-foreground">
-              Gunakan username dan password yang diberikan administrator
-              asrama.
+              Gunakan username dan password yang Anda buat saat pertama kali
+              masuk. Akun baru memakai password awal 123456 dan akan diminta
+              membuat username serta password pribadi.
             </p>
           </div>
 

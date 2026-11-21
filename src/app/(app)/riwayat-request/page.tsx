@@ -4,6 +4,7 @@ import { FilePlus2, History } from "lucide-react";
 
 import { PageHeader } from "@/components/page-header";
 import { RequestListItem } from "@/components/permission/request-list-item";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -53,12 +54,20 @@ export default async function RequestHistoryPage() {
       </PageHeader>
 
       {requests.length === 0 ? (
-        <Card>
-          <CardContent className="flex flex-col items-center justify-center gap-3 px-6 py-16 text-center">
-            <div className="flex size-12 items-center justify-center rounded-2xl bg-muted text-muted-foreground">
+        <Card className="bg-linear-to-b from-primary/[0.04] to-card">
+          <CardContent className="relative flex flex-col items-center justify-center gap-3 overflow-hidden px-6 py-16 text-center">
+            <div
+              className="pointer-events-none absolute -top-10 left-1/2 size-36 -translate-x-1/2 rounded-full border border-primary/10"
+              aria-hidden="true"
+            />
+            <div
+              className="pointer-events-none absolute -top-4 left-1/2 size-24 -translate-x-1/2 rounded-full bg-primary/[0.06]"
+              aria-hidden="true"
+            />
+            <div className="relative flex size-14 items-center justify-center rounded-2xl bg-primary/10 text-primary ring-8 ring-primary/5">
               <History className="size-6" />
             </div>
-            <div>
+            <div className="relative">
               <p className="text-sm font-medium">Belum ada pengajuan izin</p>
               <p className="mt-1 max-w-sm text-sm text-muted-foreground">
                 Pengajuan yang Anda buat atau ikuti akan muncul di sini beserta
@@ -76,12 +85,20 @@ export default async function RequestHistoryPage() {
       ) : (
         <div className="space-y-3">
           <Card>
-            <CardHeader className="py-3">
-              <CardTitle className="text-sm">Pengajuan terbaru</CardTitle>
-              <CardDescription>
-                Menampilkan {requests.length} pengajuan terbaru yang melibatkan
-                Anda.
-              </CardDescription>
+            <CardHeader className="grid-cols-[auto_1fr_auto] items-center gap-3 py-3">
+              <div className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
+                <History className="size-4" />
+              </div>
+              <div className="min-w-0 flex-1 space-y-1">
+                <CardTitle className="text-sm">Pengajuan terbaru</CardTitle>
+                <CardDescription>
+                  Menampilkan {requests.length} pengajuan terbaru yang melibatkan
+                  Anda.
+                </CardDescription>
+              </div>
+              <Badge variant="outline" className="hidden shrink-0 sm:inline-flex">
+                {requests.length} izin
+              </Badge>
             </CardHeader>
           </Card>
 

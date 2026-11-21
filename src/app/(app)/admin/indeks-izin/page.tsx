@@ -132,11 +132,17 @@ export default async function PermissionIndexPage({
       </PageHeader>
 
       <Card>
-        <CardHeader className="border-b">
-          <CardTitle className="text-sm">Cari dan filter izin</CardTitle>
-          <CardDescription>
-            Pencarian mencakup nama siswa, NIS, kelas, grha, tujuan, dan tempat.
-          </CardDescription>
+        <CardHeader className="grid-cols-[auto_1fr] items-start gap-3 border-b">
+          <div className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
+            <Search className="size-4" />
+          </div>
+          <div className="min-w-0 flex-1 space-y-1">
+            <CardTitle className="text-sm">Cari dan filter izin</CardTitle>
+            <CardDescription>
+              Pencarian mencakup nama siswa, NIS, kelas, grha, tujuan, dan
+              tempat.
+            </CardDescription>
+          </div>
         </CardHeader>
         <CardContent>
           <form method="get" className="space-y-3">
@@ -243,12 +249,20 @@ export default async function PermissionIndexPage({
       </Card>
 
       {requests.length === 0 ? (
-        <Card>
-          <CardContent className="flex flex-col items-center justify-center gap-3 px-6 py-16 text-center">
-            <div className="flex size-12 items-center justify-center rounded-2xl bg-muted text-muted-foreground">
+        <Card className="bg-linear-to-b from-primary/[0.04] to-card">
+          <CardContent className="relative flex flex-col items-center justify-center gap-3 overflow-hidden px-6 py-16 text-center">
+            <div
+              className="pointer-events-none absolute -top-10 left-1/2 size-36 -translate-x-1/2 rounded-full border border-primary/10"
+              aria-hidden="true"
+            />
+            <div
+              className="pointer-events-none absolute -top-4 left-1/2 size-24 -translate-x-1/2 rounded-full bg-primary/[0.06]"
+              aria-hidden="true"
+            />
+            <div className="relative flex size-14 items-center justify-center rounded-2xl bg-primary/10 text-primary ring-8 ring-primary/5">
               <Inbox className="size-6" />
             </div>
-            <div>
+            <div className="relative">
               <p className="text-sm font-medium">
                 {isFiltered
                   ? "Tidak ada izin yang cocok"
@@ -264,8 +278,9 @@ export default async function PermissionIndexPage({
         </Card>
       ) : (
         <div className="space-y-3">
-          <div className="flex items-center justify-between px-1 text-xs text-muted-foreground">
-            <span>
+          <div className="flex flex-wrap items-center justify-between gap-2 rounded-lg border bg-muted/30 px-3 py-2 text-xs text-muted-foreground">
+            <span className="inline-flex items-center gap-2">
+              <ClipboardList className="size-3.5 shrink-0 text-primary" />
               Menampilkan {showingFrom}–{showingTo} dari {total} pengajuan
             </span>
             <span>

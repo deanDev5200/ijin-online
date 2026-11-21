@@ -14,8 +14,10 @@ import {
 } from "@/lib/permissions/notifications";
 import {
   canUserActOnRequest,
-  getNextStatusForStep,
-  getStageByStatus,
+  getNextApproval,
+  getNextStatusForApprovals,
+  getStageFromApproval,
+  getCurrentApproval,
 } from "@/lib/permissions/status";
 import { decidePermissionSchema } from "@/lib/validations/permission";
 
@@ -66,6 +68,17 @@ export async function decidePermissionAction(
               studentId: true,
             },
           },
+          approvals: {
+            orderBy: { step: "asc" },
+            select: {
+              id: true,
+              step: true,
+              role: true,
+              status: true,
+              approverId: true,
+              label: true,
+            },
+          },
         },
       });
 
@@ -73,12 +86,18 @@ export async function decidePermissionAction(
         throw new PermissionWorkflowError("Pengajuan tidak ditemukan.");
       }
 
-      const stage = getStageByStatus(request.status);
+      const currentApproval = getCurrentApproval(request);
 
-      if (!stage) {
+      if (!currentApproval) {
         throw new PermissionWorkflowError(
           "Pengajuan ini sudah selesai diproses.",
         );
+      }
+
+      const stage = getStageFromApproval(currentApproval);
+
+      if (!stage) {
+        throw new PermissionWorkflowError("Tahap persetujuan tidak valid.");
       }
 
       if (!canUserActOnRequest(user, request)) {
@@ -88,25 +107,30 @@ export async function decidePermissionAction(
       }
 
       const isReject = decision === "REJECT";
-      const nextStatus = getNextStatusForStep(stage.step);
-
-      if (!nextStatus) {
-        throw new PermissionWorkflowError("Tahap persetujuan tidak valid.");
-      }
+      const nextApproval = isReject
+        ? null
+        : getNextApproval(request, currentApproval.step);
+      const nextStage = nextApproval
+        ? getStageFromApproval(nextApproval)
+        : null;
+      const nextStatus = isReject
+        ? "REJECTED"
+        : getNextStatusForApprovals(request, currentApproval.step);
 
       const claimed = await tx.permissionRequest.updateMany({
         where: {
           id: request.id,
           status: request.status,
         },
-        data: isReject
-          ? {
-              status: "REJECTED",
-              rejectionReason: note,
-            }
-          : {
-              status: nextStatus,
-            },
+        data:
+          isReject || nextStatus === "APPROVED"
+            ? {
+                status: nextStatus,
+                ...(isReject ? { rejectionReason: note } : {}),
+              }
+            : {
+                status: nextStatus,
+              },
       });
 
       if (claimed.count === 0) {
@@ -117,8 +141,7 @@ export async function decidePermissionAction(
 
       const stepClaim = await tx.approval.updateMany({
         where: {
-          requestId: request.id,
-          step: stage.step,
+          id: currentApproval.id,
           status: "PENDING",
         },
         data: {
@@ -147,21 +170,24 @@ export async function decidePermissionAction(
         });
       }
 
-      const nextStage = isReject ? null : getStageByStatus(nextStatus);
+      const currentLabel =
+        currentApproval.label?.trim() || stage.title;
+      const nextLabel =
+        nextApproval?.label?.trim() || nextStage?.title || null;
 
       const notification = isReject
         ? {
             title: "Pengajuan izin ditolak",
-            message: `Pengajuan "${request.purpose}" ditolak oleh ${stage.title}. Alasan: ${note}`,
+            message: `Pengajuan "${request.purpose}" ditolak oleh ${currentLabel}. Alasan: ${note}`,
           }
-        : nextStage
+        : nextLabel
           ? {
               title: "Izin disetujui tahap ini",
-              message: `Pengajuan "${request.purpose}" disetujui oleh ${stage.title} dan diteruskan ke ${nextStage.title}.`,
+              message: `Pengajuan "${request.purpose}" disetujui oleh ${currentLabel} dan diteruskan ke ${nextLabel}.`,
             }
           : {
               title: "Izin disetujui",
-              message: `Pengajuan "${request.purpose}" telah disetujui oleh ${stage.title}. Izin dinyatakan berlaku.`,
+              message: `Pengajuan "${request.purpose}" telah disetujui oleh ${currentLabel}. Izin dinyatakan berlaku.`,
             };
 
       const recipientIds = [
@@ -176,11 +202,13 @@ export async function decidePermissionAction(
         requestId: request.id,
       }));
 
-      if (!isReject && nextStage) {
-        const nextApproverIds = await getActiveUserIdsByRole(
-          tx,
-          nextStage.role,
-        );
+      if (!isReject && nextApproval && nextStage) {
+        const nextApproverIds =
+          nextStage.role === "PEMBINA"
+            ? nextApproval.approverId
+              ? [nextApproval.approverId]
+              : []
+            : await getActiveUserIdsByRole(tx, nextStage.role);
 
         notifications.push(
           ...nextApproverIds
@@ -188,7 +216,7 @@ export async function decidePermissionAction(
             .map((userId) => ({
               userId,
               title: "Permintaan izin menunggu persetujuan",
-              message: `Pengajuan "${request.purpose}" dari ${request.requester.fullName} menunggu persetujuan ${nextStage.title}.`,
+              message: `Pengajuan "${request.purpose}" dari ${request.requester.fullName} menunggu persetujuan ${nextLabel}.`,
               requestId: request.id,
             })),
         );

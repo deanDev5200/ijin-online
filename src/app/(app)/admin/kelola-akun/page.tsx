@@ -205,19 +205,25 @@ export default async function ManageAccountsPage({
       </PageHeader>
 
       {getString(query.created) === "1" ? (
-        <div className="flex items-start gap-2.5 rounded-xl border border-primary/20 bg-primary/5 px-4 py-3 text-sm text-primary">
-          <UsersRound className="mt-0.5 size-4 shrink-0" />
+        <div className="flex items-start gap-3 rounded-xl border border-primary/20 bg-primary/5 px-4 py-3 text-sm text-primary shadow-xs">
+          <div className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-primary/10 ring-1 ring-primary/10">
+            <UsersRound className="size-4" />
+          </div>
           <div>
             <p className="font-medium">Akun berhasil dibuat</p>
             <p className="text-primary/80">
-              Pengguna wajib mengganti password saat login pertama.
+              Password awal 123456. Pengguna wajib membuat username dan password
+              pribadi saat login pertama.
             </p>
           </div>
         </div>
       ) : null}
 
       <div className="grid gap-3 sm:grid-cols-3">
-        <Card size="sm">
+        <Card
+          size="sm"
+          className="bg-linear-to-br from-primary/[0.05] via-card to-card transition-shadow hover:shadow-sm"
+        >
           <CardContent className="flex items-center gap-3">
             <div className="flex size-9 items-center justify-center rounded-xl bg-primary/10 text-primary">
               <UsersRound className="size-4" />
@@ -228,7 +234,10 @@ export default async function ManageAccountsPage({
             </div>
           </CardContent>
         </Card>
-        <Card size="sm">
+        <Card
+          size="sm"
+          className="bg-linear-to-br from-primary/[0.05] via-card to-card transition-shadow hover:shadow-sm"
+        >
           <CardContent className="flex items-center gap-3">
             <div className="flex size-9 items-center justify-center rounded-xl bg-primary/10 text-primary">
               <GraduationCap className="size-4" />
@@ -239,7 +248,10 @@ export default async function ManageAccountsPage({
             </div>
           </CardContent>
         </Card>
-        <Card size="sm">
+        <Card
+          size="sm"
+          className="bg-linear-to-br from-primary/[0.05] via-card to-card transition-shadow hover:shadow-sm"
+        >
           <CardContent className="flex items-center gap-3">
             <div className="flex size-9 items-center justify-center rounded-xl bg-muted text-muted-foreground">
               <ShieldCheck className="size-4" />
@@ -252,7 +264,7 @@ export default async function ManageAccountsPage({
         </Card>
       </div>
 
-      <details className="group rounded-xl bg-card ring-1 ring-foreground/10">
+      <details className="group rounded-xl bg-card ring-1 ring-foreground/10 transition-shadow hover:shadow-sm">
         <summary className="flex cursor-pointer list-none items-center gap-3 px-4 py-3.5 [&::-webkit-details-marker]:hidden">
           <div className="flex size-9 items-center justify-center rounded-xl bg-primary/10 text-primary">
             <FileSpreadsheet className="size-4" />
@@ -267,20 +279,26 @@ export default async function ManageAccountsPage({
         </summary>
         <div className="space-y-3 border-t px-4 py-4">
           <p className="text-xs text-muted-foreground">
-            Impor ini khusus akun siswa. Setiap baris wajib memiliki password
-            awal; pengguna wajib menggantinya saat login pertama. Akun yang
-            sudah ada tidak akan ditimpa.
+            Impor ini khusus akun siswa. Kolom Nama Lengkap, NIS, Grha, dan
+            Kelas wajib ada. Username dibuat otomatis dari nama dan password
+            awal 123456; pengguna wajib membuat kredensial pribadi saat login
+            pertama. Akun yang sudah ada tidak akan ditimpa.
           </p>
           <AccountImportForm />
         </div>
       </details>
 
       <Card>
-        <CardHeader className="border-b">
-          <CardTitle className="text-sm">Cari dan filter akun</CardTitle>
-          <CardDescription>
-            Pencarian mencakup nama, username, NIS, NIP, kelas, dan grha.
-          </CardDescription>
+        <CardHeader className="grid-cols-[auto_1fr] items-start gap-3 border-b">
+          <div className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
+            <Search className="size-4" />
+          </div>
+          <div className="min-w-0 flex-1 space-y-1">
+            <CardTitle className="text-sm">Cari dan filter akun</CardTitle>
+            <CardDescription>
+              Pencarian mencakup nama, username, NIS, NIP, kelas, dan grha.
+            </CardDescription>
+          </div>
         </CardHeader>
         <CardContent>
           <form
@@ -353,12 +371,20 @@ export default async function ManageAccountsPage({
       </Card>
 
       {accounts.length === 0 ? (
-        <Card>
-          <CardContent className="flex flex-col items-center justify-center gap-3 px-6 py-16 text-center">
-            <div className="flex size-12 items-center justify-center rounded-2xl bg-muted text-muted-foreground">
+        <Card className="bg-linear-to-b from-primary/[0.04] to-card">
+          <CardContent className="relative flex flex-col items-center justify-center gap-3 overflow-hidden px-6 py-16 text-center">
+            <div
+              className="pointer-events-none absolute -top-10 left-1/2 size-36 -translate-x-1/2 rounded-full border border-primary/10"
+              aria-hidden="true"
+            />
+            <div
+              className="pointer-events-none absolute -top-4 left-1/2 size-24 -translate-x-1/2 rounded-full bg-primary/[0.06]"
+              aria-hidden="true"
+            />
+            <div className="relative flex size-14 items-center justify-center rounded-2xl bg-primary/10 text-primary ring-8 ring-primary/5">
               <Inbox className="size-6" />
             </div>
-            <div>
+            <div className="relative">
               <p className="text-sm font-medium">
                 {isFiltered ? "Tidak ada akun yang cocok" : "Belum ada akun"}
               </p>
@@ -380,8 +406,9 @@ export default async function ManageAccountsPage({
         </Card>
       ) : (
         <div className="space-y-3">
-          <div className="flex items-center justify-between px-1 text-xs text-muted-foreground">
-            <span>
+          <div className="flex flex-wrap items-center justify-between gap-2 rounded-lg border bg-muted/30 px-3 py-2 text-xs text-muted-foreground">
+            <span className="inline-flex items-center gap-2">
+              <UsersRound className="size-3.5 shrink-0 text-primary" />
               Menampilkan {showingFrom}–{showingTo} dari {total} akun
             </span>
             <span>
@@ -407,7 +434,7 @@ export default async function ManageAccountsPage({
                 key={account.id}
                 href={`/admin/kelola-akun/${account.id}`}
                 className={cn(
-                  "group flex items-start gap-3 rounded-xl border bg-card p-4 transition-colors hover:border-primary/30 hover:bg-accent/30 sm:items-center",
+                  "group flex items-start gap-3 rounded-xl border bg-card p-4 shadow-xs transition-all hover:border-primary/30 hover:bg-accent/30 hover:shadow-sm sm:items-center",
                   !account.isActive && "bg-muted/20",
                 )}
               >
@@ -441,7 +468,7 @@ export default async function ManageAccountsPage({
                         variant="outline"
                         className="border-amber-500/30 bg-amber-500/10 text-[10px] text-amber-700 dark:text-amber-300"
                       >
-                        Wajib ganti password
+                        Wajib setup akun
                       </Badge>
                     ) : null}
                   </div>

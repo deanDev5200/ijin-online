@@ -11,7 +11,11 @@ import {
   createRequestNotifications,
   getActiveUserIdsByRole,
 } from "@/lib/permissions/notifications";
-import { getStageByStatus, isPendingStatus } from "@/lib/permissions/status";
+import {
+  getCurrentApproval,
+  getStageFromApproval,
+  isPendingStatus,
+} from "@/lib/permissions/status";
 import { cancelPermissionSchema } from "@/lib/validations/permission";
 
 export async function cancelPermissionRequestAction(
@@ -49,6 +53,17 @@ export async function cancelPermissionRequestAction(
               studentId: true,
             },
           },
+          approvals: {
+            orderBy: { step: "asc" },
+            select: {
+              id: true,
+              step: true,
+              role: true,
+              status: true,
+              approverId: true,
+              label: true,
+            },
+          },
         },
       });
 
@@ -61,6 +76,11 @@ export async function cancelPermissionRequestAction(
           "Pengajuan ini sudah diproses dan tidak dapat dibatalkan.",
         );
       }
+
+      const currentApproval = getCurrentApproval(request);
+      const stage = currentApproval
+        ? getStageFromApproval(currentApproval)
+        : null;
 
       const claimed = await tx.permissionRequest.updateMany({
         where: {
@@ -89,37 +109,31 @@ export async function cancelPermissionRequestAction(
         },
       });
 
-      const stage = getStageByStatus(request.status);
       const stageUserIds =
-        stage && stage.step > 1
-          ? await getActiveUserIdsByRole(tx, stage.role)
+        currentApproval && stage
+          ? stage.role === "PEMBINA"
+            ? currentApproval.approverId
+              ? [currentApproval.approverId]
+              : []
+            : await getActiveUserIdsByRole(tx, stage.role)
           : [];
+
       const message = `${user.fullName} membatalkan pengajuan "${request.purpose}".`;
 
       await createRequestNotifications(tx, [
-        {
-          userId: request.mentorId,
-          title: "Pengajuan izin dibatalkan",
-          message,
-          requestId: request.id,
-        },
-        ...stageUserIds
-          .filter((userId) => userId !== request.mentorId)
-          .map((userId) => ({
-            userId,
-            title: "Pengajuan izin dibatalkan",
-            message,
-            requestId: request.id,
-          })),
-        ...request.students
-          .filter((student) => student.studentId !== user.id)
-          .map((student) => ({
-            userId: student.studentId,
-            title: "Pengajuan izin dibatalkan",
-            message,
-            requestId: request.id,
-          })),
-      ]);
+        ...new Set([
+          request.mentorId,
+          ...stageUserIds.filter((userId) => userId !== request.mentorId),
+          ...request.students
+            .filter((student) => student.studentId !== user.id)
+            .map((student) => student.studentId),
+        ]),
+      ].map((userId) => ({
+        userId,
+        title: "Pengajuan izin dibatalkan",
+        message,
+        requestId: request.id,
+      })));
     });
   } catch (error) {
     if (error instanceof PermissionWorkflowError) {

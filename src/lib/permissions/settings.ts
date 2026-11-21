@@ -1,6 +1,7 @@
 import "server-only";
 
 import { prisma } from "@/lib/db";
+import { getPermissionTypeConfig } from "./config";
 
 export const permissionSettingSelect = {
   id: true,
@@ -31,13 +32,25 @@ export async function getPermissionSettings() {
 }
 
 export async function getActivePermissionTypes() {
-  return prisma.permissionType.findMany({
+  const types = await prisma.permissionType.findMany({
     where: { isActive: true },
     orderBy: [{ sortOrder: "asc" }, { name: "asc" }],
     select: {
       id: true,
       name: true,
       description: true,
+      approvalRoles: true,
+      requiredFields: true,
+      fieldLabels: true,
+      approvalLabels: true,
+      formGuide: true,
     },
   });
+
+  return types.map((type) => ({
+    id: type.id,
+    name: type.name,
+    description: type.description,
+    config: getPermissionTypeConfig(type),
+  }));
 }

@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useFormStatus } from "react-dom";
 import {
   GraduationCap,
+  Info,
   Loader2,
   Save,
   ShieldCheck,
@@ -12,7 +13,6 @@ import {
 } from "lucide-react";
 
 import { FormFeedback } from "@/components/form-feedback";
-import { PasswordInput } from "@/components/password-input";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -27,6 +27,7 @@ import {
   INITIAL_ACCOUNT_ACTION_STATE,
   type AccountActionState,
 } from "@/lib/accounts/form-state";
+import { generateUsername, INITIAL_PASSWORD } from "@/lib/accounts/username";
 import { cn } from "@/lib/utils";
 
 import { createAccountAction } from "../actions";
@@ -67,8 +68,12 @@ export function AccountCreateForm() {
   const [kind, setKind] = useState<"SISWA" | "STAFF">(() =>
     state.values?.role && state.values.role !== "SISWA" ? "STAFF" : "SISWA",
   );
+  const [fullName, setFullName] = useState(state.values?.fullName ?? "");
 
   const errors = state.fieldErrors;
+  const usernamePreview = fullName.trim()
+    ? generateUsername(fullName)
+    : "—";
   const staffRole =
     state.values?.role && state.values.role !== "SISWA"
       ? state.values.role
@@ -165,7 +170,8 @@ export function AccountCreateForm() {
             Identitas akun
           </CardTitle>
           <CardDescription>
-            Nama lengkap dan username digunakan untuk masuk ke aplikasi.
+            Username dibuat otomatis dari nama lengkap, sehingga hanya nama
+            yang perlu diisi.
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -175,7 +181,8 @@ export function AccountCreateForm() {
               <Input
                 id="fullName"
                 name="fullName"
-                defaultValue={state.values?.fullName ?? ""}
+                value={fullName}
+                onChange={(event) => setFullName(event.target.value)}
                 placeholder="cth. Ahmad Fauzi"
                 required
                 minLength={3}
@@ -187,24 +194,17 @@ export function AccountCreateForm() {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="username">Username</Label>
-              <Input
-                id="username"
-                name="username"
-                defaultValue={state.values?.username ?? ""}
-                placeholder="cth. ahmad.fauzi"
-                required
-                minLength={5}
-                maxLength={20}
-                autoComplete="off"
-                aria-invalid={Boolean(errors?.username?.[0])}
-                className="h-10"
-              />
+              <Label htmlFor="usernamePreview">Username otomatis</Label>
+              <div
+                id="usernamePreview"
+                className="flex h-10 items-center rounded-lg border bg-muted/40 px-3 font-mono text-sm text-foreground"
+              >
+                {usernamePreview}
+              </div>
               <p className="text-xs text-muted-foreground">
-                5–20 karakter, tanpa spasi. Huruf akan disimpan dalam bentuk
-                kecil.
+                Diambil dari kata terakhir nama, huruf kecil, maksimal 6
+                karakter. Jika bentrok, angka unik ditambahkan otomatis.
               </p>
-              <FieldError message={errors?.username?.[0]} />
             </div>
           </div>
 
@@ -277,40 +277,26 @@ export function AccountCreateForm() {
             Keamanan akun
           </CardTitle>
           <CardDescription>
-            Password awal wajib diganti pengguna saat login pertama.
+            Kredensial awal dibuat sistem dan wajib diganti pengguna saat login
+            pertama.
           </CardDescription>
         </CardHeader>
-        <CardContent className="grid gap-4 sm:grid-cols-2">
-          <div className="space-y-2">
-            <Label htmlFor="password">Password awal</Label>
-            <PasswordInput
-              id="password"
-              name="password"
-              placeholder="Minimal 6 karakter"
-              required
-              minLength={6}
-              maxLength={72}
-              autoComplete="new-password"
-              aria-invalid={Boolean(errors?.password?.[0])}
-              className="h-10"
-            />
-            <FieldError message={errors?.password?.[0]} />
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="confirmPassword">Ulangi password</Label>
-            <PasswordInput
-              id="confirmPassword"
-              name="confirmPassword"
-              placeholder="Ulangi password awal"
-              required
-              minLength={6}
-              maxLength={72}
-              autoComplete="new-password"
-              aria-invalid={Boolean(errors?.confirmPassword?.[0])}
-              className="h-10"
-            />
-            <FieldError message={errors?.confirmPassword?.[0]} />
+        <CardContent>
+          <div className="flex items-start gap-2.5 rounded-xl border border-primary/20 bg-primary/5 px-3 py-3 text-sm">
+            <Info className="mt-0.5 size-4 shrink-0 text-primary" />
+            <div className="space-y-1 text-muted-foreground">
+              <p>
+                Password awal:{" "}
+                <span className="font-mono font-semibold text-foreground">
+                  {INITIAL_PASSWORD}
+                </span>
+              </p>
+              <p className="text-xs leading-relaxed">
+                Saat pertama kali masuk, pengguna akan diminta membuat username
+                pribadi (minimal 6 karakter) dan password sendiri. Perubahan
+                tersebut langsung tersimpan di database.
+              </p>
+            </div>
           </div>
         </CardContent>
       </Card>

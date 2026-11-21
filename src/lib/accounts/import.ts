@@ -9,20 +9,16 @@ export const IMPORT_MAX_ROWS = 200;
 
 export const STUDENT_IMPORT_HEADERS = [
   "Nama Lengkap",
-  "Username",
   "NIS",
   "Grha",
   "Kelas",
-  "Password",
 ] as const;
 
 const HEADER_LABELS: Record<string, string> = {
   fullName: "Nama Lengkap",
-  username: "Username",
   nis: "NIS",
   grha: "Grha",
   kelas: "Kelas",
-  password: "Password",
 };
 
 export class StudentImportError extends Error {
@@ -35,11 +31,9 @@ export class StudentImportError extends Error {
 export type ParsedStudentRow = {
   rowNumber: number;
   fullName: string;
-  username: string;
   nis: string;
   grha: string;
   kelas: string;
-  password: string;
 };
 
 export type StudentImportParseResult = {
@@ -109,6 +103,12 @@ export async function parseStudentImportWorkbook(
     }
   }
 
+  if (!headerIndex.has("grha")) {
+    throw new StudentImportError(
+      "Kolom \"Grha\" wajib ada pada baris pertama. Impor tidak dapat diselesaikan tanpa kolom tersebut.",
+    );
+  }
+
   const missingHeaders = STUDENT_IMPORT_HEADERS.filter(
     (header) => !headerIndex.has(header.toLowerCase()),
   );
@@ -124,7 +124,6 @@ export async function parseStudentImportWorkbook(
 
   const rows: ParsedStudentRow[] = [];
   const errors: ImportIssue[] = [];
-  const seenUsernames = new Map<string, number>();
   const seenNis = new Map<string, number>();
   let totalRows = 0;
 
@@ -132,11 +131,9 @@ export async function parseStudentImportWorkbook(
     const row = sheet.getRow(rowNumber);
     const raw = {
       fullName: getCellText(row.getCell(getColumn("Nama Lengkap"))),
-      username: getCellText(row.getCell(getColumn("Username"))),
       nis: getCellText(row.getCell(getColumn("NIS"))),
       grha: getCellText(row.getCell(getColumn("Grha"))),
       kelas: getCellText(row.getCell(getColumn("Kelas"))),
-      password: getCellText(row.getCell(getColumn("Password"))),
     };
 
     if (Object.values(raw).every((value) => value.length === 0)) {
@@ -158,8 +155,7 @@ export async function parseStudentImportWorkbook(
       const messages = Object.entries(fieldErrors).flatMap(
         ([field, fieldMessages]) =>
           (fieldMessages ?? []).map(
-            (message) =>
-              `${HEADER_LABELS[field] ?? field}: ${message}`,
+            (message) => `${HEADER_LABELS[field] ?? field}: ${message}`,
           ),
       );
 
@@ -171,17 +167,7 @@ export async function parseStudentImportWorkbook(
     }
 
     const data = parsed.data;
-    const usernameKey = data.username.toLowerCase();
-    const existingUsernameRow = seenUsernames.get(usernameKey);
     const existingNisRow = seenNis.get(data.nis.toLowerCase());
-
-    if (existingUsernameRow) {
-      errors.push({
-        row: rowNumber,
-        message: `Username "${data.username}" duplikat dengan baris ${existingUsernameRow}.`,
-      });
-      continue;
-    }
 
     if (existingNisRow) {
       errors.push({
@@ -191,7 +177,6 @@ export async function parseStudentImportWorkbook(
       continue;
     }
 
-    seenUsernames.set(usernameKey, rowNumber);
     seenNis.set(data.nis.toLowerCase(), rowNumber);
     rows.push({ rowNumber, ...data });
   }
@@ -210,11 +195,9 @@ export async function buildStudentImportTemplate(): Promise<Buffer> {
 
   sheet.columns = [
     { header: "Nama Lengkap", key: "fullName", width: 30 },
-    { header: "Username", key: "username", width: 20 },
     { header: "NIS", key: "nis", width: 16 },
     { header: "Grha", key: "grha", width: 18 },
     { header: "Kelas", key: "kelas", width: 18 },
-    { header: "Password", key: "password", width: 20 },
   ];
 
   const headerRow = sheet.getRow(1);
@@ -224,16 +207,15 @@ export async function buildStudentImportTemplate(): Promise<Buffer> {
     cell.fill = {
       type: "pattern",
       pattern: "solid",
-      fgColor: { argb: "FF0F766E" },
+      fgColor: { argb: "FF2563EB" },
     };
     cell.alignment = { vertical: "middle", horizontal: "left" };
     cell.border = {
-      bottom: { style: "thin", color: { argb: "FF0F766E" } },
+      bottom: { style: "thin", color: { argb: "FF1D4ED8" } },
     };
   });
 
   sheet.getColumn("nis").numFmt = "@";
-  sheet.getColumn("username").numFmt = "@";
 
   for (let rowNumber = 2; rowNumber <= IMPORT_MAX_ROWS + 1; rowNumber += 1) {
     sheet.getCell(`A${rowNumber}`).dataValidation = {
@@ -245,15 +227,6 @@ export async function buildStudentImportTemplate(): Promise<Buffer> {
       errorTitle: "Nama lengkap tidak valid",
       error: "Nama lengkap harus 3-100 karakter.",
     };
-    sheet.getCell(`F${rowNumber}`).dataValidation = {
-      type: "textLength",
-      operator: "between",
-      formulae: [6, 72],
-      allowBlank: true,
-      showErrorMessage: true,
-      errorTitle: "Password tidak valid",
-      error: "Password harus 6-72 karakter.",
-    };
   }
 
   const guide = workbook.addWorksheet("Petunjuk");
@@ -263,12 +236,12 @@ export async function buildStudentImportTemplate(): Promise<Buffer> {
 
   const guideRows: Array<[string, string]> = [
     ["Nama Lengkap", "Wajib. Nama lengkap siswa, 3-100 karakter."],
-    ["Username", "Wajib. 5-20 karakter, hanya huruf, angka, titik, dan garis bawah. Otomatis menjadi huruf kecil."],
     ["NIS", "Wajib. Nomor Induk Siswa, harus unik. Gunakan format teks agar angka nol di depan tidak hilang."],
-    ["Grha", "Wajib. Nama grha/asrama, 2-50 karakter."],
+    ["Grha", "Wajib. Nama grha/asrama, 2-50 karakter. Kolom ini harus ada agar impor bisa dilakukan."],
     ["Kelas", "Wajib. Kelas siswa, maksimal 50 karakter."],
-    ["Password", "Wajib. Password awal 6-72 karakter. Pengguna wajib mengganti password saat login pertama."],
-    ["Contoh baris", "Ahmad Fauzi | ahmad.fauzi | 24001 | Grha A | X IPA 1 | demo123"],
+    ["Username", "Dibuat otomatis dari kata terakhir nama lengkap (huruf kecil, maksimal 6 karakter). Tidak perlu diisi."],
+    ["Password", "Password awal otomatis 123456. Pengguna wajib membuat username dan password pribadi saat login pertama."],
+    ["Contoh baris", "Ahmad Fauzi | 24001 | Grha A | X IPA 1"],
   ];
 
   for (const [label, description] of guideRows) {

@@ -9,6 +9,9 @@ export type PermissionRequestFormValues = {
   endTime: string;
   mentorId: string;
   studentIds: string[];
+  visitorName: string;
+  phoneUse: string;
+  additionalNotes: string;
 };
 
 export type PermissionRequestFormState = {
@@ -18,7 +21,6 @@ export type PermissionRequestFormState = {
   values?: Partial<PermissionRequestFormValues>;
 };
 
-export const INITIAL_PERMISSION_REQUEST_FORM_STATE: PermissionRequestFormState =
-  {
-    status: "idle",
-  };
+export const INITIAL_PERMISSION_REQUEST_FORM_STATE: PermissionRequestFormState = {
+  status: "idle",
+};

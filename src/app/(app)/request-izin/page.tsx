@@ -81,7 +81,7 @@ export default async function RequestPermissionPage() {
     <div className="space-y-6">
       <PageHeader
         title="Ajukan Izin"
-        description="Buat pengajuan dispensasi kegiatan asrama untuk diri Anda dan siswa lain yang terlibat. Pengajuan akan diteruskan ke Pembina/Pendamping, Staff Asrama, lalu Kepala Asrama."
+        description="Buat pengajuan sesuai formulir jenis izin. Kolom isian dan tahap persetujuan akan menyesuaikan jenis izin yang Anda pilih."
       />
 
       <PermissionRequestForm

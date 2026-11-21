@@ -68,10 +68,10 @@ export function LoginForm({
               autoComplete="username"
               autoCapitalize="none"
               spellCheck={false}
-              placeholder="cth. siswa01"
+              placeholder="cth. widya"
               defaultValue={state.values?.username ?? ""}
               required
-              minLength={5}
+              minLength={3}
               maxLength={20}
               aria-invalid={Boolean(usernameError)}
               className="h-10 pl-9"
@@ -122,16 +122,19 @@ export function LoginForm({
           <dl className="mt-2 grid gap-1 text-xs text-muted-foreground">
             <div className="flex justify-between gap-3">
               <dt>Siswa</dt>
-              <dd className="font-mono text-foreground">siswa01 / demo123</dd>
+              <dd className="font-mono text-foreground">fauzi / 123456</dd>
             </div>
             <div className="flex justify-between gap-3">
               <dt>Pembina</dt>
-              <dd className="font-mono text-foreground">pembina01 / demo123</dd>
+              <dd className="font-mono text-foreground">wuland / 123456</dd>
             </div>
             <div className="flex justify-between gap-3">
               <dt>Admin</dt>
-              <dd className="font-mono text-foreground">admin / Admin12345</dd>
+              <dd className="font-mono text-foreground">admin / 123456</dd>
             </div>
+            <p className="pt-1 text-[11px] leading-relaxed">
+              Setelah login, Anda wajib membuat username dan password pribadi.
+            </p>
           </dl>
         </div>
       ) : null}

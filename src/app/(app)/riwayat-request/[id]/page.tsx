@@ -7,8 +7,11 @@ import { PageHeader } from "@/components/page-header";
 import { RequestDetail } from "@/components/permission/request-detail";
 import { Button } from "@/components/ui/button";
 import { requireRole } from "@/lib/auth/guards";
-import { isPendingStatus } from "@/lib/permissions/status";
 import { findPermissionRequestDetail } from "@/lib/permissions/queries";
+import {
+  getStageFromApproval,
+  isPendingStatus,
+} from "@/lib/permissions/status";
 
 import { CancelRequestCard } from "./cancel-request-card";
 
@@ -44,6 +47,15 @@ export default async function StudentRequestDetailPage({
   const canCancel =
     request.requesterId === user.id && isPendingStatus(request.status);
 
+  const firstApproval = [...request.approvals].sort(
+    (a, b) => a.step - b.step,
+  )[0];
+  const firstStageLabel = firstApproval
+    ? firstApproval.label?.trim() ||
+      getStageFromApproval(firstApproval)?.title ||
+      "tahap persetujuan pertama"
+    : "tahap persetujuan pertama";
+
   return (
     <div className="space-y-6">
       <PageHeader
@@ -59,20 +71,24 @@ export default async function StudentRequestDetailPage({
       </PageHeader>
 
       {query.created === "1" ? (
-        <div className="flex items-start gap-2.5 rounded-xl border border-primary/20 bg-primary/5 px-4 py-3 text-sm text-primary">
-          <CheckCircle2 className="mt-0.5 size-4 shrink-0" />
+        <div className="flex items-start gap-3 rounded-xl border border-primary/20 bg-primary/5 px-4 py-3 text-sm text-primary shadow-xs">
+          <div className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-primary/10 ring-1 ring-primary/10">
+            <CheckCircle2 className="size-4" />
+          </div>
           <div>
             <p className="font-medium">Pengajuan berhasil dikirim</p>
             <p className="text-primary/80">
-              Pengajuan Anda sudah diteruskan ke Pembina/Pendamping yang dipilih.
+              Pengajuan Anda sudah diteruskan ke {firstStageLabel}.
             </p>
           </div>
         </div>
       ) : null}
 
       {query.updated === "1" ? (
-        <div className="flex items-start gap-2.5 rounded-xl border bg-muted/60 px-4 py-3 text-sm">
-          <CheckCircle2 className="mt-0.5 size-4 shrink-0 text-muted-foreground" />
+        <div className="flex items-start gap-3 rounded-xl border bg-muted/60 px-4 py-3 text-sm shadow-xs">
+          <div className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-background text-muted-foreground ring-1 ring-foreground/10">
+            <CheckCircle2 className="size-4" />
+          </div>
           <p className="font-medium text-muted-foreground">
             Pengajuan izin berhasil dibatalkan.
           </p>

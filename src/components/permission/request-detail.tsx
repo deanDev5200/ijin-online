@@ -5,7 +5,10 @@ import {
   CalendarDays,
   ClipboardList,
   Clock3,
+  FileText,
+  Info,
   MapPin,
+  Phone,
   UserRound,
   UsersRound,
 } from "lucide-react";
@@ -24,7 +27,13 @@ import {
 } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import {
-  formatDateRange,
+  fieldLabel,
+  getPermissionTypeConfig,
+  hasField,
+  type PermissionField,
+} from "@/lib/permissions/config";
+import {
+  formatDateOnly,
   formatDateTime,
   formatTimeRange,
 } from "@/lib/permissions/dates";
@@ -84,10 +93,64 @@ export function RequestDetail({
   });
 
   const mentorNip = request.mentor.staffProfile?.nip;
+  const config = getPermissionTypeConfig(request.type);
+  const approvalCount = request.approvals.length;
+
+  const hasValue = (value: string | null) => Boolean(value?.trim());
+
+  const allDetailFields: Array<{
+    field: PermissionField;
+    icon: typeof CalendarDays;
+    value: ReactNode;
+  }> = [
+    {
+      field: "purpose",
+      icon: FileText,
+      value: request.purpose,
+    },
+    {
+      field: "place",
+      icon: MapPin,
+      value: request.place,
+    },
+    {
+      field: "visitorName",
+      icon: UserRound,
+      value: request.visitorName,
+    },
+    {
+      field: "phoneUse",
+      icon: Phone,
+      value: request.phoneUse,
+    },
+    {
+      field: "additionalNotes",
+      icon: ClipboardList,
+      value: request.additionalNotes,
+    },
+  ];
+
+  const detailFields = allDetailFields.filter(({ field, value }) => {
+    const text = typeof value === "string" ? value : "";
+
+    if (field === "purpose" && !hasField(config, "purpose")) {
+      return text !== `Pengajuan ${request.type.name}`;
+    }
+
+    return hasField(config, field) || hasValue(text);
+  });
+
+  const showTime =
+    hasField(config, "time") || Boolean(request.startTime || request.endTime);
+  const showStartDate = hasField(config, "startDate") || Boolean(request.startDate);
+  const hasDateRange =
+    Boolean(request.endDate) &&
+    request.endDate.getTime() !== request.startDate.getTime();
+  const showEndDate = hasField(config, "endDate") || hasDateRange;
 
   return (
     <div className="space-y-6">
-      <Card>
+      <Card className="bg-linear-to-br from-primary/5 via-background to-background">
         <CardContent className="space-y-4">
           <div className="flex flex-wrap items-center gap-2">
             <RequestStatusBadge status={request.status} />
@@ -95,11 +158,16 @@ export function RequestDetail({
               <ClipboardList className="size-3" />
               {request.type.name}
             </Badge>
+            <Badge variant="secondary" className="text-[10px]">
+              {approvalCount} tahap persetujuan
+            </Badge>
           </div>
 
           <div>
             <h2 className="text-xl font-semibold tracking-tight text-balance sm:text-2xl">
-              {request.purpose}
+              {hasField(config, "purpose")
+                ? request.purpose
+                : request.type.name}
             </h2>
             <p className="mt-1 text-sm text-muted-foreground">
               Diajukan oleh{" "}
@@ -113,21 +181,34 @@ export function RequestDetail({
           <Separator />
 
           <dl className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            <InfoItem
-              icon={CalendarDays}
-              label="Tanggal"
-              value={formatDateRange(request.startDate, request.endDate)}
-            />
-            <InfoItem
-              icon={Clock3}
-              label="Waktu"
-              value={formatTimeRange(request.startTime, request.endTime)}
-            />
-            <InfoItem
-              icon={MapPin}
-              label="Tempat"
-              value={request.place}
-            />
+            {showStartDate ? (
+              <InfoItem
+                icon={CalendarDays}
+                label={fieldLabel(config, "startDate")}
+                value={formatDateOnly(request.startDate)}
+              />
+            ) : null}
+            {showEndDate ? (
+              <InfoItem
+                icon={CalendarDays}
+                label={fieldLabel(config, "endDate")}
+                value={formatDateOnly(request.endDate)}
+              />
+            ) : null}
+            {!showStartDate && !showEndDate ? (
+              <InfoItem
+                icon={CalendarDays}
+                label="Tanggal pengajuan"
+                value={formatDateOnly(request.createdAt)}
+              />
+            ) : null}
+            {showTime ? (
+              <InfoItem
+                icon={Clock3}
+                label={fieldLabel(config, "time")}
+                value={formatTimeRange(request.startTime, request.endTime)}
+              />
+            ) : null}
             <InfoItem
               icon={UserRound}
               label="Pembina/Pendamping"
@@ -142,6 +223,14 @@ export function RequestDetail({
           <AlertTriangle />
           <AlertTitle>Pengajuan ditolak</AlertTitle>
           <AlertDescription>{request.rejectionReason}</AlertDescription>
+        </Alert>
+      ) : null}
+
+      {config.formGuide ? (
+        <Alert>
+          <Info />
+          <AlertTitle>Panduan formulir {request.type.name}</AlertTitle>
+          <AlertDescription>{config.formGuide}</AlertDescription>
         </Alert>
       ) : null}
 
@@ -180,10 +269,7 @@ export function RequestDetail({
                           {student.fullName}
                         </p>
                         {isRequester ? (
-                          <Badge
-                            variant="secondary"
-                            className="text-[10px]"
-                          >
+                          <Badge variant="secondary" className="text-[10px]">
                             Pengaju
                           </Badge>
                         ) : null}
@@ -200,23 +286,22 @@ export function RequestDetail({
 
           <Card>
             <CardHeader>
-              <CardTitle className="text-base">Detail kegiatan</CardTitle>
+              <CardTitle className="text-base">Detail formulir</CardTitle>
               <CardDescription>
-                Informasi lengkap yang tercatat pada pengajuan.
+                Data yang diisi sesuai ketentuan jenis izin ini.
               </CardDescription>
             </CardHeader>
             <CardContent>
               <dl className="grid gap-4 sm:grid-cols-2">
-                <InfoItem
-                  icon={ClipboardList}
-                  label="Jenis izin"
-                  value={request.type.name}
-                />
-                <InfoItem
-                  icon={MapPin}
-                  label="Tempat"
-                  value={request.place}
-                />
+                {detailFields.map(({ field, icon: Icon, value }) => (
+                  <InfoItem
+                    key={field}
+                    icon={Icon}
+                    label={fieldLabel(config, field)}
+                    value={value || "—"}
+                    className={field === "additionalNotes" || field === "phoneUse" ? "sm:col-span-2" : undefined}
+                  />
+                ))}
                 <InfoItem
                   icon={UserRound}
                   label="Pembina/Pendamping"
@@ -241,11 +326,6 @@ export function RequestDetail({
                   label="Terakhir diperbarui"
                   value={formatDateTime(request.updatedAt)}
                 />
-                <InfoItem
-                  icon={UsersRound}
-                  label="Jumlah siswa"
-                  value={`${students.length} siswa`}
-                />
               </dl>
             </CardContent>
           </Card>
@@ -256,14 +336,17 @@ export function RequestDetail({
             <CardHeader>
               <CardTitle className="text-base">Alur persetujuan</CardTitle>
               <CardDescription>
-                Persetujuan berurutan dari Pembina/Pendamping hingga Kepala
-                Asrama.
+                Persetujuan mengikuti konfigurasi jenis izin{" "}
+                <span className="font-medium text-foreground">
+                  {request.type.name}
+                </span>
+                .
               </CardDescription>
             </CardHeader>
             <CardContent>
               <ApprovalTimeline
                 request={request}
-                highlightRole={highlightRole}
+                viewerRole={highlightRole}
               />
             </CardContent>
           </Card>

@@ -77,9 +77,9 @@ function SidebarLink({
       onClick={onNavigate}
       aria-current={active ? "page" : undefined}
       className={cn(
-        "group flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors",
+        "group relative flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-all",
         active
-          ? "bg-primary text-primary-foreground shadow-sm"
+          ? "bg-primary/10 text-primary ring-1 ring-primary/15 before:absolute before:top-1/2 before:left-0 before:h-5 before:w-0.5 before:-translate-y-1/2 before:rounded-full before:bg-primary"
           : "text-muted-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
       )}
     >
@@ -87,7 +87,7 @@ function SidebarLink({
         className={cn(
           "size-4 shrink-0",
           active
-            ? "text-primary-foreground"
+            ? "text-primary"
             : "text-muted-foreground group-hover:text-sidebar-accent-foreground",
         )}
       />
@@ -121,9 +121,9 @@ function SidebarContent({
   const sections = getNavigation(user.role);
 
   return (
-    <div className="flex h-full flex-col bg-sidebar">
-      <div className="flex h-16 items-center gap-3 border-b px-5">
-        <div className="flex size-9 items-center justify-center rounded-xl bg-primary text-primary-foreground shadow-sm">
+    <div className="flex h-full flex-col bg-linear-to-b from-sidebar via-sidebar to-primary/5">
+      <div className="flex h-16 items-center gap-3 border-b bg-background/40 px-5">
+        <div className="flex size-9 items-center justify-center rounded-xl bg-linear-to-br from-primary to-chart-2 text-primary-foreground shadow-md shadow-primary/20">
           <GraduationCap className="size-5" />
         </div>
         <div className="min-w-0">
@@ -165,10 +165,11 @@ function SidebarContent({
           </Avatar>
           <div className="min-w-0 flex-1">
             <p className="truncate text-sm font-medium">{user.fullName}</p>
-            <p className="truncate text-xs text-muted-foreground">
+            <p className="truncate text-xs text-primary">
               {ROLE_LABELS[user.role]}
             </p>
           </div>
+          <span className="size-2 shrink-0 rounded-full bg-primary/80 ring-4 ring-primary/10" />
         </div>
         <p className="px-1 pt-3 text-[10px] text-muted-foreground">
           {appName} · Fase 1
@@ -197,13 +198,13 @@ export function AppShell({
     : "Notifikasi";
 
   return (
-    <div className="min-h-svh bg-muted/30">
+    <div className="min-h-svh bg-linear-to-br from-background via-muted/25 to-background">
       <aside className="fixed inset-y-0 left-0 z-40 hidden w-72 border-r lg:block">
         <SidebarContent user={user} unreadCount={unreadCount} />
       </aside>
 
       <div className="lg:pl-72">
-        <header className="sticky top-0 z-30 flex h-16 items-center gap-2 border-b bg-background/80 px-3 backdrop-blur sm:gap-3 sm:px-6">
+        <header className="sticky top-0 z-30 flex h-16 items-center gap-2 border-b bg-background/85 px-3 shadow-[0_1px_0_rgba(79,70,229,0.04)] backdrop-blur-xl sm:gap-3 sm:px-6">
           <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
             <SheetTrigger asChild>
               <Button
@@ -306,7 +307,7 @@ export function AppShell({
           </DropdownMenu>
         </header>
 
-        <main className="p-4 sm:p-6 lg:p-8">
+        <main className="app-page-enter p-4 sm:p-6 lg:p-8">
           <div className="mx-auto w-full max-w-6xl">{children}</div>
         </main>
       </div>

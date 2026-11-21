@@ -15,10 +15,19 @@ import {
   toDateOnly,
 } from "@/lib/permissions/dates";
 import {
+  approvalLabel,
+  getPermissionTypeConfig,
+  hasField,
+  pendingStatusForRole,
+} from "@/lib/permissions/config";
+import {
   type PermissionRequestFormState,
   type PermissionRequestFormValues,
 } from "@/lib/permissions/form-state";
-import { createRequestNotifications } from "@/lib/permissions/notifications";
+import {
+  createRequestNotifications,
+  getActiveUserIdsByRole,
+} from "@/lib/permissions/notifications";
 import { getPermissionSettings } from "@/lib/permissions/settings";
 import { createPermissionSchema } from "@/lib/validations/permission";
 
@@ -39,26 +48,68 @@ export async function createPermissionRequestAction(
     .filter((value): value is string => typeof value === "string");
 
   const studentIds = Array.from(new Set([user.id, ...rawStudentIds]));
-  const dateModeValue = getFormValue(formData, "dateMode");
-  const dateMode = dateModeValue === "range" ? "range" : "single";
-  const startDateValue = getFormValue(formData, "startDate");
-  const endDateValue =
-    dateMode === "range" ? getFormValue(formData, "endDate") : startDateValue;
+  const typeId = getFormValue(formData, "typeId");
+
+  const type = await prisma.permissionType.findFirst({
+    where: {
+      id: typeId,
+      isActive: true,
+    },
+    select: {
+      id: true,
+      name: true,
+      approvalRoles: true,
+      requiredFields: true,
+      fieldLabels: true,
+      approvalLabels: true,
+      formGuide: true,
+    },
+  });
+
+  if (!type) {
+    return {
+      status: "error",
+      message: "Jenis izin yang dipilih tidak tersedia.",
+      fieldErrors: {
+        typeId: ["Pilih jenis izin yang aktif."],
+      },
+    };
+  }
+
+  const config = getPermissionTypeConfig(type);
+  const today = getTodayInJakarta();
+  const needsRange = hasField(config, "endDate");
+  const startDateValue =
+    getFormValue(formData, "startDate") || (hasField(config, "startDate") ? "" : today);
+  const endDateValue = needsRange
+    ? getFormValue(formData, "endDate") || startDateValue
+    : startDateValue;
 
   const values: PermissionRequestFormValues = {
-    typeId: getFormValue(formData, "typeId"),
-    purpose: getFormValue(formData, "purpose"),
-    place: getFormValue(formData, "place"),
-    dateMode,
+    typeId: type.id,
+    purpose: hasField(config, "purpose")
+      ? getFormValue(formData, "purpose")
+      : `Pengajuan ${type.name}`,
+    place: hasField(config, "place") ? getFormValue(formData, "place") : "",
+    dateMode: needsRange ? "range" : "single",
     startDate: startDateValue,
     endDate: endDateValue,
-    startTime: getFormValue(formData, "startTime"),
-    endTime: getFormValue(formData, "endTime"),
+    startTime: hasField(config, "time") ? getFormValue(formData, "startTime") : "",
+    endTime: hasField(config, "time") ? getFormValue(formData, "endTime") : "",
     mentorId: getFormValue(formData, "mentorId"),
     studentIds,
+    visitorName: hasField(config, "visitorName")
+      ? getFormValue(formData, "visitorName")
+      : "",
+    phoneUse: hasField(config, "phoneUse")
+      ? getFormValue(formData, "phoneUse")
+      : "",
+    additionalNotes: hasField(config, "additionalNotes")
+      ? getFormValue(formData, "additionalNotes")
+      : "",
   };
 
-  const parsed = createPermissionSchema.safeParse(values);
+  const parsed = createPermissionSchema(config).safeParse(values);
 
   if (!parsed.success) {
     return {
@@ -71,7 +122,6 @@ export async function createPermissionRequestAction(
 
   const data = parsed.data;
   const settings = await getPermissionSettings();
-  const today = getTodayInJakarta();
   const earliestStart = addDaysToDateOnly(today, settings.minLeadDays);
 
   if (data.startDate < earliestStart) {
@@ -110,28 +160,6 @@ export async function createPermissionRequestAction(
         studentIds: [
           `Maksimal ${settings.maxStudentsPerRequest} siswa dalam satu pengajuan.`,
         ],
-      },
-      values,
-    };
-  }
-
-  const type = await prisma.permissionType.findFirst({
-    where: {
-      id: data.typeId,
-      isActive: true,
-    },
-    select: {
-      id: true,
-      name: true,
-    },
-  });
-
-  if (!type) {
-    return {
-      status: "error",
-      message: "Jenis izin yang dipilih tidak tersedia.",
-      fieldErrors: {
-        typeId: ["Pilih jenis izin yang aktif."],
       },
       values,
     };
@@ -189,9 +217,12 @@ export async function createPermissionRequestAction(
   }
 
   const startDate = toDateOnly(data.startDate);
-  const endDate =
-    data.dateMode === "range" ? toDateOnly(data.endDate) : startDate;
+  const endDate = needsRange ? toDateOnly(data.endDate) : startDate;
   const dateLabel = formatDateRange(startDate, endDate);
+  const firstRole = config.approvalRoles[0];
+  const initialStatus = firstRole
+    ? pendingStatusForRole(firstRole) ?? "PENDING_MENTOR"
+    : "PENDING_MENTOR";
 
   const request = await prisma.$transaction(async (tx) => {
     const created = await tx.permissionRequest.create({
@@ -205,7 +236,10 @@ export async function createPermissionRequestAction(
         endDate,
         startTime: data.startTime,
         endTime: data.endTime,
-        status: "PENDING_MENTOR",
+        visitorName: data.visitorName || null,
+        phoneUse: data.phoneUse || null,
+        additionalNotes: data.additionalNotes || null,
+        status: initialStatus,
         students: {
           create: data.studentIds.map((studentId) => ({
             studentId,
@@ -213,24 +247,13 @@ export async function createPermissionRequestAction(
           })),
         },
         approvals: {
-          create: [
-            {
-              step: 1,
-              role: "PEMBINA",
-              approverId: mentor.id,
-              status: "PENDING",
-            },
-            {
-              step: 2,
-              role: "STAFF_ASRAMA",
-              status: "PENDING",
-            },
-            {
-              step: 3,
-              role: "KEPALA_ASRAMA",
-              status: "PENDING",
-            },
-          ],
+          create: config.approvalRoles.map((role, index) => ({
+            step: index + 1,
+            role,
+            label: approvalLabel(config, role),
+            approverId: role === "PEMBINA" ? mentor.id : null,
+            status: "PENDING",
+          })),
         },
       },
       select: {
@@ -238,17 +261,27 @@ export async function createPermissionRequestAction(
       },
     });
 
+    const firstStageLabel = firstRole ? approvalLabel(config, firstRole) : "penyetuju";
+    const firstApproverIds =
+      firstRole === "PEMBINA"
+        ? [mentor.id]
+        : firstRole
+          ? await getActiveUserIdsByRole(tx, firstRole)
+          : [];
+
     await createRequestNotifications(tx, [
-      {
-        userId: mentor.id,
-        title: "Permintaan izin baru",
-        message: `${user.fullName} mengajukan ${type.name.toLowerCase()} untuk "${data.purpose}" pada ${dateLabel}. Mohon tinjau pengajuan ini.`,
-        requestId: created.id,
-      },
+      ...firstApproverIds
+        .filter((userId) => userId !== user.id)
+        .map((userId) => ({
+          userId,
+          title: "Permintaan izin baru",
+          message: `${user.fullName} mengajukan ${type.name.toLowerCase()} untuk "${data.purpose}" pada ${dateLabel}. Mohon tinjau pengajuan ini.`,
+          requestId: created.id,
+        })),
       {
         userId: user.id,
         title: "Pengajuan izin terkirim",
-        message: `Pengajuan "${data.purpose}" berhasil dikirim dan menunggu persetujuan ${mentor.fullName}.`,
+        message: `Pengajuan "${data.purpose}" berhasil dikirim dan menunggu persetujuan ${firstStageLabel}.`,
         requestId: created.id,
       },
       ...students

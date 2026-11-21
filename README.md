@@ -1,8 +1,10 @@
 # Ijin Online
 
 A school dormitory permission-request system with a Bahasa Indonesia interface.
-Students submit _Dispensasi Kegiatan Asrama_ requests, which are approved in
-sequence by the selected Pembina/Pendamping, Staff Asrama, and Kepala Asrama.
+Students choose a permission type; each type has its own form fields, labels,
+guide, and approval chain. Defaults follow _Formulir Ijin Asrama.pdf_ for six
+types: Dispensasi Kegiatan Asrama, Kunjungan Keluarga, Izin Keluar Asrama, Izin
+Penggunaan HP, Izin Pulang, and Titipan Siswa.
 
 ## Stack
 
@@ -45,7 +47,7 @@ Copy `.env.example` to `.env`, then fill in the values:
 DATABASE_URL="postgresql://postgres:CHANGE_ME@localhost:5432/ijin_online?schema=public"
 AUTH_SECRET="replace-with-a-long-random-secret"
 ADMIN_USERNAME="admin"
-ADMIN_PASSWORD="Admin12345"
+ADMIN_PASSWORD="123456"
 ADMIN_FULL_NAME="Administrator"
 NEXT_PUBLIC_SCHOOL_NAME="Sekolah Asrama"
 NEXT_PUBLIC_APP_NAME="Ijin Online"
@@ -79,17 +81,21 @@ Prisma schema so a new migration is generated.
 
 With `SEED_DEMO="true"`, the seed creates:
 
-| Role           | Username    | Password     |
-| -------------- | ----------- | ------------ |
-| Admin          | `admin`     | `Admin12345` |
-| Siswa          | `siswa01`   | `demo123`    |
-| Siswa          | `siswa02`   | `demo123`    |
-| Pembina        | `pembina01` | `demo123`    |
-| Staff Asrama   | `staff01`   | `demo123`    |
-| Kepala Asrama  | `kepala01`  | `demo123`    |
+| Role           | Username  | Password |
+| -------------- | --------- | -------- |
+| Admin          | `admin`   | `123456` |
+| Siswa          | `fauzi`   | `123456` |
+| Siswa          | `lestar`  | `123456` |
+| Pembina        | `wuland`  | `123456` |
+| Staff Asrama   | `pratam`  | `123456` |
+| Kepala Asrama  | `gunawa`  | `123456` |
 
-The admin account is required to change its password on first login. The demo
-accounts are not.
+All accounts use the initial password `123456` and must complete first-login
+setup: create a personal username (minimum 6 characters) and password. The new
+credentials are saved to the database and used for subsequent logins. Accounts
+created before this rule were normalized by the
+`20261121130000_reset_initial_credentials` migration; their existing usernames
+remain valid until the forced setup replaces them.
 
 ## Scripts
 
@@ -108,15 +114,18 @@ accounts are not.
 
 Roles are `SISWA`, `PEMBINA`, `STAFF_ASRAMA`, `KEPALA_ASRAMA`, and `ADMIN`.
 
-- A student creates a request for themselves and optionally other students,
-  with a purpose, place, one date or a date range, times, and a selected
-  Pembina/Pendamping.
-- Approval stage 1 belongs to that specific Pembina. Stages 2 and 3 can be
-  decided by any active user with the relevant role; the first decision wins.
+- A student creates a request for themselves and optionally other students.
+  The visible fields, labels, and guide come from the selected permission type;
+  the system only asks for data required by that type.
+- Approvals are generated per type in the configured order. A PEMBINA approval
+  belongs to the specific Pembina/Pendamping selected on the request. Other
+  roles use a shared role queue where the first decision wins.
+- The next request status is derived from the approval rows, so a type with two
+  stages moves directly to `APPROVED` after its second approval.
 - Rejection requires a note. Remaining approval steps are cancelled.
 - A requester can cancel while the request is still pending.
 - Every stage change creates notifications for the students, the mentor, and
-  the next approvers.
+  the next approvers, using labels captured on the approval rows.
 
 ## Admin pages
 
@@ -133,15 +142,17 @@ Administrators (`ADMIN`) manage the system through these pages:
 ### Kelola Akun
 
 - Student accounts require Nama Lengkap, NIS, Kelas, and Grha. Staff accounts
-  require Nama Lengkap and NIP. All accounts need a username and password.
-- Usernames are 5-20 characters and accept letters, numbers, dots, and
-  underscores. Passwords are stored as bcrypt hashes.
+  require Nama Lengkap and NIP.
+- The username is generated automatically from the last word of the full name:
+  lowercase, no spaces, at most 6 characters. Collisions get a numeric suffix.
+  The initial password for every account is `123456`, stored as a bcrypt hash.
+- On first login, the user must create a personal username (minimum 6
+  characters) and password. The setup page updates both values in the database;
+  later logins use the new credentials.
 - Identity data can be edited, passwords reset, and accounts deactivated or
   reactivated. Accounts are never deleted, so request history and approval
   trails remain intact. Deactivation and password resets end active sessions.
 - Roles cannot be changed after an account is created.
-- Newly created and imported accounts must change their password on first
-  login.
 
 ### Excel import
 
@@ -152,15 +163,15 @@ template also contains a `Petunjuk` sheet describing each column.
 | Column       | Description                                                          |
 | ------------ | -------------------------------------------------------------------- |
 | Nama Lengkap | Required. Student full name, 3-100 characters.                       |
-| Username     | Required. 5-20 characters; lowercase letters, numbers, `.` and `_`.  |
 | NIS          | Required. Unique student number; keep the cell formatted as text.    |
-| Grha         | Required. Dormitory/grha name, 2-50 characters.                      |
+| Grha         | Required. Dormitory/grha name, 2-50 characters. Import fails if this column is missing. |
 | Kelas        | Required. Class name, up to 50 characters.                           |
-| Password     | Required. Initial password, 6-72 characters.                         |
 
-A workbook may contain at most 200 data rows. Existing usernames and NIS values
-are reported per row and skipped rather than overwritten. After import, the
-result summary lists created accounts and every rejected row with its reason.
+Usernames and passwords are not imported: usernames are generated from the
+full name and the initial password is `123456`. A workbook may contain at most
+200 data rows. Existing NIS values are reported per row and skipped rather than
+overwritten. After import, the result summary lists created accounts and every
+rejected row with its reason.
 
 ### Indeks Izin
 
@@ -178,8 +189,12 @@ approval deadline are marked as overdue.
   These settings drive the student form and are re-validated on submit.
 - **Jenis izin**: create, edit, and deactivate permission types. At least one
   type must stay active. Deactivated types remain on historical requests.
-- **Alur persetujuan**: fixed as Pembina/Pendamping → Staff Asrama → Kepala
-  Asrama. Stage 1 goes to the mentor selected on the request; later stages use
-  the relevant role and the first decision wins.
+- **Konfigurasi per jenis izin**: for each type, set the ordered approval roles
+  (up to three), the displayed/required form fields, custom field labels,
+  custom approval labels, and the form guide shown to students. Changes apply
+  to new requests; historical approval labels are kept on each request.
+- **Alur persetujuan**: Pembina/Pendamping, Staff Asrama, and Kepala Asrama can
+  be ordered or omitted per type. A PEMBINA stage goes to the mentor selected on
+  the request; other stages use the relevant role and the first decision wins.
 - **Pembina/Pendamping yang dapat dipilih**: only checked, active staff
   accounts appear as mentor choices on the student form.

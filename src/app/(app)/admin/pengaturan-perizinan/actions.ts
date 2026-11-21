@@ -7,15 +7,109 @@ import { requireRole } from "@/lib/auth/guards";
 import { prisma } from "@/lib/db";
 import type { ActionState } from "@/lib/form-state";
 import {
+  APPROVAL_ROLES,
+  DEFAULT_APPROVAL_ROLES,
+  DEFAULT_REQUIRED_FIELDS,
+  PERMISSION_FIELDS,
+  serializeConfig,
+  type PermissionTypeConfig,
+} from "@/lib/permissions/config";
+import {
   mentorSelectionSchema,
   permissionSettingsSchema,
   permissionTypeSchema,
 } from "@/lib/validations/account";
+import {
+  approvalRolesSchema,
+  requiredFieldsSchema,
+} from "@/lib/validations/permission";
 
 function getFormValue(formData: FormData, key: string): string {
   const value = formData.get(key);
 
   return typeof value === "string" ? value : "";
+}
+
+type ConfigParseResult =
+  | { ok: true; config: PermissionTypeConfig }
+  | { ok: false; state: ActionState };
+
+function parseTypeConfig(formData: FormData): ConfigParseResult {
+  const roles = [1, 2, 3]
+    .map((step) => getFormValue(formData, `approvalRole${step}`).trim())
+    .filter(Boolean);
+  const fields = formData
+    .getAll("requiredFields")
+    .filter((value): value is string => typeof value === "string" && Boolean(value.trim()));
+
+  const rolesResult = approvalRolesSchema.safeParse(
+    roles.length > 0 ? roles : DEFAULT_APPROVAL_ROLES,
+  );
+  const fieldsResult = requiredFieldsSchema.safeParse(
+    fields.length > 0 ? fields : DEFAULT_REQUIRED_FIELDS,
+  );
+
+  if (!rolesResult.success || !fieldsResult.success) {
+    return {
+      ok: false,
+      state: {
+        status: "error",
+        message: "Periksa kembali konfigurasi formulir dan persetujuan.",
+        fieldErrors: {
+          ...(rolesResult.success
+            ? {}
+            : {
+                approvalRoles:
+                  z.flattenError(rolesResult.error).formErrors ?? [],
+              }),
+          ...(fieldsResult.success
+            ? {}
+            : {
+                requiredFields:
+                  z.flattenError(fieldsResult.error).formErrors ?? [],
+              }),
+        },
+      },
+    };
+  }
+
+  const fieldLabels: Partial<Record<(typeof PERMISSION_FIELDS)[number], string>> = {};
+
+  for (const field of PERMISSION_FIELDS) {
+    const label = getFormValue(formData, `fieldLabel_${field}`).trim();
+
+    if (label) {
+      fieldLabels[field] = label;
+    }
+  }
+
+  const approvalLabels: Partial<Record<(typeof APPROVAL_ROLES)[number], string>> = {};
+
+  for (const role of APPROVAL_ROLES) {
+    const label = getFormValue(formData, `approvalLabel_${role}`).trim();
+
+    if (label) {
+      approvalLabels[role] = label;
+    }
+  }
+
+  return {
+    ok: true,
+    config: {
+      approvalRoles: rolesResult.data,
+      requiredFields: fieldsResult.data,
+      fieldLabels,
+      approvalLabels,
+      formGuide: getFormValue(formData, "formGuide").trim() || null,
+    },
+  };
+}
+
+function revalidatePermissionPages() {
+  revalidatePath("/admin/pengaturan-perizinan");
+  revalidatePath("/admin/indeks-izin");
+  revalidatePath("/request-izin");
+  revalidatePath("/dashboard");
 }
 
 export async function updatePermissionSettingsAction(
@@ -47,9 +141,7 @@ export async function updatePermissionSettingsAction(
     create: { id: "default", ...parsed.data },
   });
 
-  revalidatePath("/admin/pengaturan-perizinan");
-  revalidatePath("/admin/indeks-izin");
-  revalidatePath("/request-izin");
+  revalidatePermissionPages();
 
   return {
     status: "success",
@@ -69,6 +161,7 @@ export async function createPermissionTypeAction(
     isActive: getFormValue(formData, "isActive") || "true",
     sortOrder: getFormValue(formData, "sortOrder") || "0",
   });
+  const configResult = parseTypeConfig(formData);
 
   if (!parsed.success) {
     return {
@@ -76,6 +169,10 @@ export async function createPermissionTypeAction(
       message: "Periksa kembali data jenis izin.",
       fieldErrors: z.flattenError(parsed.error).fieldErrors,
     };
+  }
+
+  if (!configResult.ok) {
+    return configResult.state;
   }
 
   const existing = await prisma.permissionType.findUnique({
@@ -97,11 +194,11 @@ export async function createPermissionTypeAction(
       description: parsed.data.description || null,
       isActive: parsed.data.isActive === "true",
       sortOrder: parsed.data.sortOrder,
+      ...serializeConfig(configResult.config),
     },
   });
 
-  revalidatePath("/admin/pengaturan-perizinan");
-  revalidatePath("/request-izin");
+  revalidatePermissionPages();
 
   return {
     status: "success",
@@ -122,6 +219,7 @@ export async function updatePermissionTypeAction(
     isActive: getFormValue(formData, "isActive") || "true",
     sortOrder: getFormValue(formData, "sortOrder") || "0",
   });
+  const configResult = parseTypeConfig(formData);
 
   if (!parsed.success) {
     return {
@@ -129,6 +227,10 @@ export async function updatePermissionTypeAction(
       message: "Periksa kembali data jenis izin.",
       fieldErrors: z.flattenError(parsed.error).fieldErrors,
     };
+  }
+
+  if (!configResult.ok) {
+    return configResult.state;
   }
 
   if (!parsed.data.typeId) {
@@ -186,12 +288,11 @@ export async function updatePermissionTypeAction(
       description: parsed.data.description || null,
       isActive: nextActive,
       sortOrder: parsed.data.sortOrder,
+      ...serializeConfig(configResult.config),
     },
   });
 
-  revalidatePath("/admin/pengaturan-perizinan");
-  revalidatePath("/admin/indeks-izin");
-  revalidatePath("/request-izin");
+  revalidatePermissionPages();
 
   return {
     status: "success",

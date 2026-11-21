@@ -20,8 +20,8 @@ import {
 } from "@/components/ui/card";
 import { requireRole } from "@/lib/auth/guards";
 import { prisma } from "@/lib/db";
+import { approvalLabel, getPermissionTypeConfig } from "@/lib/permissions/config";
 import { getPermissionSettings } from "@/lib/permissions/settings";
-import { APPROVAL_STEPS } from "@/lib/permissions/status";
 
 import {
   MentorSelectionForm,
@@ -47,6 +47,11 @@ export default async function PermissionSettingsPage() {
         description: true,
         isActive: true,
         sortOrder: true,
+        approvalRoles: true,
+        requiredFields: true,
+        fieldLabels: true,
+        approvalLabels: true,
+        formGuide: true,
         _count: {
           select: {
             requests: true,
@@ -119,27 +124,40 @@ export default async function PermissionSettingsPage() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-base">
               <ShieldCheck className="size-4 text-primary" />
-              Alur persetujuan
+              Alur persetujuan per jenis izin
             </CardTitle>
             <CardDescription>
-              Urutan persetujuan tetap agar jejak keputusan konsisten.
+              Setiap jenis izin memiliki urutan dan label penyetuju sendiri.
+              Ubah melalui panel jenis izin di bawah.
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="space-y-3">
-              {APPROVAL_STEPS.map((stage) => (
-                <div key={stage.step} className="flex gap-3">
-                  <div className="flex size-7 shrink-0 items-center justify-center rounded-full bg-primary/10 text-xs font-semibold text-primary">
-                    {stage.step}
+              {types.slice(0, 6).map((type) => {
+                const config = getPermissionTypeConfig(type);
+
+                return (
+                  <div key={type.id} className="rounded-xl border bg-background p-3">
+                    <p className="text-sm font-medium">{type.name}</p>
+                    <div className="mt-2 flex flex-wrap gap-1.5">
+                      {config.approvalRoles.map((role, index) => (
+                        <Badge
+                          key={role}
+                          variant="secondary"
+                          className="text-[10px]"
+                        >
+                          {index + 1}. {approvalLabel(config, role)}
+                        </Badge>
+                      ))}
+                    </div>
                   </div>
-                  <div className="min-w-0">
-                    <p className="text-sm font-medium">{stage.title}</p>
-                    <p className="text-xs leading-relaxed text-muted-foreground">
-                      {stage.description}
-                    </p>
-                  </div>
-                </div>
-              ))}
+                );
+              })}
+              {types.length === 0 ? (
+                <p className="rounded-lg border border-dashed px-3 py-6 text-center text-xs text-muted-foreground">
+                  Belum ada jenis izin yang dikonfigurasi.
+                </p>
+              ) : null}
             </div>
 
             <div className="rounded-lg border bg-muted/40 px-3 py-2 text-xs leading-relaxed text-muted-foreground">
@@ -152,8 +170,6 @@ export default async function PermissionSettingsPage() {
                 Indeks Izin.
               </p>
             </div>
-
-            <Badge variant="outline">Urutan ditetapkan sistem</Badge>
           </CardContent>
         </Card>
       </div>
@@ -213,6 +229,7 @@ export default async function PermissionSettingsPage() {
                       description: type.description ?? "",
                       isActive: type.isActive,
                       sortOrder: type.sortOrder,
+                      config: getPermissionTypeConfig(type),
                     }}
                   />
                 </div>

@@ -12,6 +12,7 @@ import {
   parseStudentImportWorkbook,
   StudentImportError,
 } from "@/lib/accounts/import";
+import { INITIAL_PASSWORD, generateUsername } from "@/lib/accounts/username";
 import { requireRole } from "@/lib/auth/guards";
 import { hashPassword } from "@/lib/auth/password";
 import { prisma } from "@/lib/db";
@@ -22,7 +23,6 @@ import {
   kelasSchema,
   nisSchema,
   nipSchema,
-  resetAccountPasswordSchema,
   updateAccountSchema,
 } from "@/lib/validations/account";
 
@@ -45,7 +45,6 @@ function accountValues(formData: FormData) {
   return {
     role: getFormValue(formData, "role"),
     fullName: getFormValue(formData, "fullName"),
-    username: getFormValue(formData, "username"),
     nis: getFormValue(formData, "nis"),
     grha: getFormValue(formData, "grha"),
     kelas: getFormValue(formData, "kelas"),
@@ -60,11 +59,7 @@ export async function createAccountAction(
   await requireRole("ADMIN");
 
   const values = accountValues(formData);
-  const parsed = createAccountSchema.safeParse({
-    ...values,
-    password: getFormValue(formData, "password"),
-    confirmPassword: getFormValue(formData, "confirmPassword"),
-  });
+  const parsed = createAccountSchema.safeParse(values);
 
   if (!parsed.success) {
     return {
@@ -76,30 +71,16 @@ export async function createAccountAction(
   }
 
   const data = parsed.data;
-  const [existingUsername, existingProfile] = await Promise.all([
-    prisma.user.findUnique({
-      where: { username: data.username },
-      select: { id: true },
-    }),
+  const existingProfile =
     data.role === "SISWA"
-      ? prisma.studentProfile.findUnique({
+      ? await prisma.studentProfile.findUnique({
           where: { nis: data.nis },
           select: { userId: true },
         })
-      : prisma.staffProfile.findUnique({
+      : await prisma.staffProfile.findUnique({
           where: { nip: data.nip },
           select: { userId: true },
-        }),
-  ]);
-
-  if (existingUsername) {
-    return {
-      status: "error",
-      message: "Username sudah digunakan akun lain.",
-      fieldErrors: { username: ["Username sudah digunakan."] },
-      values,
-    };
-  }
+        });
 
   if (existingProfile) {
     return {
@@ -116,12 +97,31 @@ export async function createAccountAction(
     };
   }
 
-  const passwordHash = await hashPassword(data.password);
+  const existingUsers = await prisma.user.findMany({
+    select: { username: true },
+  });
+
+  let username: string;
+
+  try {
+    username = generateUsername(
+      data.fullName,
+      existingUsers.map((user) => user.username),
+    );
+  } catch {
+    return {
+      status: "error",
+      message: "Username otomatis tidak dapat dibuat dari nama tersebut.",
+      values,
+    };
+  }
+
+  const passwordHash = await hashPassword(INITIAL_PASSWORD);
 
   try {
     await prisma.user.create({
       data: {
-        username: data.username,
+        username,
         passwordHash,
         role: data.role,
         fullName: data.fullName,
@@ -241,16 +241,9 @@ export async function updateAccountAction(
     };
   }
 
-  const [existingUsername, existingProfile] = await Promise.all([
-    prisma.user.findFirst({
-      where: {
-        username: data.username,
-        id: { not: account.id },
-      },
-      select: { id: true },
-    }),
+  const existingProfile =
     account.role === "SISWA"
-      ? prisma.studentProfile.findFirst({
+      ? await prisma.studentProfile.findFirst({
           where: {
             nis: data.nis,
             userId: { not: account.id },
@@ -258,24 +251,14 @@ export async function updateAccountAction(
           select: { userId: true },
         })
       : account.role !== "ADMIN"
-        ? prisma.staffProfile.findFirst({
+        ? await prisma.staffProfile.findFirst({
             where: {
               nip: data.nip,
               userId: { not: account.id },
             },
             select: { userId: true },
           })
-        : null,
-  ]);
-
-  if (existingUsername) {
-    return {
-      status: "error",
-      message: "Username sudah digunakan akun lain.",
-      fieldErrors: { username: ["Username sudah digunakan."] },
-      values,
-    };
-  }
+        : null;
 
   if (existingProfile) {
     return {
@@ -298,7 +281,6 @@ export async function updateAccountAction(
         where: { id: account.id },
         data: {
           fullName: data.fullName,
-          username: data.username,
         },
       });
 
@@ -335,7 +317,7 @@ export async function updateAccountAction(
     if (isUniqueConstraintError(error)) {
       return {
         status: "error",
-        message: "Username, NIS, atau NIP sudah digunakan akun lain.",
+        message: "NIS atau NIP sudah digunakan akun lain.",
         values,
       };
     }
@@ -366,21 +348,16 @@ export async function resetAccountPasswordAction(
 ): Promise<AccountActionState> {
   const admin = await requireRole("ADMIN");
 
-  const parsed = resetAccountPasswordSchema.safeParse({
-    accountId: getFormValue(formData, "accountId"),
-    password: getFormValue(formData, "password"),
-    confirmPassword: getFormValue(formData, "confirmPassword"),
-  });
+  const accountId = z.string().min(1).safeParse(getFormValue(formData, "accountId"));
 
-  if (!parsed.success) {
+  if (!accountId.success) {
     return {
       status: "error",
-      message: "Periksa kembali password yang Anda masukkan.",
-      fieldErrors: z.flattenError(parsed.error).fieldErrors,
+      message: "Akun tidak ditemukan.",
     };
   }
 
-  if (parsed.data.accountId === admin.id) {
+  if (accountId.data === admin.id) {
     return {
       status: "error",
       message:
@@ -389,7 +366,7 @@ export async function resetAccountPasswordAction(
   }
 
   const account = await prisma.user.findUnique({
-    where: { id: parsed.data.accountId },
+    where: { id: accountId.data },
     select: { id: true, fullName: true },
   });
 
@@ -397,7 +374,7 @@ export async function resetAccountPasswordAction(
     return { status: "error", message: "Akun tidak ditemukan." };
   }
 
-  const passwordHash = await hashPassword(parsed.data.password);
+  const passwordHash = await hashPassword(INITIAL_PASSWORD);
 
   await prisma.user.update({
     where: { id: account.id },
@@ -413,7 +390,7 @@ export async function resetAccountPasswordAction(
 
   return {
     status: "success",
-    message: `Password ${account.fullName} berhasil direset. Pengguna wajib menggantinya saat login berikutnya.`,
+    message: `Password ${account.fullName} berhasil direset ke ${INITIAL_PASSWORD}. Pengguna wajib membuat username dan password baru saat login berikutnya.`,
   };
 }
 
@@ -553,14 +530,13 @@ export async function importAccountsAction(
     };
   }
 
-  if (parsed.rows.length > 0) {
-    const [existingUsers, existingStudents] = await Promise.all([
+  const rowsToCreate = await (async () => {
+    if (parsed.rows.length === 0) {
+      return [];
+    }
+
+    const [allUsers, existingStudents] = await Promise.all([
       prisma.user.findMany({
-        where: {
-          username: {
-            in: parsed.rows.map((row) => row.username),
-          },
-        },
         select: { username: true },
       }),
       prisma.studentProfile.findMany({
@@ -573,51 +549,46 @@ export async function importAccountsAction(
       }),
     ]);
 
-    const existingUsernames = new Set(
-      existingUsers.map((user) => user.username.toLowerCase()),
-    );
+    const takenUsernames = allUsers.map((user) => user.username);
     const existingNis = new Set(
       existingStudents.map((student) => student.nis.toLowerCase()),
     );
 
-    parsed.rows = parsed.rows.filter((row) => {
-      const reasons: string[] = [];
-
-      if (existingUsernames.has(row.username.toLowerCase())) {
-        reasons.push(`Username "${row.username}" sudah digunakan.`);
-      }
-
+    return parsed.rows.flatMap((row) => {
       if (existingNis.has(row.nis.toLowerCase())) {
-        reasons.push(`NIS "${row.nis}" sudah terdaftar.`);
+        errors.push({
+          row: row.rowNumber,
+          message: `NIS "${row.nis}" sudah terdaftar.`,
+        });
+        return [];
       }
 
-      if (reasons.length > 0) {
-        errors.push({ row: row.rowNumber, message: reasons.join(" ") });
-        return false;
+      try {
+        const username = generateUsername(row.fullName, takenUsernames);
+        return [{ ...row, username }];
+      } catch {
+        errors.push({
+          row: row.rowNumber,
+          message: `Username otomatis tidak dapat dibuat dari nama "${row.fullName}".`,
+        });
+        return [];
       }
-
-      return true;
     });
-  }
+  })();
 
   let created = 0;
 
-  if (parsed.rows.length > 0) {
+  if (rowsToCreate.length > 0) {
     try {
-      const hashedRows = await Promise.all(
-        parsed.rows.map(async (row) => ({
-          ...row,
-          passwordHash: await hashPassword(row.password),
-        })),
-      );
+      const passwordHash = await hashPassword(INITIAL_PASSWORD);
 
       await prisma.$transaction(
         async (tx) => {
-          for (const row of hashedRows) {
+          for (const row of rowsToCreate) {
             await tx.user.create({
               data: {
                 username: row.username,
-                passwordHash: row.passwordHash,
+                passwordHash,
                 role: "SISWA",
                 fullName: row.fullName,
                 mustChangePassword: true,
@@ -635,7 +606,7 @@ export async function importAccountsAction(
         { timeout: 120_000 },
       );
 
-      created = hashedRows.length;
+      created = rowsToCreate.length;
     } catch (error) {
       console.error(error);
 
@@ -643,7 +614,7 @@ export async function importAccountsAction(
         return {
           status: "error",
           message:
-            "Impor dibatalkan karena ada username atau NIS yang sudah digunakan. Tidak ada akun yang dibuat.",
+            "Impor dibatalkan karena ada NIS yang sudah digunakan. Tidak ada akun yang dibuat.",
           result: {
             created: 0,
             totalRows: parsed.totalRows,
@@ -686,7 +657,7 @@ export async function importAccountsAction(
     message:
       errors.length > 0
         ? `${created} akun berhasil diimpor. ${errors.length} baris dilewati karena tidak valid.`
-        : `${created} akun berhasil diimpor. Semua pengguna wajib mengganti password saat login pertama.`,
+        : `${created} akun berhasil diimpor. Password awal ${INITIAL_PASSWORD}; pengguna wajib membuat username dan password pribadi saat login pertama.`,
     result: {
       created,
       totalRows: parsed.totalRows,

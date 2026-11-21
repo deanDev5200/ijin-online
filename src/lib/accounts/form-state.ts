@@ -3,7 +3,6 @@ import type { ActionState } from "@/lib/form-state";
 export type AccountFormValues = {
   role?: string;
   fullName?: string;
-  username?: string;
   nis?: string;
   grha?: string;
   kelas?: string;

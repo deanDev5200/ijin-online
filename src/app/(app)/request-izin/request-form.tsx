@@ -7,10 +7,11 @@ import {
   AlertTriangle,
   CalendarDays,
   ClipboardList,
+  Info,
   Loader2,
   LockKeyhole,
-  MapPin,
   Save,
+  ShieldCheck,
   UserRound,
   UsersRound,
 } from "lucide-react";
@@ -28,12 +29,18 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
+import {
+  APPROVAL_ROLE_DESCRIPTIONS,
+  approvalLabel,
+  fieldLabel,
+  hasField,
+  type PermissionTypeConfig,
+} from "@/lib/permissions/config";
 import { addDaysToDateOnly } from "@/lib/permissions/dates";
 import {
   INITIAL_PERMISSION_REQUEST_FORM_STATE,
   type PermissionRequestFormState,
 } from "@/lib/permissions/form-state";
-import { cn } from "@/lib/utils";
 
 import { createPermissionRequestAction } from "./actions";
 import {
@@ -59,6 +66,7 @@ type PermissionTypeOption = {
   id: string;
   name: string;
   description: string | null;
+  config: PermissionTypeConfig;
 };
 
 type RequestRules = {
@@ -121,6 +129,14 @@ function getInitials(fullName: string): string {
     .join("");
 }
 
+const EMPTY_CONFIG: PermissionTypeConfig = {
+  approvalRoles: [],
+  requiredFields: [],
+  fieldLabels: {},
+  approvalLabels: {},
+  formGuide: null,
+};
+
 export function PermissionRequestForm({
   requester,
   students,
@@ -141,9 +157,10 @@ export function PermissionRequestForm({
     FormData
   >(createPermissionRequestAction, INITIAL_PERMISSION_REQUEST_FORM_STATE);
 
-  const [dateMode, setDateMode] = useState<"single" | "range">(
-    state.values?.dateMode ?? "single",
-  );
+  const initialTypeId =
+    state.values?.typeId ??
+    (types.length === 1 ? types[0]?.id ?? "" : "");
+  const [typeId, setTypeId] = useState(initialTypeId);
 
   const errors = state.fieldErrors;
   const requesterMeta = [requester.nis, requester.kelas, requester.grha]
@@ -151,27 +168,44 @@ export function PermissionRequestForm({
     .join(" · ");
   const earliestStart = addDaysToDateOnly(today, settings.minLeadDays);
   const maxOtherStudents = Math.max(0, settings.maxStudentsPerRequest - 1);
-  const selectedTypeId =
-    state.values?.typeId ??
-    (types.length === 1 ? types[0]?.id ?? "" : "");
+  const selectedType = types.find((type) => type.id === typeId) ?? types[0];
+  const config = selectedType?.config ?? EMPTY_CONFIG;
+
+  const needsPurpose = hasField(config, "purpose");
+  const needsPlace = hasField(config, "place");
+  const needsStartDate = hasField(config, "startDate");
+  const needsEndDate = hasField(config, "endDate");
+  const needsTime = hasField(config, "time");
+  const needsVisitorName = hasField(config, "visitorName");
+  const needsPhoneUse = hasField(config, "phoneUse");
+  const needsAdditionalNotes = hasField(config, "additionalNotes");
+  const showStartDate = needsStartDate || needsEndDate;
+  const hasApprovalFields =
+    needsPurpose ||
+    needsPlace ||
+    needsVisitorName ||
+    needsPhoneUse ||
+    needsAdditionalNotes;
 
   const mentorDefault =
     state.values?.mentorId ??
     (mentors.length === 1 ? mentors[0]?.id ?? "" : "");
+  const mentorApprovalIndex = config.approvalRoles.indexOf("PEMBINA");
 
   return (
     <form action={formAction} className="space-y-6" noValidate>
-      <Card>
+      <Card className="bg-linear-to-br from-primary/5 via-background to-background">
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-base">
             <ClipboardList className="size-4 text-primary" />
             Jenis izin
           </CardTitle>
           <CardDescription>
-            Jenis izin yang tersedia saat ini untuk siswa asrama.
+            Pilih jenis izin yang sesuai. Kolom formulir dan persetujuan akan
+            menyesuaikan jenis yang dipilih.
           </CardDescription>
         </CardHeader>
-        <CardContent className="space-y-3">
+        <CardContent className="space-y-4">
           {types.length === 0 ? (
             <Alert variant="destructive">
               <AlertTriangle />
@@ -183,11 +217,11 @@ export function PermissionRequestForm({
             </Alert>
           ) : types.length === 1 ? (
             <>
-              <input type="hidden" name="typeId" value={selectedTypeId} />
-              <div className="rounded-xl border border-primary/20 bg-primary/5 p-4">
-                <p className="text-sm font-semibold">{types[0]?.name}</p>
+              <input type="hidden" name="typeId" value={typeId || types[0]?.id} />
+              <div className="rounded-xl border border-primary/20 bg-background/80 p-4">
+                <p className="text-sm font-semibold">{selectedType?.name}</p>
                 <p className="mt-1 text-sm leading-relaxed text-muted-foreground">
-                  {types[0]?.description ??
+                  {selectedType?.description ??
                     "Jenis izin ini berlaku untuk pengajuan dispensasi asrama."}
                 </p>
               </div>
@@ -198,7 +232,8 @@ export function PermissionRequestForm({
               <select
                 id="typeId"
                 name="typeId"
-                defaultValue={selectedTypeId}
+                value={typeId}
+                onChange={(event) => setTypeId(event.target.value)}
                 required
                 aria-invalid={Boolean(errors?.typeId?.[0])}
                 className={selectClassName}
@@ -215,6 +250,48 @@ export function PermissionRequestForm({
               <FieldError message={errors?.typeId?.[0]} />
             </div>
           )}
+
+          {selectedType ? (
+            <div className="space-y-3 rounded-xl border bg-background/80 p-4">
+              <div className="flex items-center gap-2">
+                <ShieldCheck className="size-4 text-primary" />
+                <p className="text-sm font-medium">
+                  Persetujuan yang diperlukan
+                </p>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                {config.approvalRoles.length > 0 ? (
+                  config.approvalRoles.map((role, index) => (
+                    <Badge
+                      key={role}
+                      variant="secondary"
+                      className="gap-1.5 py-1 text-[11px]"
+                    >
+                      <span className="flex size-4 items-center justify-center rounded-full bg-primary/15 text-[10px] font-semibold text-primary">
+                        {index + 1}
+                      </span>
+                      {approvalLabel(config, role)}
+                    </Badge>
+                  ))
+                ) : (
+                  <p className="text-xs text-muted-foreground">
+                    Belum ada tahap persetujuan yang dikonfigurasi.
+                  </p>
+                )}
+              </div>
+              {config.approvalRoles.length > 0 ? (
+                <p className="text-xs leading-relaxed text-muted-foreground">
+                  {APPROVAL_ROLE_DESCRIPTIONS[config.approvalRoles[0]]}
+                </p>
+              ) : null}
+              {config.formGuide ? (
+                <div className="flex items-start gap-2 rounded-lg border bg-muted/40 px-3 py-2 text-xs leading-relaxed text-muted-foreground">
+                  <Info className="mt-0.5 size-3.5 shrink-0 text-primary" />
+                  <span>{config.formGuide}</span>
+                </div>
+              ) : null}
+            </div>
+          ) : null}
         </CardContent>
       </Card>
 
@@ -277,209 +354,239 @@ export function PermissionRequestForm({
         </CardContent>
       </Card>
 
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-base">
-            <MapPin className="size-4 text-primary" />
-            Detail kegiatan
-          </CardTitle>
-          <CardDescription>
-            Jelaskan kegiatan dan tempat pelaksanaannya secara singkat.
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="purpose">Tujuan kegiatan</Label>
-            <textarea
-              id="purpose"
-              name="purpose"
-              defaultValue={state.values?.purpose ?? ""}
-              placeholder="cth. Mengikuti lomba debat antar sekolah"
-              required
-              minLength={5}
-              maxLength={200}
-              aria-invalid={Boolean(errors?.purpose?.[0])}
-              className={textareaClassName}
-            />
-            <p className="text-xs text-muted-foreground">
-              Maksimal 200 karakter. Sertakan nama kegiatan yang jelas.
-            </p>
-            <FieldError message={errors?.purpose?.[0]} />
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="place">Tempat kegiatan</Label>
-            <Input
-              id="place"
-              name="place"
-              type="text"
-              defaultValue={state.values?.place ?? ""}
-              placeholder="cth. Aula SMA Negeri 1"
-              required
-              minLength={3}
-              maxLength={150}
-              aria-invalid={Boolean(errors?.place?.[0])}
-              className="h-10"
-            />
-            <FieldError message={errors?.place?.[0]} />
-          </div>
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-base">
-            <CalendarDays className="size-4 text-primary" />
-            Jadwal izin
-          </CardTitle>
-          <CardDescription>
-            Tentukan tanggal dan jam berlakunya izin. Untuk kegiatan beberapa
-            hari, gunakan rentang tanggal.
-          </CardDescription>
-          <div className="rounded-lg border bg-muted/40 px-3 py-2 text-xs text-muted-foreground">
-            <p>
-              Pengajuan paling cepat{" "}
-              {settings.minLeadDays === 0
-                ? "pada hari yang sama"
-                : `${settings.minLeadDays} hari sebelum tanggal mulai`}{" "}
-              dan durasi maksimal {settings.maxRangeDays} hari kalender.
-            </p>
-          </div>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <fieldset className="space-y-2">
-            <legend className="text-sm font-medium">Durasi izin</legend>
-            <div className="grid gap-3 sm:grid-cols-2">
-              <label
-                className={cn(
-                  "flex cursor-pointer items-start gap-3 rounded-xl border p-2.5 transition-colors",
-                  dateMode === "single" && "border-primary bg-primary/5",
-                )}
-              >
-                <input
-                  type="radio"
-                  name="dateMode"
-                  value="single"
-                  checked={dateMode === "single"}
-                  onChange={() => setDateMode("single")}
-                  className="mt-1 accent-primary"
-                />
-                <span>
-                  <span className="block text-sm font-medium">Satu hari</span>
-                  <span className="block text-xs text-muted-foreground">
-                    Kegiatan selesai di hari yang sama.
-                  </span>
-                </span>
-              </label>
-
-              <label
-                className={cn(
-                  "flex cursor-pointer items-start gap-3 rounded-xl border p-2.5 transition-colors",
-                  dateMode === "range" && "border-primary bg-primary/5",
-                )}
-              >
-                <input
-                  type="radio"
-                  name="dateMode"
-                  value="range"
-                  checked={dateMode === "range"}
-                  onChange={() => setDateMode("range")}
-                  className="mt-1 accent-primary"
-                />
-                <span>
-                  <span className="block text-sm font-medium">
-                    Rentang tanggal
-                  </span>
-                  <span className="block text-xs text-muted-foreground">
-                    Kegiatan berlangsung lebih dari satu hari.
-                  </span>
-                </span>
-              </label>
-            </div>
-            <FieldError message={errors?.dateMode?.[0]} />
-          </fieldset>
-
-          <div className="grid gap-4 sm:grid-cols-2">
-            <div className="space-y-2">
-              <Label htmlFor="startDate">
-                {dateMode === "single" ? "Tanggal izin" : "Tanggal mulai"}
-              </Label>
-              <Input
-                id="startDate"
-                name="startDate"
-                type="date"
-                defaultValue={state.values?.startDate ?? earliestStart}
-                min={earliestStart}
-                required
-                aria-invalid={Boolean(errors?.startDate?.[0])}
-                className="h-10"
-              />
-              <FieldError message={errors?.startDate?.[0]} />
-            </div>
-
-            {dateMode === "range" ? (
+      {hasApprovalFields ? (
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-base">
+              <ClipboardList className="size-4 text-primary" />
+              Isian sesuai formulir
+            </CardTitle>
+            <CardDescription>
+              Kolom berikut mengikuti ketentuan{" "}
+              <span className="font-medium text-foreground">
+                {selectedType?.name}
+              </span>
+              .
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {needsPurpose ? (
               <div className="space-y-2">
-                <Label htmlFor="endDate">Tanggal selesai</Label>
-                <Input
-                  id="endDate"
-                  name="endDate"
-                  type="date"
-                  defaultValue={
-                    state.values?.endDate ??
-                    state.values?.startDate ??
-                    earliestStart
-                  }
-                  min={state.values?.startDate ?? earliestStart}
-                  required
-                  aria-invalid={Boolean(errors?.endDate?.[0])}
-                  className="h-10"
+                <Label htmlFor="purpose">{fieldLabel(config, "purpose")}</Label>
+                <textarea
+                  id="purpose"
+                  name="purpose"
+                  defaultValue={state.values?.purpose ?? ""}
+                  placeholder={fieldLabel(config, "purpose")}
+                  minLength={5}
+                  maxLength={200}
+                  aria-invalid={Boolean(errors?.purpose?.[0])}
+                  className={textareaClassName}
                 />
-                <FieldError message={errors?.endDate?.[0]} />
+                <p className="text-xs text-muted-foreground">
+                  Maksimal 200 karakter. Isikan sesuai formulir jenis izin ini.
+                </p>
+                <FieldError message={errors?.purpose?.[0]} />
               </div>
             ) : null}
-          </div>
 
-          <div className="grid gap-4 sm:grid-cols-2">
-            <div className="space-y-2">
-              <Label htmlFor="startTime">
-                Jam mulai
-                {dateMode === "range" ? " (hari pertama)" : ""}
-              </Label>
-              <Input
-                id="startTime"
-                name="startTime"
-                type="time"
-                defaultValue={
-                  state.values?.startTime ?? settings.defaultStartTime
-                }
-                required
-                aria-invalid={Boolean(errors?.startTime?.[0])}
-                className="h-10"
-              />
-              <FieldError message={errors?.startTime?.[0]} />
+            {needsPlace ? (
+              <div className="space-y-2">
+                <Label htmlFor="place">{fieldLabel(config, "place")}</Label>
+                <Input
+                  id="place"
+                  name="place"
+                  type="text"
+                  defaultValue={state.values?.place ?? ""}
+                  placeholder={fieldLabel(config, "place")}
+                  minLength={3}
+                  maxLength={150}
+                  aria-invalid={Boolean(errors?.place?.[0])}
+                  className="h-10"
+                />
+                <FieldError message={errors?.place?.[0]} />
+              </div>
+            ) : null}
+
+            {needsVisitorName ? (
+              <div className="space-y-2">
+                <Label htmlFor="visitorName">
+                  {fieldLabel(config, "visitorName")}
+                </Label>
+                <Input
+                  id="visitorName"
+                  name="visitorName"
+                  type="text"
+                  defaultValue={state.values?.visitorName ?? ""}
+                  placeholder="cth. Ibu Sari, orang tua siswa"
+                  minLength={3}
+                  maxLength={120}
+                  aria-invalid={Boolean(errors?.visitorName?.[0])}
+                  className="h-10"
+                />
+                <FieldError message={errors?.visitorName?.[0]} />
+              </div>
+            ) : null}
+
+            {needsPhoneUse ? (
+              <div className="space-y-2">
+                <Label htmlFor="phoneUse">
+                  {fieldLabel(config, "phoneUse")}
+                </Label>
+                <textarea
+                  id="phoneUse"
+                  name="phoneUse"
+                  defaultValue={state.values?.phoneUse ?? ""}
+                  placeholder="cth. Menghubungi orang tua setelah kegiatan"
+                  minLength={5}
+                  maxLength={500}
+                  aria-invalid={Boolean(errors?.phoneUse?.[0])}
+                  className={textareaClassName}
+                />
+                <FieldError message={errors?.phoneUse?.[0]} />
+              </div>
+            ) : null}
+
+            {needsAdditionalNotes ? (
+              <div className="space-y-2">
+                <Label htmlFor="additionalNotes">
+                  {fieldLabel(config, "additionalNotes")}
+                </Label>
+                <textarea
+                  id="additionalNotes"
+                  name="additionalNotes"
+                  defaultValue={state.values?.additionalNotes ?? ""}
+                  placeholder="cth. 2 kg apel · buah · untuk seluruh siswa Grha 3"
+                  minLength={5}
+                  maxLength={1000}
+                  aria-invalid={Boolean(errors?.additionalNotes?.[0])}
+                  className={textareaClassName}
+                />
+                <FieldError message={errors?.additionalNotes?.[0]} />
+              </div>
+            ) : null}
+          </CardContent>
+        </Card>
+      ) : null}
+
+      {showStartDate || needsTime ? (
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-base">
+              <CalendarDays className="size-4 text-primary" />
+              Jadwal izin
+            </CardTitle>
+            <CardDescription>
+              {needsEndDate
+                ? "Tentukan tanggal mulai dan tanggal selesai sesuai formulir."
+                : "Tentukan tanggal dan waktu berlakunya izin."}
+            </CardDescription>
+            <div className="rounded-lg border bg-muted/40 px-3 py-2 text-xs text-muted-foreground">
+              <p>
+                Pengajuan paling cepat{" "}
+                {settings.minLeadDays === 0
+                  ? "pada hari yang sama"
+                  : `${settings.minLeadDays} hari sebelum tanggal mulai`}{" "}
+                dan durasi maksimal {settings.maxRangeDays} hari kalender.
+              </p>
+            </div>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <input
+              type="hidden"
+              name="dateMode"
+              value={needsEndDate ? "range" : "single"}
+            />
+
+            <div className="grid gap-4 sm:grid-cols-2">
+              {showStartDate ? (
+                <div className="space-y-2">
+                  <Label htmlFor="startDate">
+                    {fieldLabel(config, "startDate")}
+                  </Label>
+                  <Input
+                    id="startDate"
+                    name="startDate"
+                    type="date"
+                    defaultValue={state.values?.startDate ?? earliestStart}
+                    min={earliestStart}
+                    required
+                    aria-invalid={Boolean(errors?.startDate?.[0])}
+                    className="h-10"
+                  />
+                  <FieldError message={errors?.startDate?.[0]} />
+                </div>
+              ) : (
+                <input type="hidden" name="startDate" value={today} />
+              )}
+
+              {needsEndDate ? (
+                <div className="space-y-2">
+                  <Label htmlFor="endDate">
+                    {fieldLabel(config, "endDate")}
+                  </Label>
+                  <Input
+                    id="endDate"
+                    name="endDate"
+                    type="date"
+                    defaultValue={
+                      state.values?.endDate ??
+                      state.values?.startDate ??
+                      earliestStart
+                    }
+                    min={state.values?.startDate ?? earliestStart}
+                    required
+                    aria-invalid={Boolean(errors?.endDate?.[0])}
+                    className="h-10"
+                  />
+                  <FieldError message={errors?.endDate?.[0]} />
+                </div>
+              ) : null}
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="endTime">
-                Jam selesai
-                {dateMode === "range" ? " (hari terakhir)" : ""}
-              </Label>
-              <Input
-                id="endTime"
-                name="endTime"
-                type="time"
-                defaultValue={
-                  state.values?.endTime ?? settings.defaultEndTime
-                }
-                required
-                aria-invalid={Boolean(errors?.endTime?.[0])}
-                className="h-10"
-              />
-              <FieldError message={errors?.endTime?.[0]} />
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+            {needsTime ? (
+              <div className="grid gap-4 sm:grid-cols-2">
+                <div className="space-y-2">
+                  <Label htmlFor="startTime">Jam mulai</Label>
+                  <Input
+                    id="startTime"
+                    name="startTime"
+                    type="time"
+                    defaultValue={
+                      state.values?.startTime ?? settings.defaultStartTime
+                    }
+                    required
+                    aria-invalid={Boolean(errors?.startTime?.[0])}
+                    className="h-10"
+                  />
+                  <FieldError message={errors?.startTime?.[0]} />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="endTime">Jam selesai</Label>
+                  <Input
+                    id="endTime"
+                    name="endTime"
+                    type="time"
+                    defaultValue={
+                      state.values?.endTime ?? settings.defaultEndTime
+                    }
+                    required
+                    aria-invalid={Boolean(errors?.endTime?.[0])}
+                    className="h-10"
+                  />
+                  <FieldError message={errors?.endTime?.[0]} />
+                </div>
+              </div>
+            ) : null}
+          </CardContent>
+        </Card>
+      ) : (
+        <>
+          <input type="hidden" name="dateMode" value="single" />
+          <input type="hidden" name="startDate" value={today} />
+        </>
+      )}
 
       <Card>
         <CardHeader>
@@ -488,8 +595,9 @@ export function PermissionRequestForm({
             Pembina / Pendamping
           </CardTitle>
           <CardDescription>
-            Pilih Pembina atau Pendamping yang bertanggung jawab dan akan
-            memberikan persetujuan tahap pertama.
+            {mentorApprovalIndex >= 0
+              ? `Pembina/Pendamping bertindak sebagai penyetuju tahap ${mentorApprovalIndex + 1} untuk jenis izin ini.`
+              : "Pembina/Pendamping tetap dicatat pada formulir meski bukan penyetuju pada jenis izin ini."}
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-2">

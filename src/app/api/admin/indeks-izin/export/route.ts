@@ -149,7 +149,7 @@ export async function GET(request: Request) {
     cell.fill = {
       type: "pattern",
       pattern: "solid",
-      fgColor: { argb: "FF0F766E" },
+      fgColor: { argb: "FF2563EB" },
     };
     cell.alignment = { vertical: "middle", wrapText: true };
   });

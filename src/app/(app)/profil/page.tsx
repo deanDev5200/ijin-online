@@ -6,6 +6,7 @@ import {
   LockKeyhole,
   School,
   ShieldCheck,
+  UserRound,
 } from "lucide-react";
 
 import { PageHeader } from "@/components/page-header";
@@ -36,7 +37,7 @@ function InfoItem({
   value: string | null | undefined;
 }) {
   return (
-    <div>
+    <div className="rounded-lg bg-muted/40 px-3 py-2.5">
       <dt className="text-xs font-medium tracking-wide text-muted-foreground uppercase">
         {label}
       </dt>
@@ -63,12 +64,17 @@ export default async function ProfilePage() {
 
       <div className="grid gap-6 lg:grid-cols-[1.15fr_0.85fr]">
         <Card>
-          <CardHeader>
-            <CardTitle className="text-base">Informasi pribadi</CardTitle>
-            <CardDescription>
-              Nama lengkap dapat Anda ubah sendiri. Data lain dikelola oleh
-              administrator asrama.
-            </CardDescription>
+          <CardHeader className="grid-cols-[auto_1fr] items-start gap-3">
+            <div className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
+              <UserRound className="size-4" />
+            </div>
+            <div className="min-w-0 flex-1 space-y-1">
+              <CardTitle className="text-base">Informasi pribadi</CardTitle>
+              <CardDescription>
+                Nama lengkap dapat Anda ubah sendiri. Data lain dikelola oleh
+                administrator asrama.
+              </CardDescription>
+            </div>
           </CardHeader>
           <CardContent className="space-y-5">
             <ProfileNameForm fullName={user.fullName} />
@@ -89,18 +95,22 @@ export default async function ProfilePage() {
         </Card>
 
         <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-base">
+          <CardHeader className="grid-cols-[auto_1fr] items-start gap-3">
+            <div className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
               {isStudent ? (
-                <GraduationCap className="size-4 text-primary" />
+                <GraduationCap className="size-4" />
               ) : (
-                <School className="size-4 text-primary" />
+                <School className="size-4" />
               )}
-              {isStudent ? "Data akademik" : "Data kepegawaian"}
-            </CardTitle>
-            <CardDescription>
-              Data ini hanya dapat diubah oleh administrator asrama.
-            </CardDescription>
+            </div>
+            <div className="min-w-0 flex-1 space-y-1">
+              <CardTitle className="text-base">
+                {isStudent ? "Data akademik" : "Data kepegawaian"}
+              </CardTitle>
+              <CardDescription>
+                Data ini hanya dapat diubah oleh administrator asrama.
+              </CardDescription>
+            </div>
           </CardHeader>
           <CardContent>
             <dl className="grid gap-4 sm:grid-cols-2 lg:grid-cols-1">
@@ -114,8 +124,10 @@ export default async function ProfilePage() {
                 <InfoItem label="NIP" value={user.nip} />
               )}
             </dl>
-            <div className="mt-5 flex items-start gap-2 rounded-lg bg-muted/60 px-3 py-2.5 text-xs leading-relaxed text-muted-foreground">
-              <LockKeyhole className="mt-0.5 size-3.5 shrink-0" />
+            <div className="mt-5 flex items-start gap-2.5 rounded-lg border border-border/60 bg-muted/60 px-3 py-2.5 text-xs leading-relaxed text-muted-foreground">
+              <span className="flex size-6 shrink-0 items-center justify-center rounded-lg bg-background text-primary ring-1 ring-foreground/10">
+                <LockKeyhole className="size-3.5" />
+              </span>
               <p>
                 Hubungi administrator asrama jika ada data yang perlu
                 diperbaiki.
@@ -126,11 +138,16 @@ export default async function ProfilePage() {
       </div>
 
       <Card>
-        <CardHeader>
-          <CardTitle className="text-base">Keamanan akun</CardTitle>
-          <CardDescription>
-            Ganti password secara berkala untuk menjaga keamanan akun Anda.
-          </CardDescription>
+        <CardHeader className="grid-cols-[auto_1fr] items-start gap-3">
+          <div className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
+            <KeyRound className="size-4" />
+          </div>
+          <div className="min-w-0 flex-1 space-y-1">
+            <CardTitle className="text-base">Keamanan akun</CardTitle>
+            <CardDescription>
+              Ganti password secara berkala untuk menjaga keamanan akun Anda.
+            </CardDescription>
+          </div>
         </CardHeader>
         <CardContent className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div>

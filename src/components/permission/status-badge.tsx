@@ -39,8 +39,13 @@ export function RequestStatusBadge({
   return (
     <Badge
       variant="outline"
-      className={cn("font-medium", requestStatusClasses[status], className)}
+      className={cn(
+        "gap-1.5 font-medium shadow-xs",
+        requestStatusClasses[status],
+        className,
+      )}
     >
+      <span className="size-1.5 rounded-full bg-current" aria-hidden="true" />
       {REQUEST_STATUS_LABELS[status]}
     </Badge>
   );
@@ -56,8 +61,13 @@ export function ApprovalStatusBadge({
   return (
     <Badge
       variant="outline"
-      className={cn("font-medium", approvalStatusClasses[status], className)}
+      className={cn(
+        "gap-1.5 font-medium shadow-xs",
+        approvalStatusClasses[status],
+        className,
+      )}
     >
+      <span className="size-1.5 rounded-full bg-current" aria-hidden="true" />
       {APPROVAL_STATUS_LABELS[status]}
     </Badge>
   );

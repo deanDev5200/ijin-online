@@ -2,13 +2,31 @@
 
 import { useActionState, type ReactNode } from "react";
 import { useFormStatus } from "react-dom";
-import { Loader2, Plus, Save, UsersRound } from "lucide-react";
+import {
+  ClipboardCheck,
+  ListChecks,
+  Loader2,
+  Plus,
+  Save,
+  UsersRound,
+} from "lucide-react";
 
 import { FormFeedback } from "@/components/form-feedback";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Separator } from "@/components/ui/separator";
 import { INITIAL_ACTION_STATE, type ActionState } from "@/lib/form-state";
+import {
+  APPROVAL_ROLE_LABELS,
+  APPROVAL_ROLES,
+  DEFAULT_APPROVAL_ROLES,
+  DEFAULT_REQUIRED_FIELDS,
+  FIELD_LABELS,
+  PERMISSION_FIELDS,
+  type PermissionTypeConfig,
+} from "@/lib/permissions/config";
 
 import {
   createPermissionTypeAction,
@@ -18,7 +36,18 @@ import {
 } from "./actions";
 
 const textareaClassName =
-  "min-h-20 w-full rounded-lg border border-input bg-transparent px-3 py-2 text-base transition-colors outline-none placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 disabled:cursor-not-allowed disabled:bg-input/50 disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20 md:text-sm dark:bg-input/30";
+  "min-h-20 w-full rounded-lg border border-input bg-transparent px-3 py-2 text-base transition-colors outline-none placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 disabled:cursor-not-allowed disabled:bg-input/50 disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20 md:text-sm dark:bg-input/30 dark:aria-invalid:border-destructive/50 dark:aria-invalid:ring-destructive/40";
+
+const selectClassName =
+  "h-9 w-full rounded-lg border border-input bg-transparent px-2.5 text-sm outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50";
+
+const DEFAULT_CREATE_CONFIG: PermissionTypeConfig = {
+  approvalRoles: [...DEFAULT_APPROVAL_ROLES],
+  requiredFields: [...DEFAULT_REQUIRED_FIELDS],
+  fieldLabels: {},
+  approvalLabels: {},
+  formGuide: null,
+};
 
 function FieldError({ message }: { message?: string }) {
   if (!message) {
@@ -53,6 +82,161 @@ function SubmitButton({
         </>
       )}
     </Button>
+  );
+}
+
+function PermissionTypeConfigFields({
+  config,
+  idPrefix,
+  errors,
+}: {
+  config: PermissionTypeConfig;
+  idPrefix: string;
+  errors?: Record<string, string[] | undefined>;
+}) {
+  return (
+    <div className="space-y-5 rounded-xl border bg-muted/20 p-4">
+      <div className="space-y-3">
+        <div className="flex items-center gap-2">
+          <ClipboardCheck className="size-4 text-primary" />
+          <p className="text-sm font-medium">Urutan persetujuan</p>
+        </div>
+        <p className="text-xs leading-relaxed text-muted-foreground">
+          Tentukan peran penyetuju secara berurutan. Biarkan kosong untuk
+          menghapus tahap.
+        </p>
+        <div className="grid gap-3 sm:grid-cols-3">
+          {[0, 1, 2].map((index) => (
+            <div key={index} className="space-y-2">
+              <Label htmlFor={`${idPrefix}-approval-role-${index}`}>
+                Tahap {index + 1}
+              </Label>
+              <select
+                id={`${idPrefix}-approval-role-${index}`}
+                name={`approvalRole${index + 1}`}
+                defaultValue={config.approvalRoles[index] ?? ""}
+                className={selectClassName}
+              >
+                <option value="">Tidak ada</option>
+                {APPROVAL_ROLES.map((role) => (
+                  <option key={role} value={role}>
+                    {APPROVAL_ROLE_LABELS[role]}
+                  </option>
+                ))}
+              </select>
+            </div>
+          ))}
+        </div>
+        <FieldError message={errors?.approvalRoles?.[0]} />
+      </div>
+
+      <Separator />
+
+      <div className="space-y-3">
+        <div className="flex items-center gap-2">
+          <ListChecks className="size-4 text-primary" />
+          <p className="text-sm font-medium">Field formulir yang ditampilkan</p>
+        </div>
+        <p className="text-xs leading-relaxed text-muted-foreground">
+          Centang field yang wajib diisi siswa pada jenis izin ini.
+        </p>
+        <div className="grid gap-2 sm:grid-cols-2">
+          {PERMISSION_FIELDS.map((field) => (
+            <label
+              key={field}
+              htmlFor={`${idPrefix}-required-${field}`}
+              className="flex cursor-pointer items-center gap-2 rounded-lg border bg-background px-3 py-2 text-xs transition-colors hover:bg-accent"
+            >
+              <input
+                id={`${idPrefix}-required-${field}`}
+                type="checkbox"
+                name="requiredFields"
+                value={field}
+                defaultChecked={config.requiredFields.includes(field)}
+                className="size-4 shrink-0 accent-primary"
+              />
+              <span className="min-w-0 flex-1">
+                {config.fieldLabels[field] ?? FIELD_LABELS[field]}
+              </span>
+            </label>
+          ))}
+        </div>
+        <FieldError message={errors?.requiredFields?.[0]} />
+      </div>
+
+      <Separator />
+
+      <div className="space-y-3">
+        <p className="text-sm font-medium">Label field formulir</p>
+        <div className="grid gap-3 sm:grid-cols-2">
+          {PERMISSION_FIELDS.map((field) => (
+            <div key={field} className="space-y-1.5">
+              <Label htmlFor={`${idPrefix}-field-label-${field}`}>
+                {FIELD_LABELS[field]}
+              </Label>
+              <Input
+                id={`${idPrefix}-field-label-${field}`}
+                name={`fieldLabel_${field}`}
+                defaultValue={config.fieldLabels[field] ?? ""}
+                placeholder={FIELD_LABELS[field]}
+                maxLength={120}
+                className="h-9"
+              />
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <Separator />
+
+      <div className="space-y-3">
+        <p className="text-sm font-medium">Label tahap persetujuan</p>
+        <div className="grid gap-3 sm:grid-cols-3">
+          {APPROVAL_ROLES.map((role) => (
+            <div key={role} className="space-y-1.5">
+              <Label htmlFor={`${idPrefix}-approval-label-${role}`}>
+                {APPROVAL_ROLE_LABELS[role]}
+              </Label>
+              <Input
+                id={`${idPrefix}-approval-label-${role}`}
+                name={`approvalLabel_${role}`}
+                defaultValue={config.approvalLabels[role] ?? ""}
+                placeholder={APPROVAL_ROLE_LABELS[role]}
+                maxLength={120}
+                className="h-9"
+              />
+            </div>
+          ))}
+        </div>
+        <p className="text-xs text-muted-foreground">
+          Kosongkan untuk memakai label bawaan peran.
+        </p>
+      </div>
+
+      <div className="space-y-2">
+        <Label htmlFor={`${idPrefix}-form-guide`}>Panduan formulir</Label>
+        <textarea
+          id={`${idPrefix}-form-guide`}
+          name="formGuide"
+          defaultValue={config.formGuide ?? ""}
+          placeholder="Jelaskan isian dan signatory sesuai formulir PDF."
+          maxLength={1000}
+          className={textareaClassName}
+        />
+        <p className="text-xs text-muted-foreground">
+          Panduan ini ditampilkan kepada siswa saat memilih jenis izin.
+        </p>
+      </div>
+
+      <div className="flex flex-wrap gap-2">
+        <Badge variant="secondary" className="text-[10px]">
+          {config.approvalRoles.length} tahap bawaan
+        </Badge>
+        <Badge variant="outline" className="text-[10px]">
+          {config.requiredFields.length} field bawaan
+        </Badge>
+      </div>
+    </div>
   );
 }
 
@@ -242,7 +426,7 @@ export function PermissionTypeCreateForm() {
               id="new-type-active"
               name="isActive"
               defaultValue="true"
-              className="h-9 w-full rounded-lg border border-input bg-transparent px-2.5 text-sm outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
+              className={selectClassName}
             >
               <option value="true">Aktif</option>
               <option value="false">Nonaktif</option>
@@ -261,6 +445,12 @@ export function PermissionTypeCreateForm() {
           />
           <FieldError message={errors?.description?.[0]} />
         </div>
+
+        <PermissionTypeConfigFields
+          config={DEFAULT_CREATE_CONFIG}
+          idPrefix="new-type"
+          errors={errors}
+        />
 
         <div className="flex justify-end">
           <SubmitButton
@@ -285,6 +475,7 @@ export function PermissionTypeEditForm({
     description: string;
     isActive: boolean;
     sortOrder: number;
+    config: PermissionTypeConfig;
   };
 }) {
   const [state, formAction] = useActionState<ActionState, FormData>(
@@ -334,7 +525,7 @@ export function PermissionTypeEditForm({
             id={`type-active-${type.id}`}
             name="isActive"
             defaultValue={type.isActive ? "true" : "false"}
-            className="h-9 w-full rounded-lg border border-input bg-transparent px-2.5 text-sm outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
+            className={selectClassName}
           >
             <option value="true">Aktif</option>
             <option value="false">Nonaktif</option>
@@ -353,6 +544,12 @@ export function PermissionTypeEditForm({
         />
         <FieldError message={errors?.description?.[0]} />
       </div>
+
+      <PermissionTypeConfigFields
+        config={type.config}
+        idPrefix={`type-${type.id}`}
+        errors={errors}
+      />
 
       <FormFeedback state={state} />
 

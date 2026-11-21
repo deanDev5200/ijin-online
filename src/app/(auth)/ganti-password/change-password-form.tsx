@@ -5,6 +5,7 @@ import { useFormStatus } from "react-dom";
 import { KeyRound, Loader2 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { PasswordInput } from "@/components/password-input";
 import { INITIAL_ACTION_STATE } from "@/lib/form-state";
@@ -37,14 +38,20 @@ function SubmitButton({ forced }: { forced: boolean }) {
       ) : (
         <>
           <KeyRound />
-          {forced ? "Ganti password & lanjutkan" : "Simpan password baru"}
+          {forced ? "Simpan & lanjutkan" : "Simpan password baru"}
         </>
       )}
     </Button>
   );
 }
 
-export function ChangePasswordForm({ forced }: { forced: boolean }) {
+export function ChangePasswordForm({
+  forced,
+  currentUsername,
+}: {
+  forced: boolean;
+  currentUsername: string;
+}) {
   const [state, formAction] = useActionState(
     changePasswordAction,
     INITIAL_ACTION_STATE,
@@ -54,16 +61,44 @@ export function ChangePasswordForm({ forced }: { forced: boolean }) {
 
   return (
     <form action={formAction} className="space-y-5" noValidate>
+      {forced ? (
+        <div className="space-y-2">
+          <Label htmlFor="username">Username baru</Label>
+          <Input
+            id="username"
+            name="username"
+            autoComplete="username"
+            placeholder="Minimal 6 karakter"
+            required
+            minLength={6}
+            maxLength={20}
+            autoFocus
+            aria-invalid={Boolean(errors?.username?.[0])}
+            className="h-10"
+          />
+          <p className="text-xs text-muted-foreground">
+            Username sementara Anda saat ini:{" "}
+            <span className="font-medium">{currentUsername}</span>. Silakan
+            ganti dengan username pribadi Anda.
+          </p>
+          <FieldError message={errors?.username?.[0]} />
+        </div>
+      ) : null}
+
       <div className="space-y-2">
-        <Label htmlFor="currentPassword">Password saat ini</Label>
+        <Label htmlFor="currentPassword">
+          {forced ? "Password awal" : "Password saat ini"}
+        </Label>
         <PasswordInput
           id="currentPassword"
           name="currentPassword"
           autoComplete="current-password"
-          placeholder="Masukkan password saat ini"
+          placeholder={
+            forced ? "Masukkan password awal (123456)" : "Masukkan password saat ini"
+          }
           required
           maxLength={72}
-          autoFocus
+          autoFocus={!forced}
           aria-invalid={Boolean(errors?.currentPassword?.[0])}
           className="h-10"
         />
@@ -110,6 +145,15 @@ export function ChangePasswordForm({ forced }: { forced: boolean }) {
         <div
           role="alert"
           className="rounded-lg border border-destructive/20 bg-destructive/10 px-3 py-2 text-sm text-destructive"
+        >
+          {state.message}
+        </div>
+      ) : null}
+
+      {state.status === "success" && state.message ? (
+        <div
+          role="status"
+          className="rounded-lg border border-primary/20 bg-primary/10 px-3 py-2 text-sm text-primary"
         >
           {state.message}
         </div>

@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { ArrowRight, BellOff, CheckCheck } from "lucide-react";
+import { ArrowRight, Bell, BellOff, CheckCheck } from "lucide-react";
 
 import { PageHeader } from "@/components/page-header";
 import { Badge } from "@/components/ui/badge";
@@ -84,17 +84,28 @@ export default async function NotificationsPage() {
           </form>
         ) : null}
         {unreadCount > 0 ? (
-          <Badge variant="secondary">{unreadCount} belum dibaca</Badge>
+          <Badge variant="secondary" className="gap-1.5">
+            <Bell className="size-3" />
+            {unreadCount} belum dibaca
+          </Badge>
         ) : null}
       </PageHeader>
 
       {notifications.length === 0 ? (
-        <Card>
-          <CardContent className="flex flex-col items-center justify-center gap-3 px-6 py-16 text-center">
-            <div className="flex size-12 items-center justify-center rounded-2xl bg-muted text-muted-foreground">
+        <Card className="bg-linear-to-b from-primary/[0.04] to-card">
+          <CardContent className="relative flex flex-col items-center justify-center gap-3 overflow-hidden px-6 py-16 text-center">
+            <div
+              className="pointer-events-none absolute -top-10 left-1/2 size-36 -translate-x-1/2 rounded-full border border-primary/10"
+              aria-hidden="true"
+            />
+            <div
+              className="pointer-events-none absolute -top-4 left-1/2 size-24 -translate-x-1/2 rounded-full bg-primary/[0.06]"
+              aria-hidden="true"
+            />
+            <div className="relative flex size-14 items-center justify-center rounded-2xl bg-primary/10 text-primary ring-8 ring-primary/5">
               <BellOff className="size-6" />
             </div>
-            <div>
+            <div className="relative">
               <p className="text-sm font-medium">Belum ada notifikasi</p>
               <p className="mt-1 max-w-sm text-sm text-muted-foreground">
                 Pemberitahuan tentang pengajuan izin Anda akan muncul di sini.
@@ -104,13 +115,21 @@ export default async function NotificationsPage() {
         </Card>
       ) : (
         <Card>
-          <CardHeader className="flex-row items-center justify-between space-y-0">
-            <div className="space-y-1">
+          <CardHeader className="grid-cols-[auto_1fr_auto] items-center gap-3 space-y-0">
+            <div className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
+              <Bell className="size-4" />
+            </div>
+            <div className="min-w-0 flex-1 space-y-1">
               <CardTitle className="text-base">Kotak masuk</CardTitle>
               <CardDescription>
                 Menampilkan {notifications.length} notifikasi terbaru.
               </CardDescription>
             </div>
+            {unreadCount > 0 ? (
+              <Badge variant="secondary" className="hidden shrink-0 sm:inline-flex">
+                {unreadCount} baru
+              </Badge>
+            ) : null}
           </CardHeader>
           <CardContent className="p-0">
             <ul className="divide-y">
@@ -124,19 +143,20 @@ export default async function NotificationsPage() {
                   <li
                     key={notification.id}
                     className={cn(
-                      "flex gap-3 px-4 py-4 sm:px-6",
+                      "flex gap-3 px-4 py-4 transition-colors hover:bg-muted/30 sm:px-6",
                       !notification.isRead && "bg-primary/[0.035]",
                     )}
                   >
-                    <span
+                    <div
                       className={cn(
-                        "mt-1.5 size-2 shrink-0 rounded-full",
+                        "flex size-9 shrink-0 items-center justify-center rounded-xl",
                         notification.isRead
-                          ? "bg-border"
-                          : "bg-primary ring-4 ring-primary/10",
+                          ? "bg-muted text-muted-foreground"
+                          : "bg-primary/10 text-primary",
                       )}
-                      aria-hidden="true"
-                    />
+                    >
+                      <Bell className="size-4" />
+                    </div>
                     <div className="min-w-0 flex-1">
                       <div className="flex flex-wrap items-center gap-2">
                         <p className="text-sm font-medium">
@@ -147,11 +167,17 @@ export default async function NotificationsPage() {
                             Baru
                           </Badge>
                         ) : null}
+                        {!notification.isRead ? (
+                          <span
+                            className="size-1.5 rounded-full bg-primary ring-4 ring-primary/10"
+                            aria-hidden="true"
+                          />
+                        ) : null}
                       </div>
                       <p className="mt-1 text-sm leading-relaxed text-muted-foreground">
                         {notification.message}
                       </p>
-                      <div className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1">
+                      <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 rounded-lg bg-muted/40 px-2.5 py-1.5">
                         <p className="text-xs text-muted-foreground/80">
                           {dateFormatter.format(notification.createdAt)}
                         </p>

@@ -50,13 +50,18 @@ export function CancelRequestCard({ requestId }: { requestId: string }) {
 
   return (
     <Card>
-      <CardHeader>
-        <CardTitle className="text-base">Batalkan pengajuan</CardTitle>
-        <CardDescription>
-          Gunakan tindakan ini jika kegiatan batal atau pengajuan tidak lagi
-          diperlukan. Pengajuan hanya dapat dibatalkan selama belum selesai
-          diproses.
-        </CardDescription>
+      <CardHeader className="flex-row items-start gap-3">
+        <div className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-destructive/10 text-destructive">
+          <XCircle className="size-4" />
+        </div>
+        <div className="min-w-0 flex-1 space-y-1">
+          <CardTitle className="text-base">Batalkan pengajuan</CardTitle>
+          <CardDescription>
+            Gunakan tindakan ini jika kegiatan batal atau pengajuan tidak lagi
+            diperlukan. Pengajuan hanya dapat dibatalkan selama belum selesai
+            diproses.
+          </CardDescription>
+        </div>
       </CardHeader>
       <CardContent className="space-y-2">
         <form

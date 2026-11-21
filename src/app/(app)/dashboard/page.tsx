@@ -30,6 +30,8 @@ import { requireAppUser } from "@/lib/auth/guards";
 import { ROLE_LABELS, type AppRole } from "@/lib/auth/roles";
 import type { SessionUser } from "@/lib/auth/user-types";
 import { prisma } from "@/lib/db";
+import { approvalLabel } from "@/lib/permissions/config";
+import { getActivePermissionTypes } from "@/lib/permissions/settings";
 import { cn } from "@/lib/utils";
 
 export const metadata: Metadata = {
@@ -55,27 +57,6 @@ type QuickAction = {
   description: string;
   icon: LucideIcon;
 };
-
-const approvalSteps = [
-  {
-    role: "PEMBINA",
-    title: "Pembina / Pendamping",
-    description:
-      "Memeriksa kesesuaian kegiatan dan memberikan persetujuan awal.",
-  },
-  {
-    role: "STAFF_ASRAMA",
-    title: "Staff Asrama",
-    description:
-      "Memverifikasi data asrama, jadwal, dan siswa yang terlibat.",
-  },
-  {
-    role: "KEPALA_ASRAMA",
-    title: "Kepala Asrama",
-    description:
-      "Memberikan persetujuan akhir sebelum izin dinyatakan berlaku.",
-  },
-] as const;
 
 function getGreeting(): string {
   const hour = new Date().getHours();
@@ -332,13 +313,16 @@ export default async function DashboardPage({
 }) {
   const user = await requireAppUser();
   const params = await searchParams;
-  const stats = await getStats(user);
+  const [stats, permissionTypes] = await Promise.all([
+    getStats(user),
+    getActivePermissionTypes(),
+  ]);
   const quickActions = getQuickActions(user.role);
   const firstName = user.fullName.split(" ")[0] || user.fullName;
   const isStudent = user.role === "SISWA";
 
   const subtitle = isStudent
-    ? "Pantau pengajuan izin dan alur persetujuannya dari satu tempat."
+    ? "gunakanlah dispensasi sebaik mungkin, dan semoga mendapatkan hasil yang maksimal"
     : user.role === "ADMIN"
       ? "Kelola akun dan pantau seluruh perizinan asrama."
       : "Tinjau permintaan izin yang menunggu keputusan Anda.";
@@ -351,7 +335,7 @@ export default async function DashboardPage({
             {getGreeting()}, {firstName}
           </p>
           <h2 className="mt-1 text-2xl font-semibold tracking-tight text-balance sm:text-3xl">
-            Ringkasan perizinan asrama
+            Ringkasan Perizinan Terpadu
           </h2>
           <p className="mt-1.5 max-w-2xl text-sm leading-relaxed text-muted-foreground">
             {subtitle}
@@ -367,8 +351,8 @@ export default async function DashboardPage({
         <div className="flex items-start gap-2.5 rounded-xl border border-primary/20 bg-primary/5 px-4 py-3 text-sm text-primary">
           <CheckCircle2 className="mt-0.5 size-4 shrink-0" />
           <p>
-            Password berhasil diperbarui. Gunakan password baru Anda pada login
-            berikutnya.
+            Username dan password berhasil disimpan. Gunakan kredensial baru
+            Anda pada login berikutnya.
           </p>
         </div>
       ) : null}
@@ -405,17 +389,34 @@ export default async function DashboardPage({
             </CardDescription>
           </CardHeader>
           <CardContent className="grid gap-3 sm:grid-cols-2">
-            {quickActions.map((action) => (
+            {quickActions.map((action, index) => (
               <Link
                 key={action.href}
                 href={action.href}
-                className="group flex items-center gap-3 rounded-xl border bg-background p-3 transition-colors hover:border-primary/30 hover:bg-accent"
+                className={cn(
+                  "group flex items-center gap-3 rounded-xl border p-3 transition-all hover:border-primary/30 hover:bg-accent",
+                  index === 0
+                    ? "border-primary/20 bg-linear-to-br from-primary/10 to-background"
+                    : "bg-background",
+                )}
               >
-                <div className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                <div
+                  className={cn(
+                    "flex size-9 shrink-0 items-center justify-center rounded-lg text-primary",
+                    index === 0 ? "bg-primary text-primary-foreground" : "bg-primary/10",
+                  )}
+                >
                   <action.icon className="size-4" />
                 </div>
                 <div className="min-w-0 flex-1">
-                  <p className="text-sm font-medium">{action.label}</p>
+                  <div className="flex items-center gap-2">
+                    <p className="text-sm font-medium">{action.label}</p>
+                    {index === 0 && isStudent ? (
+                      <Badge variant="secondary" className="text-[10px]">
+                        Utama
+                      </Badge>
+                    ) : null}
+                  </div>
                   <p className="truncate text-xs text-muted-foreground">
                     {action.description}
                   </p>
@@ -428,54 +429,65 @@ export default async function DashboardPage({
 
         <Card>
           <CardHeader>
-            <CardTitle className="text-base">Alur persetujuan izin</CardTitle>
+            <CardTitle className="text-base">Jenis izin & persetujuan</CardTitle>
             <CardDescription>
               {isStudent
-                ? "Pengajuan Anda melewati tiga tahap berikut."
-                : user.role === "ADMIN"
-                  ? "Alur standar yang berlaku di asrama."
-                  : "Tahap Anda ditandai pada alur berikut."}
+                ? "Persetujuan mengikuti jenis izin yang dipilih saat pengajuan."
+                : "Ringkasan alur persetujuan pada setiap jenis izin aktif."}
             </CardDescription>
           </CardHeader>
-          <CardContent>
-            <ol className="space-y-4">
-              {approvalSteps.map((step, index) => {
-                const isCurrentStage = user.role === step.role;
-
-                return (
-                  <li key={step.role} className="flex gap-3">
-                    <div className="flex flex-col items-center">
-                      <div
-                        className={cn(
-                          "flex size-7 shrink-0 items-center justify-center rounded-full text-xs font-semibold",
-                          isCurrentStage
-                            ? "bg-primary text-primary-foreground"
-                            : "bg-muted text-muted-foreground",
-                        )}
-                      >
-                        {index + 1}
-                      </div>
-                      {index < approvalSteps.length - 1 ? (
-                        <div className="mt-1 h-full w-px bg-border" />
-                      ) : null}
+          <CardContent className="space-y-3">
+            {permissionTypes.length === 0 ? (
+              <p className="rounded-xl border border-dashed px-3 py-6 text-center text-xs text-muted-foreground">
+                Belum ada jenis izin aktif.
+              </p>
+            ) : (
+              permissionTypes.map((type, index) => (
+                <div
+                  key={type.id}
+                  className={cn(
+                    "rounded-xl border p-3 transition-colors",
+                    index === 0
+                      ? "border-primary/20 bg-primary/5"
+                      : "bg-background",
+                  )}
+                >
+                  <div className="flex items-start gap-2.5">
+                    <div className="flex size-7 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-xs font-semibold text-primary">
+                      {index + 1}
                     </div>
-                    <div className="pb-1">
-                      <div className="flex flex-wrap items-center gap-2">
-                        <p className="text-sm font-medium">{step.title}</p>
-                        {isCurrentStage ? (
-                          <Badge variant="secondary" className="text-[10px]">
-                            Tahap Anda
-                          </Badge>
-                        ) : null}
-                      </div>
-                      <p className="mt-0.5 text-xs leading-relaxed text-muted-foreground">
-                        {step.description}
+                    <div className="min-w-0 flex-1">
+                      <p className="text-sm font-medium">{type.name}</p>
+                      <p className="mt-0.5 line-clamp-2 text-xs leading-relaxed text-muted-foreground">
+                        {type.description ?? "Jenis izin asrama."}
                       </p>
                     </div>
-                  </li>
-                );
-              })}
-            </ol>
+                  </div>
+                  <div className="mt-3 flex flex-wrap gap-1.5">
+                    {type.config.approvalRoles.map((role, stageIndex) => (
+                      <Badge
+                        key={role}
+                        variant="secondary"
+                        className="gap-1 py-0.5 text-[10px]"
+                      >
+                        <span>{stageIndex + 1}</span>
+                        <span className="text-muted-foreground">·</span>
+                        <span>{approvalLabel(type.config, role)}</span>
+                      </Badge>
+                    ))}
+                  </div>
+                </div>
+              ))
+            )}
+            {isStudent ? (
+              <Link
+                href="/request-izin"
+                className="flex items-center justify-between rounded-xl border border-primary/20 bg-primary/5 px-3 py-2.5 text-xs font-medium text-primary transition-colors hover:bg-primary/10"
+              >
+                Lihat isian lengkap pada formulir pengajuan
+                <ArrowUpRight className="size-3.5" />
+              </Link>
+            ) : null}
           </CardContent>
         </Card>
       </div>

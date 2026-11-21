@@ -12,7 +12,6 @@ import {
 
 import type { Role } from "@/generated/prisma/enums";
 import { FormFeedback } from "@/components/form-feedback";
-import { PasswordInput } from "@/components/password-input";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -20,6 +19,7 @@ import {
   INITIAL_ACCOUNT_ACTION_STATE,
   type AccountActionState,
 } from "@/lib/accounts/form-state";
+import { INITIAL_PASSWORD } from "@/lib/accounts/username";
 import { ROLE_LABELS } from "@/lib/auth/roles";
 
 import {
@@ -108,16 +108,15 @@ export function AccountDetailsForm({ account }: { account: AccountDetails }) {
           <Label htmlFor="username">Username</Label>
           <Input
             id="username"
-            name="username"
-            defaultValue={state.values?.username ?? account.username}
-            required
-            minLength={5}
-            maxLength={20}
-            autoComplete="off"
-            aria-invalid={Boolean(errors?.username?.[0])}
-            className="h-10"
+            value={account.username}
+            readOnly
+            disabled
+            aria-describedby="username-hint"
+            className="h-10 bg-muted/40"
           />
-          <FieldError message={errors?.username?.[0]} />
+          <p id="username-hint" className="text-xs text-muted-foreground">
+            Username dikelola pengguna melalui halaman setup akun.
+          </p>
         </div>
       </div>
 
@@ -211,7 +210,6 @@ export function ResetPasswordForm({
     AccountActionState,
     FormData
   >(resetAccountPasswordAction, INITIAL_ACCOUNT_ACTION_STATE);
-  const errors = state.fieldErrors;
 
   return (
     <form
@@ -228,44 +226,22 @@ export function ResetPasswordForm({
         </p>
       ) : (
         <>
-          <div className="grid gap-4 sm:grid-cols-2">
-            <div className="space-y-2">
-              <Label htmlFor="newPassword">Password baru</Label>
-              <PasswordInput
-                id="newPassword"
-                name="password"
-                placeholder="Minimal 6 karakter"
-                required
-                minLength={6}
-                maxLength={72}
-                autoComplete="new-password"
-                aria-invalid={Boolean(errors?.password?.[0])}
-                className="h-10"
-              />
-              <FieldError message={errors?.password?.[0]} />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="confirmNewPassword">Ulangi password</Label>
-              <PasswordInput
-                id="confirmNewPassword"
-                name="confirmPassword"
-                placeholder="Ulangi password baru"
-                required
-                minLength={6}
-                maxLength={72}
-                autoComplete="new-password"
-                aria-invalid={Boolean(errors?.confirmPassword?.[0])}
-                className="h-10"
-              />
-              <FieldError message={errors?.confirmPassword?.[0]} />
+          <div className="flex items-start gap-2.5 rounded-lg border border-primary/20 bg-primary/5 px-3 py-3 text-sm">
+            <KeyRound className="mt-0.5 size-4 shrink-0 text-primary" />
+            <div className="space-y-1 text-muted-foreground">
+              <p>
+                Password akan direset ke{" "}
+                <span className="font-mono font-semibold text-foreground">
+                  {INITIAL_PASSWORD}
+                </span>
+                .
+              </p>
+              <p className="text-xs leading-relaxed">
+                Pengguna {fullName} wajib membuat username dan password pribadi
+                saat login berikutnya. Sesi aktif akan diakhiri.
+              </p>
             </div>
           </div>
-
-          <p className="text-xs text-muted-foreground">
-            Password {fullName} akan direset dan pengguna wajib menggantinya saat
-            login berikutnya. Sesi aktif pengguna akan diakhiri.
-          </p>
 
           <FormFeedback state={state} />
 
