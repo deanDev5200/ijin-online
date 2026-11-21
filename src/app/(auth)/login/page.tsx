@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { Plus_Jakarta_Sans } from "next/font/google";
 import {
   CalendarCheck2,
   GraduationCap,
@@ -14,6 +15,11 @@ import { LoginForm } from "./login-form";
 export const metadata: Metadata = {
   title: "Masuk",
 };
+
+const loginFont = Plus_Jakarta_Sans({
+  subsets: ["latin"],
+  display: "swap",
+});
 
 const schoolName = process.env.NEXT_PUBLIC_SCHOOL_NAME ?? "Sekolah Asrama";
 const appName = process.env.NEXT_PUBLIC_APP_NAME ?? "Ijin Online";
@@ -52,7 +58,9 @@ export default async function LoginPage({
     process.env.SEED_DEMO === "true" && process.env.NODE_ENV !== "production";
 
   return (
-    <div className="grid min-h-screen bg-background lg:h-screen lg:grid-cols-[1.05fr_0.95fr] lg:overflow-hidden">
+    <div
+      className={`${loginFont.className} grid min-h-screen bg-background antialiased lg:h-screen lg:grid-cols-[1.05fr_0.95fr] lg:overflow-hidden`}
+    >
       <aside className="relative hidden overflow-hidden bg-linear-to-br from-[#0b2f8f] via-[#1d4ed8] to-[#4338ca] p-7 text-blue-50 lg:flex lg:flex-col lg:justify-between xl:px-12 xl:py-8">
         <div className="pointer-events-none absolute -top-32 -left-24 size-[28rem] rounded-full bg-sky-300/30 blur-[100px]" />
         <div className="pointer-events-none absolute -right-32 -bottom-32 size-[30rem] rounded-full bg-indigo-300/25 blur-[110px]" />
@@ -145,18 +153,16 @@ export default async function LoginPage({
             </div>
           </div>
 
-          <div className="mb-5 space-y-1.5">
-            <div className="mb-2 h-0.5 w-8 rounded-full bg-linear-to-r from-blue-600 to-indigo-500" />
-            <p className="text-sm font-medium text-primary">
-              Masuk ke akun Anda
+          <div className="mb-5 space-y-2">
+            <p className="text-xs font-semibold tracking-widest text-primary uppercase">
+              PORTAL AKSES
             </p>
-            <h2 className="text-2xl font-semibold tracking-tight">
+            <h2 className="text-2xl leading-tight font-semibold tracking-tight">
               Selamat datang kembali
             </h2>
-            <p className="text-[13px] leading-snug text-muted-foreground">
-              Gunakan username dan password yang Anda buat saat pertama kali
-              masuk. Akun baru memakai password awal 123456 dan akan diminta
-              membuat username serta password pribadi.
+            <p className="text-[13px] leading-relaxed text-slate-600 dark:text-slate-300">
+              Masuk menggunakan akun pribadi Anda untuk mengajukan dispensasi
+              dan memantau status perizinan.
             </p>
           </div>
 
