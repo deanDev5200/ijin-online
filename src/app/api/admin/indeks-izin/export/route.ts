@@ -13,6 +13,7 @@ import {
   formatTimeRange,
   getTodayInJakarta,
 } from "@/lib/permissions/dates";
+import { parseDepositItems } from "@/lib/permissions/deposit-items";
 import {
   APPROVAL_STATUS_LABELS,
   REQUEST_STATUS_LABELS,
@@ -51,6 +52,10 @@ export async function GET(request: Request) {
         endTime: true,
         status: true,
         rejectionReason: true,
+        visitorName: true,
+        phoneUse: true,
+        additionalNotes: true,
+        depositItems: true,
         createdAt: true,
         type: {
           select: {
@@ -134,6 +139,10 @@ export async function GET(request: Request) {
     { header: "Grha", key: "grha", width: 16 },
     { header: "Tujuan Kegiatan", key: "purpose", width: 36 },
     { header: "Tempat", key: "place", width: 26 },
+    { header: "Yang Datang", key: "visitorName", width: 26 },
+    { header: "Keperluan HP", key: "phoneUse", width: 32 },
+    { header: "Catatan Tambahan", key: "additionalNotes", width: 38 },
+    { header: "Daftar Titipan", key: "depositItems", width: 48 },
     { header: "Tanggal Izin", key: "dates", width: 30 },
     { header: "Jam", key: "times", width: 16 },
     { header: "Pembina/Pendamping", key: "mentor", width: 26 },
@@ -208,10 +217,21 @@ export async function GET(request: Request) {
       ).join("; "),
       purpose: requestItem.purpose,
       place: requestItem.place,
+      visitorName: requestItem.visitorName ?? "",
+      phoneUse: requestItem.phoneUse ?? "",
+      additionalNotes: requestItem.additionalNotes ?? "",
+      depositItems: parseDepositItems(requestItem.depositItems)
+        .map(
+          (item, index) =>
+            `${index + 1}. ${item.name} · ${item.quantity} ${item.unit}${
+              item.note ? ` · ${item.note}` : ""
+            }`,
+        )
+        .join("\n"),
       dates: formatDateRange(requestItem.startDate, requestItem.endDate),
       times: formatTimeRange(requestItem.startTime, requestItem.endTime),
-      mentor: requestItem.mentor.fullName,
-      mentorNip: requestItem.mentor.staffProfile?.nip ?? "",
+      mentor: requestItem.mentor?.fullName ?? "",
+      mentorNip: requestItem.mentor?.staffProfile?.nip ?? "",
       approvals: approvalTrail,
       rejection: requestItem.rejectionReason ?? "",
     });
@@ -219,7 +239,7 @@ export async function GET(request: Request) {
 
   sheet.autoFilter = {
     from: "A1",
-    to: `Q${Math.max(1, requests.length + 1)}`,
+    to: `U${Math.max(1, requests.length + 1)}`,
   };
 
   sheet.eachRow((row, rowNumber) => {

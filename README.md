@@ -81,14 +81,15 @@ Prisma schema so a new migration is generated.
 
 With `SEED_DEMO="true"`, the seed creates:
 
-| Role           | Username  | Password |
-| -------------- | --------- | -------- |
-| Admin          | `admin`   | `123456` |
-| Siswa          | `fauzi`   | `123456` |
-| Siswa          | `lestar`  | `123456` |
-| Pembina        | `wuland`  | `123456` |
-| Staff Asrama   | `pratam`  | `123456` |
-| Kepala Asrama  | `gunawa`  | `123456` |
+| Role               | Username  | Password |
+| ------------------ | --------- | -------- |
+| Admin              | `admin`   | `123456` |
+| Siswa              | `fauzi`   | `123456` |
+| Siswa              | `lestar`  | `123456` |
+| Pembina            | `wuland`  | `123456` |
+| Staff Asrama       | `pratam`  | `123456` |
+| Kepala Asrama      | `gunawa`  | `123456` |
+| Wakasek Kesiswaan  | `wakase`  | `123456` |
 
 All accounts use the initial password `123456` and must complete first-login
 setup: create a personal username (minimum 6 characters) and password. The new
@@ -112,16 +113,25 @@ remain valid until the forced setup replaces them.
 
 ## Request workflow
 
-Roles are `SISWA`, `PEMBINA`, `STAFF_ASRAMA`, `KEPALA_ASRAMA`, and `ADMIN`.
+Roles are `SISWA`, `PEMBINA`, `STAFF_ASRAMA`, `KEPALA_ASRAMA`,
+`WAKASEK_KESISWAAN`, and `ADMIN`.
 
 - A student creates a request for themselves and optionally other students.
-  The visible fields, labels, and guide come from the selected permission type;
-  the system only asks for data required by that type.
-- Approvals are generated per type in the configured order. A PEMBINA approval
-  belongs to the specific Pembina/Pendamping selected on the request. Other
-  roles use a shared role queue where the first decision wins.
+  Kunjungan Keluarga and Titipan Siswa only list the requester, so the
+  additional-student picker is hidden. Titipan Siswa uses a 1-10 item table with
+  Nama, Jumlah, Satuan, and Keterangan. The visible fields, labels, and guide
+  come from the selected permission type; the system only asks for data required
+  by that type.
+- Approvals are generated per type in the configured order: Pembina/Matta Pitta
+  first, asrama staff/head next, and Wakasek Kesiswaan last where required.
+  Wakasek Kesiswaan is required for Izin Penggunaan HP and Izin Pulang only.
+  Kunjungan Keluarga and Titipan Siswa start directly at Matta Pitta and do not
+  ask for Pembina/Pendamping.
+- A PEMBINA approval belongs to the specific Pembina/Pendamping selected on the
+  request. Other roles use a shared role queue where the first decision wins.
 - The next request status is derived from the approval rows, so a type with two
-  stages moves directly to `APPROVED` after its second approval.
+  stages moves directly to `APPROVED` after its second approval. A type ending in
+  Wakasek moves to `PENDING_WAKASEK` before approval.
 - Rejection requires a note. Remaining approval steps are cancelled.
 - A requester can cancel while the request is still pending.
 - Every stage change creates notifications for the students, the mentor, and
@@ -190,11 +200,13 @@ approval deadline are marked as overdue.
 - **Jenis izin**: create, edit, and deactivate permission types. At least one
   type must stay active. Deactivated types remain on historical requests.
 - **Konfigurasi per jenis izin**: for each type, set the ordered approval roles
-  (up to three), the displayed/required form fields, custom field labels,
-  custom approval labels, and the form guide shown to students. Changes apply
-  to new requests; historical approval labels are kept on each request.
-- **Alur persetujuan**: Pembina/Pendamping, Staff Asrama, and Kepala Asrama can
-  be ordered or omitted per type. A PEMBINA stage goes to the mentor selected on
-  the request; other stages use the relevant role and the first decision wins.
+  (up to four; Wakasek Kesiswaan must be last), the displayed/required form
+  fields, custom field labels, custom approval labels, and the form guide shown
+  to students. Changes apply to new requests; historical approval labels are
+  kept on each request.
+- **Alur persetujuan**: Pembina/Pendamping, Staff Asrama, Kepala Asrama, and
+  Wakasek Kesiswaan can be ordered or omitted per type. A PEMBINA stage goes to
+  the mentor selected on the request; other stages use the relevant role and the
+  first decision wins.
 - **Pembina/Pendamping yang dapat dipilih**: only checked, active staff
   accounts appear as mentor choices on the student form.

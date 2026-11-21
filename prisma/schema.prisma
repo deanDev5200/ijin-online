@@ -12,6 +12,7 @@ enum Role {
   PEMBINA
   STAFF_ASRAMA
   KEPALA_ASRAMA
+  WAKASEK_KESISWAAN
   ADMIN
 }
 
@@ -19,6 +20,7 @@ enum RequestStatus {
   PENDING_MENTOR
   PENDING_DORM_STAFF
   PENDING_DORM_HEAD
+  PENDING_WAKASEK
   APPROVED
   REJECTED
   CANCELLED
@@ -110,7 +112,7 @@ model PermissionRequest {
   id              String        @id @default(cuid())
   typeId          String
   requesterId     String
-  mentorId        String
+  mentorId        String?
   purpose         String
   place           String
   startDate       DateTime      @db.Date
@@ -120,6 +122,7 @@ model PermissionRequest {
   visitorName     String?
   phoneUse        String?
   additionalNotes String?
+  depositItems    String?
   status          RequestStatus @default(PENDING_MENTOR)
   rejectionReason String?
   createdAt       DateTime      @default(now())
@@ -127,7 +130,7 @@ model PermissionRequest {
 
   type          PermissionType             @relation(fields: [typeId], references: [id], onDelete: Restrict)
   requester     User                       @relation("RequestRequester", fields: [requesterId], references: [id], onDelete: Restrict)
-  mentor        User                       @relation("RequestMentor", fields: [mentorId], references: [id], onDelete: Restrict)
+  mentor        User?                      @relation("RequestMentor", fields: [mentorId], references: [id], onDelete: SetNull)
   students      PermissionRequestStudent[]
   approvals     Approval[]
   notifications Notification[]

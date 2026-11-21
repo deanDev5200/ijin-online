@@ -7,6 +7,7 @@ import {
   PERMISSION_FIELDS,
   type PermissionTypeConfig,
 } from "@/lib/permissions/config";
+import { compactDepositItems } from "@/lib/permissions/deposit-items";
 
 export const dateOnlySchema = z
   .string()
@@ -27,14 +28,24 @@ export const timeOfDaySchema = z
 export const approvalRolesSchema = z
   .array(z.enum(APPROVAL_ROLES))
   .min(1, "Pilih minimal satu tahap persetujuan.")
-  .max(3, "Maksimal tiga tahap persetujuan.")
+  .max(4, "Maksimal empat tahap persetujuan.")
   .refine((roles) => new Set(roles).size === roles.length, {
     message: "Peran persetujuan tidak boleh berulang.",
+  })
+  .refine((roles) => !roles.includes("WAKASEK_KESISWAAN") || roles.at(-1) === "WAKASEK_KESISWAAN", {
+    message: "Wakasek Kesiswaan harus menjadi tahap persetujuan terakhir.",
   });
 
 export const requiredFieldsSchema = z
   .array(z.enum(PERMISSION_FIELDS))
   .min(1, "Pilih minimal satu field wajib.");
+
+export const depositItemSchema = z.object({
+  name: z.string().trim().max(120, "Nama barang maksimal 120 karakter."),
+  quantity: z.string().trim().max(30, "Jumlah maksimal 30 karakter."),
+  unit: z.string().trim().max(30, "Satuan maksimal 30 karakter."),
+  note: z.string().trim().max(200, "Keterangan maksimal 200 karakter."),
+});
 
 /**
  * The base form is permissive; required fields are decided by the selected
@@ -51,7 +62,8 @@ export function createPermissionSchema(config: PermissionTypeConfig) {
       endDate: dateOnlySchema,
       startTime: z.string(),
       endTime: z.string(),
-      mentorId: z.string().min(1, "Pilih Pembina/Pendamping."),
+      mentorId: z.string(),
+      depositItems: z.array(depositItemSchema).max(10, "Maksimal 10 barang."),
       studentIds: z
         .array(z.string().min(1))
         .min(1, "Pilih minimal satu siswa.")
@@ -70,6 +82,48 @@ export function createPermissionSchema(config: PermissionTypeConfig) {
         .max(1000, "Catatan maksimal 1000 karakter."),
     })
     .superRefine((data, ctx) => {
+      if (config.approvalRoles.includes("PEMBINA") && !data.mentorId) {
+        ctx.addIssue({
+          code: "custom",
+          message: "Pilih Pembina/Pendamping.",
+          path: ["mentorId"],
+        });
+      }
+
+      if (hasField(config, "depositItems")) {
+        const filledItems = compactDepositItems(data.depositItems);
+
+        if (filledItems.length === 0) {
+          ctx.addIssue({
+            code: "custom",
+            message: "Isi minimal satu barang titipan.",
+            path: ["depositItems"],
+          });
+        }
+
+        data.depositItems.forEach((item, index) => {
+          if (!item.name && !item.quantity && !item.unit && !item.note) {
+            return;
+          }
+
+          if (item.name.length < 2) {
+            ctx.addIssue({
+              code: "custom",
+              message: "Nama barang minimal 2 karakter.",
+              path: [`depositItems.${index}.name`],
+            });
+          }
+
+          if (!item.quantity) {
+            ctx.addIssue({
+              code: "custom",
+              message: "Jumlah barang wajib diisi.",
+              path: [`depositItems.${index}.quantity`],
+            });
+          }
+        });
+      }
+
       if (hasField(config, "purpose") && data.purpose.length < 5) {
         ctx.addIssue({
           code: "custom",

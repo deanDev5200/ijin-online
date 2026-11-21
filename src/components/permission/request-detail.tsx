@@ -30,8 +30,10 @@ import {
   fieldLabel,
   getPermissionTypeConfig,
   hasField,
+  requiresMentor,
   type PermissionField,
 } from "@/lib/permissions/config";
+import { parseDepositItems } from "@/lib/permissions/deposit-items";
 import {
   formatDateOnly,
   formatDateTime,
@@ -92,8 +94,10 @@ export function RequestDetail({
     return a.student.fullName.localeCompare(b.student.fullName, "id");
   });
 
-  const mentorNip = request.mentor.staffProfile?.nip;
   const config = getPermissionTypeConfig(request.type);
+  const needsMentor = requiresMentor(config);
+  const mentorNip = request.mentor?.staffProfile?.nip;
+  const depositItems = parseDepositItems(request.depositItems);
   const approvalCount = request.approvals.length;
 
   const hasValue = (value: string | null) => Boolean(value?.trim());
@@ -209,11 +213,13 @@ export function RequestDetail({
                 value={formatTimeRange(request.startTime, request.endTime)}
               />
             ) : null}
-            <InfoItem
-              icon={UserRound}
-              label="Pembina/Pendamping"
-              value={request.mentor.fullName}
-            />
+            {needsMentor && request.mentor ? (
+              <InfoItem
+                icon={UserRound}
+                label="Pembina/Pendamping"
+                value={request.mentor.fullName}
+              />
+            ) : null}
           </dl>
         </CardContent>
       </Card>
@@ -302,20 +308,22 @@ export function RequestDetail({
                     className={field === "additionalNotes" || field === "phoneUse" ? "sm:col-span-2" : undefined}
                   />
                 ))}
-                <InfoItem
-                  icon={UserRound}
-                  label="Pembina/Pendamping"
-                  value={
-                    <span>
-                      {request.mentor.fullName}
-                      {mentorNip ? (
-                        <span className="block text-xs font-normal text-muted-foreground">
-                          NIP {mentorNip}
-                        </span>
-                      ) : null}
-                    </span>
-                  }
-                />
+                {needsMentor && request.mentor ? (
+                  <InfoItem
+                    icon={UserRound}
+                    label="Pembina/Pendamping"
+                    value={
+                      <span>
+                        {request.mentor.fullName}
+                        {mentorNip ? (
+                          <span className="block text-xs font-normal text-muted-foreground">
+                            NIP {mentorNip}
+                          </span>
+                        ) : null}
+                      </span>
+                    }
+                  />
+                ) : null}
                 <InfoItem
                   icon={Clock3}
                   label="Diajukan pada"
@@ -329,6 +337,50 @@ export function RequestDetail({
               </dl>
             </CardContent>
           </Card>
+
+          {depositItems.length > 0 ? (
+            <Card className="bg-linear-to-br from-primary/5 to-card">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2 text-base">
+                  <ClipboardList className="size-4 text-primary" />
+                  Daftar barang titipan
+                </CardTitle>
+                <CardDescription>
+                  {depositItems.length} barang tercantum dalam pengajuan ini.
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="overflow-x-auto rounded-xl border">
+                  <table className="w-full min-w-[560px] border-collapse text-sm">
+                    <thead>
+                      <tr className="border-b bg-primary/5 text-left text-[11px] font-semibold tracking-wide text-muted-foreground uppercase">
+                        <th className="w-10 px-3 py-2 text-center">No</th>
+                        <th className="px-3 py-2">Nama</th>
+                        <th className="px-3 py-2">Jumlah</th>
+                        <th className="px-3 py-2">Satuan</th>
+                        <th className="px-3 py-2">Keterangan</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {depositItems.map((item, index) => (
+                        <tr key={index} className="border-b last:border-0">
+                          <td className="px-3 py-2 text-center text-xs font-semibold text-primary">
+                            {index + 1}
+                          </td>
+                          <td className="px-3 py-2 font-medium">{item.name || "—"}</td>
+                          <td className="px-3 py-2">{item.quantity || "—"}</td>
+                          <td className="px-3 py-2">{item.unit || "—"}</td>
+                          <td className="px-3 py-2 text-muted-foreground">
+                            {item.note || "—"}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </CardContent>
+            </Card>
+          ) : null}
         </div>
 
         <div className="space-y-6">

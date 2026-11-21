@@ -122,12 +122,11 @@ export async function cancelPermissionRequestAction(
 
       await createRequestNotifications(tx, [
         ...new Set([
-          request.mentorId,
-          ...stageUserIds.filter((userId) => userId !== request.mentorId),
+          ...stageUserIds,
           ...request.students
             .filter((student) => student.studentId !== user.id)
             .map((student) => student.studentId),
-        ]),
+        ].filter((userId): userId is string => Boolean(userId))),
       ].map((userId) => ({
         userId,
         title: "Pengajuan izin dibatalkan",

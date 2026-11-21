@@ -7,6 +7,7 @@ export const ACCOUNT_ROLES = [
   "PEMBINA",
   "STAFF_ASRAMA",
   "KEPALA_ASRAMA",
+  "WAKASEK_KESISWAAN",
   "ADMIN",
 ] as const;
 
@@ -15,6 +16,7 @@ export const MANAGEABLE_ROLES = [
   "PEMBINA",
   "STAFF_ASRAMA",
   "KEPALA_ASRAMA",
+  "WAKASEK_KESISWAAN",
 ] as const;
 
 export type ManageableRole = (typeof MANAGEABLE_ROLES)[number];

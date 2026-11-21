@@ -137,7 +137,8 @@ export function AccountCreateForm() {
                 Tenaga kependidikan
               </span>
               <span className="block text-xs leading-relaxed text-muted-foreground">
-                Pembina, Staff Asrama, atau Kepala Asrama dengan NIP.
+                Pembina, Staff Asrama, Kepala Asrama, atau Wakasek Kesiswaan
+                dengan NIP.
               </span>
             </span>
           </label>
@@ -156,6 +157,7 @@ export function AccountCreateForm() {
                 <option value="PEMBINA">Pembina / Pendamping</option>
                 <option value="STAFF_ASRAMA">Staff Asrama</option>
                 <option value="KEPALA_ASRAMA">Kepala Asrama</option>
+                <option value="WAKASEK_KESISWAAN">Wakasek Kesiswaan</option>
               </select>
               <FieldError message={errors?.role?.[0]} />
             </div>

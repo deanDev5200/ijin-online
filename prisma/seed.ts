@@ -25,7 +25,13 @@ const BCRYPT_ROUNDS = 12;
 type SeedUser = {
   username: string;
   password: string;
-  role: "SISWA" | "PEMBINA" | "STAFF_ASRAMA" | "KEPALA_ASRAMA" | "ADMIN";
+  role:
+    | "SISWA"
+    | "PEMBINA"
+    | "STAFF_ASRAMA"
+    | "KEPALA_ASRAMA"
+    | "WAKASEK_KESISWAAN"
+    | "ADMIN";
   fullName: string;
   mustChangePassword?: boolean;
   student?: {
@@ -163,6 +169,14 @@ async function main() {
         fullName: "Hendra Gunawan",
         mustChangePassword: true,
         staff: { nip: "197905202005011003" },
+      },
+      {
+        username: generateUsername("Dewi Wakasek"),
+        password: INITIAL_PASSWORD,
+        role: "WAKASEK_KESISWAAN",
+        fullName: "Dewi Wakasek",
+        mustChangePassword: true,
+        staff: { nip: "198204102012012004" },
       },
     ];
 

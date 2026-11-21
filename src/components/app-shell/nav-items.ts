@@ -132,6 +132,28 @@ const navigationByRole: Record<AppRole, NavSection[]> = {
       items: [notificationsItem, profileItem],
     },
   ],
+  WAKASEK_KESISWAAN: [
+    {
+      title: "Menu Utama",
+      items: [
+        dashboardItem,
+        {
+          href: "/permintaan-izin",
+          label: "Permintaan Izin",
+          icon: ClipboardCheck,
+        },
+        {
+          href: "/riwayat-approval",
+          label: "Riwayat Approval",
+          icon: FileClock,
+        },
+      ],
+    },
+    {
+      title: "Akun",
+      items: [notificationsItem, profileItem],
+    },
+  ],
   ADMIN: [
     {
       title: "Menu Utama",

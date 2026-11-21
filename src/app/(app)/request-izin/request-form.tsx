@@ -34,6 +34,8 @@ import {
   approvalLabel,
   fieldLabel,
   hasField,
+  requiresMentor,
+  requiresSingleStudent,
   type PermissionTypeConfig,
 } from "@/lib/permissions/config";
 import { addDaysToDateOnly } from "@/lib/permissions/dates";
@@ -43,6 +45,7 @@ import {
 } from "@/lib/permissions/form-state";
 
 import { createPermissionRequestAction } from "./actions";
+import { DepositItemsField } from "./deposit-items-field";
 import {
   StudentPicker,
   type SelectableStudent,
@@ -179,18 +182,21 @@ export function PermissionRequestForm({
   const needsVisitorName = hasField(config, "visitorName");
   const needsPhoneUse = hasField(config, "phoneUse");
   const needsAdditionalNotes = hasField(config, "additionalNotes");
+  const needsDepositItems = hasField(config, "depositItems");
+  const singleStudent = requiresSingleStudent(config);
+  const needsMentor = requiresMentor(config);
   const showStartDate = needsStartDate || needsEndDate;
   const hasApprovalFields =
     needsPurpose ||
     needsPlace ||
     needsVisitorName ||
     needsPhoneUse ||
-    needsAdditionalNotes;
+    needsAdditionalNotes ||
+    needsDepositItems;
 
   const mentorDefault =
     state.values?.mentorId ??
     (mentors.length === 1 ? mentors[0]?.id ?? "" : "");
-  const mentorApprovalIndex = config.approvalRoles.indexOf("PEMBINA");
 
   return (
     <form action={formAction} className="space-y-6" noValidate>
@@ -295,15 +301,20 @@ export function PermissionRequestForm({
         </CardContent>
       </Card>
 
-      <Card>
+      <Card className={singleStudent ? "bg-linear-to-br from-primary/5 to-card" : undefined}>
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-base">
-            <UsersRound className="size-4 text-primary" />
-            Siswa yang terlibat
+            {singleStudent ? (
+              <UserRound className="size-4 text-primary" />
+            ) : (
+              <UsersRound className="size-4 text-primary" />
+            )}
+            {singleStudent ? "Data siswa" : "Siswa yang terlibat"}
           </CardTitle>
           <CardDescription>
-            Anda otomatis tercantum sebagai siswa pertama. Tambahkan siswa lain
-            yang mengikuti kegiatan yang sama.
+            {singleStudent
+              ? "Pengajuan ini hanya untuk Anda sebagai siswa pengaju."
+              : "Anda otomatis tercantum sebagai siswa pertama. Tambahkan siswa lain yang mengikuti kegiatan yang sama."}
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -330,27 +341,31 @@ export function PermissionRequestForm({
             />
           </div>
 
-          <Separator />
+          {singleStudent ? null : (
+            <>
+              <Separator />
 
-          <div className="space-y-2">
-            <Label htmlFor="student-search">
-              Tambah siswa lain{" "}
-              <span className="font-normal text-muted-foreground">
-                (opsional)
-              </span>
-            </Label>
-            <StudentPicker
-              students={students}
-              requesterId={requester.id}
-              initialSelectedIds={state.values?.studentIds ?? []}
-              maxStudents={maxOtherStudents}
-            />
-            <p className="text-xs text-muted-foreground">
-              Maksimal {settings.maxStudentsPerRequest} siswa per pengajuan,
-              termasuk Anda sebagai pengaju.
-            </p>
-            <FieldError message={errors?.studentIds?.[0]} />
-          </div>
+              <div className="space-y-2">
+                <Label htmlFor="student-search">
+                  Tambah siswa lain{" "}
+                  <span className="font-normal text-muted-foreground">
+                    (opsional)
+                  </span>
+                </Label>
+                <StudentPicker
+                  students={students}
+                  requesterId={requester.id}
+                  initialSelectedIds={state.values?.studentIds ?? []}
+                  maxStudents={maxOtherStudents}
+                />
+                <p className="text-xs text-muted-foreground">
+                  Maksimal {settings.maxStudentsPerRequest} siswa per pengajuan,
+                  termasuk Anda sebagai pengaju.
+                </p>
+                <FieldError message={errors?.studentIds?.[0]} />
+              </div>
+            </>
+          )}
         </CardContent>
       </Card>
 
@@ -463,6 +478,29 @@ export function PermissionRequestForm({
                   className={textareaClassName}
                 />
                 <FieldError message={errors?.additionalNotes?.[0]} />
+              </div>
+            ) : null}
+
+            {needsDepositItems ? (
+              <div className="space-y-2">
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <Label>{fieldLabel(config, "depositItems")}</Label>
+                  <Badge variant="secondary" className="text-[10px]">
+                    1–10 barang
+                  </Badge>
+                </div>
+                <DepositItemsField initialItems={state.values?.depositItems} />
+                <p className="text-xs leading-relaxed text-muted-foreground">
+                  Isi baris yang digunakan saja. Setiap baris yang diisi wajib
+                  memiliki nama dan jumlah barang.
+                </p>
+                <FieldError message={errors?.depositItems?.[0]} />
+                {Array.from({ length: 10 }, (_, index) => (
+                  <FieldError
+                    key={index}
+                    message={errors?.[`depositItems.${index}.name`]?.[0]}
+                  />
+                ))}
               </div>
             ) : null}
           </CardContent>
@@ -588,46 +626,48 @@ export function PermissionRequestForm({
         </>
       )}
 
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-base">
-            <UserRound className="size-4 text-primary" />
-            Pembina / Pendamping
-          </CardTitle>
-          <CardDescription>
-            {mentorApprovalIndex >= 0
-              ? `Pembina/Pendamping bertindak sebagai penyetuju tahap ${mentorApprovalIndex + 1} untuk jenis izin ini.`
-              : "Pembina/Pendamping tetap dicatat pada formulir meski bukan penyetuju pada jenis izin ini."}
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-2">
-          <Label htmlFor="mentorId">Pilih Pembina/Pendamping</Label>
-          <select
-            id="mentorId"
-            name="mentorId"
-            defaultValue={mentorDefault}
-            required
-            aria-invalid={Boolean(errors?.mentorId?.[0])}
-            className={selectClassName}
-          >
-            <option value="" disabled>
-              Pilih Pembina/Pendamping
-            </option>
-            {mentors.map((mentor) => (
-              <option key={mentor.id} value={mentor.id}>
-                {mentor.fullName}
-                {mentor.nip ? ` · NIP ${mentor.nip}` : ""}
+      {needsMentor ? (
+        <Card className="bg-linear-to-br from-primary/5 to-card">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-base">
+              <UserRound className="size-4 text-primary" />
+              Pembina / Pendamping
+            </CardTitle>
+            <CardDescription>
+              {`Pembina/Pendamping bertindak sebagai penyetuju tahap ${
+                config.approvalRoles.indexOf("PEMBINA") + 1
+              } untuk jenis izin ini.`}
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-2">
+            <Label htmlFor="mentorId">Pilih Pembina/Pendamping</Label>
+            <select
+              id="mentorId"
+              name="mentorId"
+              defaultValue={mentorDefault}
+              required
+              aria-invalid={Boolean(errors?.mentorId?.[0])}
+              className={selectClassName}
+            >
+              <option value="" disabled>
+                Pilih Pembina/Pendamping
               </option>
-            ))}
-          </select>
-          <FieldError message={errors?.mentorId?.[0]} />
-          {mentors.length === 0 ? (
-            <p className="text-xs text-destructive">
-              Belum ada akun Pembina yang aktif. Hubungi administrator asrama.
-            </p>
-          ) : null}
-        </CardContent>
-      </Card>
+              {mentors.map((mentor) => (
+                <option key={mentor.id} value={mentor.id}>
+                  {mentor.fullName}
+                  {mentor.nip ? ` · NIP ${mentor.nip}` : ""}
+                </option>
+              ))}
+            </select>
+            <FieldError message={errors?.mentorId?.[0]} />
+            {mentors.length === 0 ? (
+              <p className="text-xs text-destructive">
+                Belum ada akun Pembina yang aktif. Hubungi administrator asrama.
+              </p>
+            ) : null}
+          </CardContent>
+        </Card>
+      ) : null}
 
       {state.status === "error" && state.message ? (
         <Alert variant="destructive">
@@ -641,7 +681,9 @@ export function PermissionRequestForm({
         <Button type="button" variant="outline" size="lg" className="h-10" asChild>
           <Link href="/dashboard">Batal</Link>
         </Button>
-        <SubmitButton disabled={mentors.length === 0 || types.length === 0} />
+        <SubmitButton
+          disabled={types.length === 0 || (needsMentor && mentors.length === 0)}
+        />
       </div>
     </form>
   );

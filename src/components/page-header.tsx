@@ -10,13 +10,17 @@ export function PageHeader({
   children?: ReactNode;
 }) {
   return (
-    <div className="relative overflow-hidden rounded-2xl border border-primary/10 bg-linear-to-br from-primary/[0.06] via-card to-card px-5 py-5 sm:px-6 sm:py-6">
+    <div className="relative overflow-hidden rounded-2xl border border-primary/20 bg-linear-to-br from-primary/[0.16] via-primary/[0.07] to-card px-5 py-5 shadow-[0_12px_30px_-24px_rgba(37,99,235,0.6)] sm:px-6 sm:py-6">
       <div
-        className="pointer-events-none absolute -top-12 -right-10 size-40 rounded-full bg-primary/[0.05]"
+        className="pointer-events-none absolute -top-16 -right-12 size-48 rounded-full bg-primary/[0.12]"
         aria-hidden="true"
       />
       <div
-        className="pointer-events-none absolute -top-5 -right-3 size-24 rounded-full border border-primary/10"
+        className="pointer-events-none absolute -top-6 -right-4 size-28 rounded-full border border-primary/20"
+        aria-hidden="true"
+      />
+      <div
+        className="pointer-events-none absolute -bottom-16 left-1/3 size-40 rounded-full bg-chart-2/[0.08]"
         aria-hidden="true"
       />
       <div className="relative flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">

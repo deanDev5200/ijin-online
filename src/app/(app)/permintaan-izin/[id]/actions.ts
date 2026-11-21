@@ -193,7 +193,9 @@ export async function decidePermissionAction(
       const recipientIds = [
         ...request.students.map((student) => student.studentId),
         request.mentorId,
-      ].filter((userId) => userId !== user.id);
+      ].filter(
+        (userId): userId is string => Boolean(userId) && userId !== user.id,
+      );
 
       const notifications = recipientIds.map((userId) => ({
         userId,

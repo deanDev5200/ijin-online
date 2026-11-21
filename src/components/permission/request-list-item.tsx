@@ -112,7 +112,7 @@ export function RequestListItem({
                 ) : (
                   <>
                     <UserRound className="size-3.5 shrink-0" />
-                    Pembina: {request.mentor.fullName}
+                    Pembina: {request.mentor?.fullName ?? "-"}
                   </>
                 )}
               </span>

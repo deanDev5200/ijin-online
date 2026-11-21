@@ -29,6 +29,7 @@ export const permissionRequestDetailSelect = {
   visitorName: true,
   phoneUse: true,
   additionalNotes: true,
+  depositItems: true,
   status: true,
   rejectionReason: true,
   createdAt: true,

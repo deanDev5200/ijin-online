@@ -4,6 +4,7 @@ export const APPROVAL_ROLES = [
   "PEMBINA",
   "STAFF_ASRAMA",
   "KEPALA_ASRAMA",
+  "WAKASEK_KESISWAAN",
 ] as const;
 
 export type ApprovalRole = (typeof APPROVAL_ROLES)[number];
@@ -17,6 +18,7 @@ export const PERMISSION_FIELDS = [
   "visitorName",
   "phoneUse",
   "additionalNotes",
+  "depositItems",
 ] as const;
 
 export type PermissionField = (typeof PERMISSION_FIELDS)[number];
@@ -37,12 +39,15 @@ export const APPROVAL_ROLE_LABELS: Record<ApprovalRole, string> = {
   PEMBINA: "Pembina / Pendamping",
   STAFF_ASRAMA: "Staff Asrama",
   KEPALA_ASRAMA: "Kepala Asrama",
+  WAKASEK_KESISWAAN: "Wakasek Kesiswaan",
 };
 
 export const APPROVAL_ROLE_DESCRIPTIONS: Record<ApprovalRole, string> = {
   PEMBINA: "Meninjau kesesuaian kegiatan dan pendampingan siswa.",
   STAFF_ASRAMA: "Memverifikasi data asrama dan jadwal siswa.",
-  KEPALA_ASRAMA: "Memberikan persetujuan akhir pengajuan.",
+  KEPALA_ASRAMA: "Memberikan persetujuan akhir pengajuan asrama.",
+  WAKASEK_KESISWAAN:
+    "Memberikan persetujuan terakhir dari bagian kesiswaan.",
 };
 
 export const FIELD_LABELS: Record<PermissionField, string> = {
@@ -54,6 +59,7 @@ export const FIELD_LABELS: Record<PermissionField, string> = {
   visitorName: "Yang datang",
   phoneUse: "Keperluan penggunaan HP",
   additionalNotes: "Catatan tambahan",
+  depositItems: "Daftar barang titipan (1-10)",
 };
 
 export type PermissionTypeConfig = {
@@ -163,6 +169,19 @@ export function hasField(
   return config.requiredFields.includes(field);
 }
 
+/** Titipan and family visits do not use a Pembina/Pendamping approval row. */
+export function requiresMentor(config: PermissionTypeConfig): boolean {
+  return config.approvalRoles.includes("PEMBINA");
+}
+
+/**
+ * Visitors and deposit forms list only the requester, so the additional-student
+ * picker is hidden and ignored by the server action for these types.
+ */
+export function requiresSingleStudent(config: PermissionTypeConfig): boolean {
+  return hasField(config, "visitorName") || hasField(config, "depositItems");
+}
+
 export function fieldLabel(
   config: PermissionTypeConfig,
   field: PermissionField,
@@ -209,7 +228,7 @@ export const PDF_PERMISSION_TYPES: PdfPermissionType[] = [
       "Dispensasi mengikuti kegiatan akademik atau non-akademik di luar rutinitas asrama.",
     sortOrder: 0,
     config: {
-      approvalRoles: ["STAFF_ASRAMA", "PEMBINA", "KEPALA_ASRAMA"],
+      approvalRoles: ["PEMBINA", "STAFF_ASRAMA", "KEPALA_ASRAMA"],
       requiredFields: ["purpose", "startDate", "time", "place"],
       fieldLabels: {
         purpose: "Untuk (nama kegiatan)",
@@ -218,12 +237,12 @@ export const PDF_PERMISSION_TYPES: PdfPermissionType[] = [
         place: "Tempat",
       },
       approvalLabels: {
-        STAFF_ASRAMA: "Staf Asrama",
         PEMBINA: "Pembina / Pendamping",
+        STAFF_ASRAMA: "Staf Asrama",
         KEPALA_ASRAMA: "Kepala Urusan Asrama",
       },
       formGuide:
-        "Isi daftar siswa, Untuk, Hari/tanggal, Waktu, dan Tempat. Formulir diketahui Staf Asrama serta Pembina/Pendamping, lalu disetujui Kepala Urusan Asrama.",
+        "Isi daftar siswa, Untuk, Hari/tanggal, Waktu, dan Tempat. Formulir diketahui Pembina/Pendamping dan Staf Asrama, lalu disetujui Kepala Urusan Asrama.",
     },
   },
   {
@@ -244,7 +263,7 @@ export const PDF_PERMISSION_TYPES: PdfPermissionType[] = [
         KEPALA_ASRAMA: "Kepala Urusan Asrama",
       },
       formGuide:
-        "Isi Nama, Grha, Hari/Tanggal, Yang Datang, dan Keperluan. Formulir diketahui Matta Pitta dan Pemohon/Siswa, lalu disetujui Kepala Urusan Asrama.",
+        "Isi Nama, Grha, Hari/Tanggal, Yang Datang, dan Keperluan. Formulir diketahui Matta Pitta dan Pemohon/Siswa, lalu disetujui Kepala Urusan Asrama. Tidak memerlukan Pembina/Pendamping.",
     },
   },
   {
@@ -253,7 +272,7 @@ export const PDF_PERMISSION_TYPES: PdfPermissionType[] = [
       "Izin keluar asrama atau sekolah untuk kegiatan pengembangan diri siswa.",
     sortOrder: 20,
     config: {
-      approvalRoles: ["STAFF_ASRAMA", "PEMBINA", "KEPALA_ASRAMA"],
+      approvalRoles: ["PEMBINA", "STAFF_ASRAMA", "KEPALA_ASRAMA"],
       requiredFields: ["purpose", "startDate", "time", "place"],
       fieldLabels: {
         purpose: "Untuk",
@@ -262,12 +281,12 @@ export const PDF_PERMISSION_TYPES: PdfPermissionType[] = [
         place: "Tempat",
       },
       approvalLabels: {
-        STAFF_ASRAMA: "Kubutambahan / Staf Asrama",
         PEMBINA: "Pembina / Pendamping",
+        STAFF_ASRAMA: "Kubutambahan / Staf Asrama",
         KEPALA_ASRAMA: "Kepala Urusan Asrama",
       },
       formGuide:
-        "Isi daftar siswa, Untuk, Hari/tgl, Waktu, dan Tempat. Formulir diketahui Kubutambahan, Staf Asrama, dan Pembina/Pendamping, lalu disetujui Kepala Urusan Asrama.",
+        "Isi daftar siswa, Untuk, Hari/tgl, Waktu, dan Tempat. Formulir diketahui Pembina/Pendamping dan Kubutambahan/Staf Asrama, lalu disetujui Kepala Urusan Asrama.",
     },
   },
   {
@@ -276,7 +295,7 @@ export const PDF_PERMISSION_TYPES: PdfPermissionType[] = [
       "Izin mengambil dan menggunakan HP untuk keperluan yang dinyatakan siswa.",
     sortOrder: 30,
     config: {
-      approvalRoles: ["PEMBINA", "KEPALA_ASRAMA"],
+      approvalRoles: ["PEMBINA", "STAFF_ASRAMA", "WAKASEK_KESISWAAN"],
       requiredFields: ["phoneUse", "startDate", "time"],
       fieldLabels: {
         phoneUse: "Mengambil HP dan memanfaatkan untuk",
@@ -285,10 +304,11 @@ export const PDF_PERMISSION_TYPES: PdfPermissionType[] = [
       },
       approvalLabels: {
         PEMBINA: "Pembina",
-        KEPALA_ASRAMA: "Kubutambahan / Wakasek Kesiswaan",
+        STAFF_ASRAMA: "Kubutambahan / Staf Asrama",
+        WAKASEK_KESISWAAN: "Wakasek Kesiswaan",
       },
       formGuide:
-        "Isi daftar siswa, keperluan Mengambil HP dan memanfaatkan untuk, Hari/tgl, serta Waktu. Formulir diketahui Kubutambahan/Wakasek Kesiswaan dan Pembina.",
+        "Isi daftar siswa, keperluan Mengambil HP dan memanfaatkan untuk, Hari/tgl, serta Waktu. Formulir diketahui Pembina dan Kubutambahan/Staf Asrama, lalu disetujui Wakasek Kesiswaan.",
     },
   },
   {
@@ -297,7 +317,7 @@ export const PDF_PERMISSION_TYPES: PdfPermissionType[] = [
       "Izin pulang ke rumah dengan tanggal kepulangan dan tanggal kedatangan kembali.",
     sortOrder: 40,
     config: {
-      approvalRoles: ["PEMBINA", "KEPALA_ASRAMA", "STAFF_ASRAMA"],
+      approvalRoles: ["PEMBINA", "STAFF_ASRAMA", "WAKASEK_KESISWAAN"],
       requiredFields: ["purpose", "startDate", "endDate"],
       fieldLabels: {
         startDate: "Hari / tanggal kepulangan",
@@ -306,11 +326,11 @@ export const PDF_PERMISSION_TYPES: PdfPermissionType[] = [
       },
       approvalLabels: {
         PEMBINA: "Yang memberi izin",
-        KEPALA_ASRAMA: "Wakasek Kesiswaan",
         STAFF_ASRAMA: "Matta Pitta / Kepala Urusan Asrama",
+        WAKASEK_KESISWAAN: "Wakasek Kesiswaan",
       },
       formGuide:
-        "Isi Nama, Kelas, Grha, Hari/Tanggal Kepulangan, Hari/Tanggal Kedatangan, dan Alasan/Keperluan. Formulir diketahui Wakasek Kesiswaan, Kepala Urusan Asrama, dan Matta Pitta.",
+        "Isi Nama, Kelas, Grha, Hari/Tanggal Kepulangan, Hari/Tanggal Kedatangan, dan Alasan/Keperluan. Formulir diketahui Yang memberi izin dan Matta Pitta/Kepala Urusan Asrama, lalu disetujui Wakasek Kesiswaan.",
     },
   },
   {
@@ -320,17 +340,16 @@ export const PDF_PERMISSION_TYPES: PdfPermissionType[] = [
     sortOrder: 50,
     config: {
       approvalRoles: ["STAFF_ASRAMA", "KEPALA_ASRAMA"],
-      requiredFields: ["additionalNotes"],
+      requiredFields: ["depositItems"],
       fieldLabels: {
-        additionalNotes:
-          "Daftar barang, jumlah, satuan, dan keterangan titipan",
+        depositItems: "Daftar barang titipan (1-10)",
       },
       approvalLabels: {
         STAFF_ASRAMA: "Matta Pitta",
         KEPALA_ASRAMA: "Kepala Urusan Asrama",
       },
       formGuide:
-        "Tuliskan daftar barang beserta jumlah, satuan, dan keterangannya. Titipan makanan/minuman maksimal sekali per minggu per siswa per grha; uang dan obat wajib diketahui Matta Pitta.",
+        "Isi daftar barang 1-10 dengan nama, jumlah, satuan, dan keterangan. Titipan makanan/minuman maksimal sekali per minggu per siswa per grha; uang dan obat wajib diketahui Matta Pitta. Tidak memerlukan Pembina/Pendamping.",
     },
   },
 ];
@@ -358,7 +377,12 @@ export function isPermissionFieldList(value: unknown): value is PermissionField[
   );
 }
 
-export function pendingStatusForRole(role: Role): "PENDING_MENTOR" | "PENDING_DORM_STAFF" | "PENDING_DORM_HEAD" | null {
+export function pendingStatusForRole(role: Role):
+  | "PENDING_MENTOR"
+  | "PENDING_DORM_STAFF"
+  | "PENDING_DORM_HEAD"
+  | "PENDING_WAKASEK"
+  | null {
   if (role === "PEMBINA") {
     return "PENDING_MENTOR";
   }
@@ -369,6 +393,10 @@ export function pendingStatusForRole(role: Role): "PENDING_MENTOR" | "PENDING_DO
 
   if (role === "KEPALA_ASRAMA") {
     return "PENDING_DORM_HEAD";
+  }
+
+  if (role === "WAKASEK_KESISWAAN") {
+    return "PENDING_WAKASEK";
   }
 
   return null;

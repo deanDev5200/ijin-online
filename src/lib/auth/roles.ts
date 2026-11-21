@@ -3,6 +3,7 @@ export const APP_ROLES = [
   "PEMBINA",
   "STAFF_ASRAMA",
   "KEPALA_ASRAMA",
+  "WAKASEK_KESISWAAN",
   "ADMIN",
 ] as const;
 
@@ -12,6 +13,7 @@ export const STAFF_ROLES = [
   "PEMBINA",
   "STAFF_ASRAMA",
   "KEPALA_ASRAMA",
+  "WAKASEK_KESISWAAN",
 ] as const satisfies readonly AppRole[];
 
 export type StaffRole = (typeof STAFF_ROLES)[number];
@@ -21,6 +23,7 @@ export const ROLE_LABELS: Record<AppRole, string> = {
   PEMBINA: "Pembina",
   STAFF_ASRAMA: "Staff Asrama",
   KEPALA_ASRAMA: "Kepala Asrama",
+  WAKASEK_KESISWAAN: "Wakasek Kesiswaan",
   ADMIN: "Administrator",
 };
 
@@ -28,7 +31,8 @@ export const ROLE_DESCRIPTIONS: Record<AppRole, string> = {
   SISWA: "Mengajukan dan memantau izin asrama",
   PEMBINA: "Menyetujui izin tahap pertama",
   STAFF_ASRAMA: "Menyetujui izin tahap kedua",
-  KEPALA_ASRAMA: "Menyetujui izin tahap akhir",
+  KEPALA_ASRAMA: "Menyetujui izin tahap asrama",
+  WAKASEK_KESISWAAN: "Menyetujui izin tahap akhir kesiswaan",
   ADMIN: "Mengelola akun dan pengaturan perizinan",
 };
 

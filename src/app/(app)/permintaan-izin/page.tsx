@@ -27,10 +27,14 @@ function getDescription(role: string): string {
   }
 
   if (role === "STAFF_ASRAMA") {
-    return "Pengajuan yang menunggu verifikasi Anda pada tahap Staff Asrama sesuai alur jenis izin.";
+    return "Pengajuan yang menunggu verifikasi Anda pada tahap Staf Asrama atau Matta Pitta sesuai alur jenis izin.";
   }
 
-  return "Pengajuan yang menunggu persetujuan akhir Anda pada tahap Kepala Asrama sesuai alur jenis izin.";
+  if (role === "KEPALA_ASRAMA") {
+    return "Pengajuan yang menunggu persetujuan Anda pada tahap Kepala Asrama sesuai alur jenis izin.";
+  }
+
+  return "Pengajuan yang menunggu persetujuan terakhir Anda sebagai Wakasek Kesiswaan sesuai alur jenis izin.";
 }
 
 export default async function PermissionRequestsPage() {

@@ -19,7 +19,13 @@ import {
   getPermissionTypeConfig,
   hasField,
   pendingStatusForRole,
+  requiresMentor,
+  requiresSingleStudent,
 } from "@/lib/permissions/config";
+import {
+  readDepositItemsFormData,
+  serializeDepositItems,
+} from "@/lib/permissions/deposit-items";
 import {
   type PermissionRequestFormState,
   type PermissionRequestFormValues,
@@ -47,7 +53,6 @@ export async function createPermissionRequestAction(
     .getAll("studentIds")
     .filter((value): value is string => typeof value === "string");
 
-  const studentIds = Array.from(new Set([user.id, ...rawStudentIds]));
   const typeId = getFormValue(formData, "typeId");
 
   const type = await prisma.permissionType.findFirst({
@@ -77,6 +82,10 @@ export async function createPermissionRequestAction(
   }
 
   const config = getPermissionTypeConfig(type);
+  const studentIds = requiresSingleStudent(config)
+    ? [user.id]
+    : Array.from(new Set([user.id, ...rawStudentIds]));
+  const depositItems = readDepositItemsFormData(formData);
   const today = getTodayInJakarta();
   const needsRange = hasField(config, "endDate");
   const startDateValue =
@@ -96,8 +105,9 @@ export async function createPermissionRequestAction(
     endDate: endDateValue,
     startTime: hasField(config, "time") ? getFormValue(formData, "startTime") : "",
     endTime: hasField(config, "time") ? getFormValue(formData, "endTime") : "",
-    mentorId: getFormValue(formData, "mentorId"),
+    mentorId: requiresMentor(config) ? getFormValue(formData, "mentorId") : "",
     studentIds,
+    depositItems,
     visitorName: hasField(config, "visitorName")
       ? getFormValue(formData, "visitorName")
       : "",
@@ -165,24 +175,26 @@ export async function createPermissionRequestAction(
     };
   }
 
-  const mentor = await prisma.user.findFirst({
-    where: {
-      id: data.mentorId,
-      role: "PEMBINA",
-      isActive: true,
-      staffProfile: {
-        is: {
-          canBeMentor: true,
+  const mentor = requiresMentor(config)
+    ? await prisma.user.findFirst({
+        where: {
+          id: data.mentorId,
+          role: "PEMBINA",
+          isActive: true,
+          staffProfile: {
+            is: {
+              canBeMentor: true,
+            },
+          },
         },
-      },
-    },
-    select: {
-      id: true,
-      fullName: true,
-    },
-  });
+        select: {
+          id: true,
+          fullName: true,
+        },
+      })
+    : null;
 
-  if (!mentor) {
+  if (requiresMentor(config) && !mentor) {
     return {
       status: "error",
       message: "Pembina/Pendamping yang dipilih tidak tersedia.",
@@ -229,7 +241,7 @@ export async function createPermissionRequestAction(
       data: {
         typeId: type.id,
         requesterId: user.id,
-        mentorId: mentor.id,
+        mentorId: mentor?.id ?? null,
         purpose: data.purpose,
         place: data.place,
         startDate,
@@ -239,6 +251,9 @@ export async function createPermissionRequestAction(
         visitorName: data.visitorName || null,
         phoneUse: data.phoneUse || null,
         additionalNotes: data.additionalNotes || null,
+        depositItems: hasField(config, "depositItems")
+          ? serializeDepositItems(data.depositItems)
+          : null,
         status: initialStatus,
         students: {
           create: data.studentIds.map((studentId) => ({
@@ -251,7 +266,7 @@ export async function createPermissionRequestAction(
             step: index + 1,
             role,
             label: approvalLabel(config, role),
-            approverId: role === "PEMBINA" ? mentor.id : null,
+            approverId: role === "PEMBINA" ? (mentor?.id ?? null) : null,
             status: "PENDING",
           })),
         },
@@ -264,7 +279,9 @@ export async function createPermissionRequestAction(
     const firstStageLabel = firstRole ? approvalLabel(config, firstRole) : "penyetuju";
     const firstApproverIds =
       firstRole === "PEMBINA"
-        ? [mentor.id]
+        ? mentor
+          ? [mentor.id]
+          : []
         : firstRole
           ? await getActiveUserIdsByRole(tx, firstRole)
           : [];

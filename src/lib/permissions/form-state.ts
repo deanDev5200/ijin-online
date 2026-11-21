@@ -1,3 +1,5 @@
+import type { DepositItem } from "./deposit-items";
+
 export type PermissionRequestFormValues = {
   typeId: string;
   purpose: string;
@@ -12,6 +14,7 @@ export type PermissionRequestFormValues = {
   visitorName: string;
   phoneUse: string;
   additionalNotes: string;
+  depositItems: DepositItem[];
 };
 
 export type PermissionRequestFormState = {

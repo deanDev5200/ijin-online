@@ -16,6 +16,8 @@ const requestStatusClasses: Record<RequestStatus, string> = {
     "border-amber-500/30 bg-amber-500/10 text-amber-700 dark:text-amber-300",
   PENDING_DORM_HEAD:
     "border-amber-500/30 bg-amber-500/10 text-amber-700 dark:text-amber-300",
+  PENDING_WAKASEK:
+    "border-amber-500/30 bg-amber-500/10 text-amber-700 dark:text-amber-300",
   APPROVED: "border-primary/30 bg-primary/10 text-primary",
   REJECTED: "border-destructive/30 bg-destructive/10 text-destructive",
   CANCELLED: "border-border bg-muted text-muted-foreground",

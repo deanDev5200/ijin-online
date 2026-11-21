@@ -79,8 +79,8 @@ function SidebarLink({
       className={cn(
         "group relative flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-all",
         active
-          ? "bg-primary/10 text-primary ring-1 ring-primary/15 before:absolute before:top-1/2 before:left-0 before:h-5 before:w-0.5 before:-translate-y-1/2 before:rounded-full before:bg-primary"
-          : "text-muted-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
+          ? "bg-primary/15 text-primary ring-1 ring-primary/25 before:absolute before:top-1/2 before:left-0 before:h-6 before:w-0.5 before:-translate-y-1/2 before:rounded-full before:bg-primary"
+          : "text-muted-foreground hover:bg-sidebar-accent/70 hover:text-sidebar-accent-foreground",
       )}
     >
       <item.icon
@@ -121,8 +121,8 @@ function SidebarContent({
   const sections = getNavigation(user.role);
 
   return (
-    <div className="flex h-full flex-col bg-linear-to-b from-sidebar via-sidebar to-primary/5">
-      <div className="flex h-16 items-center gap-3 border-b bg-background/40 px-5">
+    <div className="flex h-full flex-col bg-linear-to-b from-sidebar via-sidebar to-primary/10">
+      <div className="flex h-16 items-center gap-3 border-b border-primary/15 bg-linear-to-r from-primary/10 to-transparent px-5">
         <div className="flex size-9 items-center justify-center rounded-xl bg-linear-to-br from-primary to-chart-2 text-primary-foreground shadow-md shadow-primary/20">
           <GraduationCap className="size-5" />
         </div>
@@ -157,7 +157,7 @@ function SidebarContent({
       </nav>
 
       <div className="border-t p-3">
-        <div className="flex items-center gap-3 rounded-xl bg-sidebar-accent/60 p-3">
+        <div className="flex items-center gap-3 rounded-xl bg-linear-to-br from-primary/15 to-sidebar-accent/70 p-3 ring-1 ring-primary/15">
           <Avatar>
             <AvatarFallback className="bg-primary/10 text-xs font-semibold text-primary">
               {getInitials(user.fullName)}
@@ -198,13 +198,13 @@ export function AppShell({
     : "Notifikasi";
 
   return (
-    <div className="min-h-svh bg-linear-to-br from-background via-muted/25 to-background">
-      <aside className="fixed inset-y-0 left-0 z-40 hidden w-72 border-r lg:block">
+    <div className="min-h-svh bg-linear-to-br from-primary/[0.07] via-background to-primary/[0.09]">
+      <aside className="fixed inset-y-0 left-0 z-40 hidden w-72 border-r border-primary/15 lg:block">
         <SidebarContent user={user} unreadCount={unreadCount} />
       </aside>
 
       <div className="lg:pl-72">
-        <header className="sticky top-0 z-30 flex h-16 items-center gap-2 border-b bg-background/85 px-3 shadow-[0_1px_0_rgba(79,70,229,0.04)] backdrop-blur-xl sm:gap-3 sm:px-6">
+        <header className="sticky top-0 z-30 flex h-16 items-center gap-2 border-b border-primary/15 bg-linear-to-r from-primary/[0.12] via-background/90 to-background/75 px-3 shadow-[0_1px_0_rgba(37,99,235,0.08)] backdrop-blur-xl sm:gap-3 sm:px-6">
           <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
             <SheetTrigger asChild>
               <Button

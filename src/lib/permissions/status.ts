@@ -16,6 +16,7 @@ export const PENDING_STATUSES = [
   "PENDING_MENTOR",
   "PENDING_DORM_STAFF",
   "PENDING_DORM_HEAD",
+  "PENDING_WAKASEK",
 ] as const;
 
 export type PendingStatus = (typeof PENDING_STATUSES)[number];
@@ -24,6 +25,7 @@ export const REQUEST_STATUS_LABELS: Record<RequestStatus, string> = {
   PENDING_MENTOR: "Menunggu Pembina",
   PENDING_DORM_STAFF: "Menunggu Staff Asrama",
   PENDING_DORM_HEAD: "Menunggu Kepala Asrama",
+  PENDING_WAKASEK: "Menunggu Wakasek",
   APPROVED: "Disetujui",
   REJECTED: "Ditolak",
   CANCELLED: "Dibatalkan",
@@ -66,6 +68,13 @@ export const APPROVAL_STEPS: readonly ApprovalStepConfig[] = [
     title: APPROVAL_ROLE_LABELS.KEPALA_ASRAMA,
     description: APPROVAL_ROLE_DESCRIPTIONS.KEPALA_ASRAMA,
   },
+  {
+    step: 4,
+    role: "WAKASEK_KESISWAAN",
+    pendingStatus: "PENDING_WAKASEK",
+    title: APPROVAL_ROLE_LABELS.WAKASEK_KESISWAAN,
+    description: APPROVAL_ROLE_DESCRIPTIONS.WAKASEK_KESISWAAN,
+  },
 ] as const;
 
 export type ApprovalRowLike = {
@@ -79,7 +88,7 @@ export type ApprovalRowLike = {
 
 export type RequestApprovalLike = {
   status: RequestStatus;
-  mentorId: string;
+  mentorId: string | null;
   approvals: ApprovalRowLike[];
 };
 
@@ -118,6 +127,10 @@ export function getNextStatusForStep(step: number): RequestStatus | null {
   }
 
   if (step === 3) {
+    return "PENDING_WAKASEK";
+  }
+
+  if (step === 4) {
     return "APPROVED";
   }
 
