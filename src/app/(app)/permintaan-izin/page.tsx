@@ -29,6 +29,10 @@ function getDescription(role: string): string {
     return "Pengajuan yang menunggu keputusan Anda sebagai Staff Pegawai penyetuju jenis izin.";
   }
 
+  if (role === "STAFF_ASRAMA_TAMBAHAN") {
+    return "Pengajuan yang menunggu keputusan Anda sebagai Staff Asrama penyetuju jenis izin.";
+  }
+
   if (role === "KEPALA_ASRAMA") {
     return "Pengajuan yang menunggu keputusan Anda sebagai Kepala Asrama.";
   }

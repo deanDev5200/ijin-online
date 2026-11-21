@@ -3,6 +3,7 @@ import type { Role } from "../../generated/prisma/enums";
 export const APPROVAL_ROLES = [
   "PEMBINA",
   "STAFF_ASRAMA",
+  "STAFF_ASRAMA_TAMBAHAN",
   "KEPALA_ASRAMA",
   "WAKASEK_KESISWAAN",
 ] as const;
@@ -39,6 +40,7 @@ export const DEFAULT_REQUIRED_FIELDS: PermissionField[] = [
 export const APPROVAL_ROLE_LABELS: Record<ApprovalRole, string> = {
   PEMBINA: "Guru",
   STAFF_ASRAMA: "Staff Pegawai",
+  STAFF_ASRAMA_TAMBAHAN: "Staff Asrama",
   KEPALA_ASRAMA: "Kepala Asrama",
   WAKASEK_KESISWAAN: "Wakasek Kesiswaan",
 };
@@ -47,6 +49,8 @@ export const APPROVAL_ROLE_DESCRIPTIONS: Record<ApprovalRole, string> = {
   PEMBINA: "Guru yang berwenang memberikan keputusan pada pengajuan ini.",
   STAFF_ASRAMA:
     "Staff pegawai yang berwenang memberikan keputusan pada pengajuan ini.",
+  STAFF_ASRAMA_TAMBAHAN:
+    "Staff asrama yang berwenang memberikan keputusan pada pengajuan ini.",
   KEPALA_ASRAMA: "Memberikan keputusan persetujuan pengajuan asrama.",
   WAKASEK_KESISWAAN: "Memberikan keputusan persetujuan dari bagian kesiswaan.",
 };
@@ -382,7 +386,7 @@ export function pendingStatusForRole(role: Role):
     return "PENDING_MENTOR";
   }
 
-  if (role === "STAFF_ASRAMA") {
+  if (role === "STAFF_ASRAMA" || role === "STAFF_ASRAMA_TAMBAHAN") {
     return "PENDING_DORM_STAFF";
   }
 

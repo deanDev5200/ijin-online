@@ -1,7 +1,7 @@
 /** Password awal yang digunakan untuk setiap akun baru. */
 export const INITIAL_PASSWORD = "123456";
 
-/** Panjang maksimal username yang dibuat otomatis oleh sistem. */
+/** Panjang maksimal username baru, baik otomatis maupun pilihan pengguna. */
 export const GENERATED_USERNAME_MAX_LENGTH = 6;
 
 const MIN_GENERATED_USERNAME_LENGTH = 3;
@@ -47,6 +47,11 @@ export function generateUsername(
 
   const claim = (candidate: string) => {
     taken.add(candidate);
+
+    if (Array.isArray(takenUsernames)) {
+      takenUsernames.push(candidate);
+    }
+
     return candidate;
   };
 
@@ -60,7 +65,10 @@ export function generateUsername(
     for (let number = from; number <= to; number += 1) {
       const candidate = `${prefix}${number}`;
 
-      if (candidate.length <= GENERATED_USERNAME_MAX_LENGTH && isAvailable(candidate)) {
+      if (
+        candidate.length <= GENERATED_USERNAME_MAX_LENGTH &&
+        isAvailable(candidate)
+      ) {
         return claim(candidate);
       }
     }

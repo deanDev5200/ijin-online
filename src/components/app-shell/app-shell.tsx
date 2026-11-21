@@ -79,7 +79,7 @@ function SidebarLink({
       className={cn(
         "group relative flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-all",
         active
-          ? "bg-primary/15 text-primary ring-1 ring-primary/25 before:absolute before:top-1/2 before:left-0 before:h-6 before:w-0.5 before:-translate-y-1/2 before:rounded-full before:bg-primary"
+          ? "bg-linear-to-r from-primary/20 to-primary/5 text-primary shadow-[0_10px_24px_-20px_rgba(37,99,235,0.9)] ring-1 ring-primary/25 before:absolute before:top-1/2 before:left-0 before:h-6 before:w-0.5 before:-translate-y-1/2 before:rounded-full before:bg-primary"
           : "text-muted-foreground hover:bg-sidebar-accent/70 hover:text-sidebar-accent-foreground",
       )}
     >
@@ -123,7 +123,7 @@ function SidebarContent({
   return (
     <div className="flex h-full flex-col bg-linear-to-b from-sidebar via-sidebar to-primary/10">
       <div className="flex h-16 items-center gap-3 border-b border-primary/15 bg-linear-to-r from-primary/10 to-transparent px-5">
-        <div className="flex size-9 items-center justify-center rounded-xl bg-linear-to-br from-primary to-chart-2 text-primary-foreground shadow-md shadow-primary/20">
+        <div className="flex size-9 items-center justify-center rounded-xl bg-linear-to-br from-primary to-chart-2 text-primary-foreground shadow-md shadow-primary/30 ring-1 ring-white/20">
           <GraduationCap className="size-5" />
         </div>
         <div className="min-w-0">
@@ -137,7 +137,11 @@ function SidebarContent({
       <nav className="flex-1 space-y-6 overflow-y-auto px-3 py-4">
         {sections.map((section) => (
           <div key={section.title}>
-            <p className="px-3 pb-2 text-[10px] font-semibold tracking-[0.16em] text-muted-foreground/80 uppercase">
+            <p className="flex items-center gap-2 px-3 pb-2 text-[10px] font-semibold tracking-[0.16em] text-muted-foreground/80 uppercase">
+              <span
+                className="h-px w-3 rounded-full bg-primary/60"
+                aria-hidden="true"
+              />
               {section.title}
             </p>
             <ul className="space-y-1">
@@ -233,7 +237,13 @@ export function AppShell({
             <p className="hidden text-[10px] font-semibold tracking-[0.16em] text-muted-foreground uppercase sm:block">
               {schoolName}
             </p>
-            <h1 className="truncate text-base font-semibold">{pageTitle}</h1>
+            <h1 className="flex items-center gap-2 truncate text-base font-semibold">
+              <span
+                className="size-1.5 shrink-0 rounded-full bg-primary ring-3 ring-primary/15"
+                aria-hidden="true"
+              />
+              {pageTitle}
+            </h1>
           </div>
 
           <Button

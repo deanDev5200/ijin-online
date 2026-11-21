@@ -12,6 +12,10 @@ export function PageHeader({
   return (
     <div className="relative overflow-hidden rounded-2xl border border-primary/20 bg-linear-to-br from-primary/[0.16] via-primary/[0.07] to-card px-5 py-5 shadow-[0_12px_30px_-24px_rgba(37,99,235,0.6)] sm:px-6 sm:py-6">
       <div
+        className="pointer-events-none absolute inset-x-0 top-0 h-0.5 bg-linear-to-r from-primary via-chart-2 to-transparent"
+        aria-hidden="true"
+      />
+      <div
         className="pointer-events-none absolute -top-16 -right-12 size-48 rounded-full bg-primary/[0.12]"
         aria-hidden="true"
       />

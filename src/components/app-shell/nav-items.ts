@@ -43,12 +43,36 @@ const profileItem: NavItem = {
   icon: UserRound,
 };
 
+const accountSection: NavSection = {
+  title: "Akun",
+  items: [notificationsItem, profileItem],
+};
+
+const approvalItems: NavItem[] = [
+  {
+    href: "/permintaan-izin",
+    label: "Permintaan Izin",
+    icon: ClipboardCheck,
+  },
+  {
+    href: "/riwayat-approval",
+    label: "Riwayat Approval",
+    icon: FileClock,
+  },
+];
+
+const staffSections: NavSection[] = [
+  { title: "Ringkasan", items: [dashboardItem] },
+  { title: "Persetujuan", items: approvalItems },
+  accountSection,
+];
+
 const navigationByRole: Record<AppRole, NavSection[]> = {
   SISWA: [
+    { title: "Ringkasan", items: [dashboardItem] },
     {
-      title: "Menu Utama",
+      title: "Pengajuan",
       items: [
-        dashboardItem,
         {
           href: "/request-izin",
           label: "Ajukan Izin",
@@ -61,113 +85,17 @@ const navigationByRole: Record<AppRole, NavSection[]> = {
         },
       ],
     },
-    {
-      title: "Akun",
-      items: [notificationsItem, profileItem],
-    },
+    accountSection,
   ],
-  PEMBINA: [
-    {
-      title: "Menu Utama",
-      items: [
-        dashboardItem,
-        {
-          href: "/permintaan-izin",
-          label: "Permintaan Izin",
-          icon: ClipboardCheck,
-        },
-        {
-          href: "/riwayat-approval",
-          label: "Riwayat Approval",
-          icon: FileClock,
-        },
-      ],
-    },
-    {
-      title: "Akun",
-      items: [notificationsItem, profileItem],
-    },
-  ],
-  STAFF_ASRAMA: [
-    {
-      title: "Menu Utama",
-      items: [
-        dashboardItem,
-        {
-          href: "/permintaan-izin",
-          label: "Permintaan Izin",
-          icon: ClipboardCheck,
-        },
-        {
-          href: "/riwayat-approval",
-          label: "Riwayat Approval",
-          icon: FileClock,
-        },
-      ],
-    },
-    {
-      title: "Akun",
-      items: [notificationsItem, profileItem],
-    },
-  ],
-  KEPALA_ASRAMA: [
-    {
-      title: "Menu Utama",
-      items: [
-        dashboardItem,
-        {
-          href: "/permintaan-izin",
-          label: "Permintaan Izin",
-          icon: ClipboardCheck,
-        },
-        {
-          href: "/riwayat-approval",
-          label: "Riwayat Approval",
-          icon: FileClock,
-        },
-      ],
-    },
-    {
-      title: "Akun",
-      items: [notificationsItem, profileItem],
-    },
-  ],
-  WAKASEK_KESISWAAN: [
-    {
-      title: "Menu Utama",
-      items: [
-        dashboardItem,
-        {
-          href: "/permintaan-izin",
-          label: "Permintaan Izin",
-          icon: ClipboardCheck,
-        },
-        {
-          href: "/riwayat-approval",
-          label: "Riwayat Approval",
-          icon: FileClock,
-        },
-      ],
-    },
-    {
-      title: "Akun",
-      items: [notificationsItem, profileItem],
-    },
-  ],
+  PEMBINA: staffSections,
+  STAFF_ASRAMA: staffSections,
+  STAFF_ASRAMA_TAMBAHAN: staffSections,
+  KEPALA_ASRAMA: staffSections,
+  WAKASEK_KESISWAAN: staffSections,
   ADMIN: [
+    { title: "Ringkasan", items: [dashboardItem] },
     {
-      title: "Menu Utama",
-      items: [
-        dashboardItem,
-        {
-          href: "/admin/indeks-izin",
-          label: "Indeks Izin",
-          icon: ClipboardList,
-        },
-      ],
-    },
-    {
-      title: "Administrasi",
+      title: "Manajemen",
       items: [
         {
           href: "/admin/kelola-akun",
@@ -182,9 +110,16 @@ const navigationByRole: Record<AppRole, NavSection[]> = {
       ],
     },
     {
-      title: "Akun",
-      items: [notificationsItem, profileItem],
+      title: "Laporan",
+      items: [
+        {
+          href: "/admin/indeks-izin",
+          label: "Indeks Izin",
+          icon: ClipboardList,
+        },
+      ],
     },
+    accountSection,
   ],
 };
 

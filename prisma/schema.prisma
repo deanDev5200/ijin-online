@@ -14,6 +14,7 @@ enum Role {
   KEPALA_ASRAMA
   WAKASEK_KESISWAAN
   ADMIN
+  STAFF_ASRAMA_TAMBAHAN
 }
 
 enum RequestStatus {

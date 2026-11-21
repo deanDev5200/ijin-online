@@ -137,8 +137,8 @@ export function AccountCreateForm() {
                 Tenaga kependidikan
               </span>
               <span className="block text-xs leading-relaxed text-muted-foreground">
-                Pembina, Staff Asrama, Kepala Asrama, atau Wakasek Kesiswaan
-                dengan NIP.
+                Pembina, Staff Pegawai, Staff Asrama, Kepala Asrama, atau
+                Wakasek Kesiswaan dengan NIP.
               </span>
             </span>
           </label>
@@ -155,7 +155,8 @@ export function AccountCreateForm() {
                 className="h-10 w-full rounded-lg border border-input bg-transparent px-2.5 py-1 text-base transition-colors outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 md:text-sm dark:bg-input/30"
               >
                 <option value="PEMBINA">Pembina / Pendamping</option>
-                <option value="STAFF_ASRAMA">Staff Asrama</option>
+                <option value="STAFF_ASRAMA">Staff Pegawai</option>
+                <option value="STAFF_ASRAMA_TAMBAHAN">Staff Asrama</option>
                 <option value="KEPALA_ASRAMA">Kepala Asrama</option>
                 <option value="WAKASEK_KESISWAAN">Wakasek Kesiswaan</option>
               </select>
@@ -172,8 +173,8 @@ export function AccountCreateForm() {
             Identitas akun
           </CardTitle>
           <CardDescription>
-            Username dibuat otomatis dari nama lengkap, sehingga hanya nama
-            yang perlu diisi.
+            Username dibuat otomatis dari nama lengkap (maksimal 6 karakter),
+            sehingga hanya nama yang perlu diisi.
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -295,7 +296,7 @@ export function AccountCreateForm() {
               </p>
               <p className="text-xs leading-relaxed">
                 Saat pertama kali masuk, pengguna akan diminta membuat username
-                pribadi (minimal 6 karakter) dan password sendiri. Perubahan
+                pribadi (6 karakter) dan password sendiri. Perubahan
                 tersebut langsung tersimpan di database.
               </p>
             </div>

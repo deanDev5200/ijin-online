@@ -126,21 +126,57 @@
   }
   body {
     @apply bg-background text-foreground antialiased;
-    background-image: linear-gradient(
-      180deg,
-      oklch(0.935 0.045 250) 0%,
-      oklch(0.965 0.028 250) 46%,
-      oklch(0.945 0.038 250) 100%
-    );
+    background-image: radial-gradient(
+        circle at 10% -5%,
+        oklch(0.84 0.11 255 / 40%),
+        transparent 42%
+      ),
+      radial-gradient(
+        circle at 92% 2%,
+        oklch(0.82 0.1 225 / 32%),
+        transparent 38%
+      ),
+      linear-gradient(
+        180deg,
+        oklch(0.935 0.045 250) 0%,
+        oklch(0.965 0.028 250) 46%,
+        oklch(0.945 0.038 250) 100%
+      );
     background-attachment: fixed;
   }
   .dark body {
-    background-image: linear-gradient(
-      180deg,
-      oklch(0.2 0.03 255) 0%,
-      oklch(0.18 0.025 255) 48%,
-      oklch(0.19 0.028 255) 100%
-    );
+    background-image: radial-gradient(
+        circle at 10% -5%,
+        oklch(0.55 0.16 255 / 20%),
+        transparent 42%
+      ),
+      radial-gradient(
+        circle at 92% 2%,
+        oklch(0.55 0.13 225 / 16%),
+        transparent 38%
+      ),
+      linear-gradient(
+        180deg,
+        oklch(0.2 0.03 255) 0%,
+        oklch(0.18 0.025 255) 48%,
+        oklch(0.19 0.028 255) 100%
+      );
+  }
+  ::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  ::-webkit-scrollbar-thumb {
+    border: 3px solid transparent;
+    border-radius: 999px;
+    background-clip: content-box;
+    background-color: oklch(0.68 0.17 255 / 45%);
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background-color: oklch(0.68 0.17 255 / 70%);
   }
   ::selection {
     background-color: oklch(0.68 0.17 255 / 35%);
@@ -161,5 +197,11 @@
 @layer utilities {
   .app-page-enter {
     animation: soft-page-enter 320ms ease-out both;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .app-page-enter {
+    animation: none;
   }
 }

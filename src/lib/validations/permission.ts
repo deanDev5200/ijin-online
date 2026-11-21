@@ -28,7 +28,7 @@ export const timeOfDaySchema = z
 export const approvalRolesSchema = z
   .array(z.enum(APPROVAL_ROLES))
   .min(1, "Pilih minimal satu penyetuju izin.")
-  .max(4, "Maksimal empat penyetuju izin.")
+  .max(APPROVAL_ROLES.length, `Maksimal ${APPROVAL_ROLES.length} penyetuju izin.`)
   .refine((roles) => new Set(roles).size === roles.length, {
     message: "Penyetuju izin tidak boleh duplikat.",
   });
