@@ -11,6 +11,9 @@ export const ACCOUNT_ROLES = [
   "STAFF_ASRAMA_TAMBAHAN",
   "KEPALA_ASRAMA",
   "WAKASEK_KESISWAAN",
+  "GURU",
+  "WAKASEK_AKADEMIK",
+  "KEPALA_SEKOLAH",
   "ADMIN",
 ] as const;
 
@@ -21,6 +24,9 @@ export const MANAGEABLE_ROLES = [
   "STAFF_ASRAMA_TAMBAHAN",
   "KEPALA_ASRAMA",
   "WAKASEK_KESISWAAN",
+  "GURU",
+  "WAKASEK_AKADEMIK",
+  "KEPALA_SEKOLAH",
 ] as const;
 
 export type ManageableRole = (typeof MANAGEABLE_ROLES)[number];
@@ -51,6 +57,24 @@ export const nipSchema = z
   .regex(
     /^[A-Za-z0-9._-]+$/,
     "NIP hanya boleh berisi huruf, angka, titik, garis bawah, dan tanda hubung.",
+  );
+
+/** NIP boleh kosong pada impor Excel; jika diisi tetap mengikuti aturan nipSchema. */
+export const optionalNipSchema = z
+  .string()
+  .trim()
+  .refine((value) => value.length === 0 || value.length >= 5, {
+    message: "NIP minimal 5 karakter.",
+  })
+  .refine((value) => value.length === 0 || value.length <= 30, {
+    message: "NIP maksimal 30 karakter.",
+  })
+  .refine(
+    (value) => value.length === 0 || /^[A-Za-z0-9._-]+$/.test(value),
+    {
+      message:
+        "NIP hanya boleh berisi huruf, angka, titik, garis bawah, dan tanda hubung.",
+    },
   );
 
 export const grhaSchema = z
@@ -176,7 +200,7 @@ export const importStaffRowSchema = z.object({
 
       return role;
     }),
-  nip: nipSchema,
+  nip: optionalNipSchema,
 });
 
 export const permissionTypeSchema = z.object({

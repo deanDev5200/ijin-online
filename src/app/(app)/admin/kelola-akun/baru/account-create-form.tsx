@@ -137,8 +137,9 @@ export function AccountCreateForm() {
                 Tenaga kependidikan
               </span>
               <span className="block text-xs leading-relaxed text-muted-foreground">
-                Pembina, Staff Pegawai, Staff Asrama, Kepala Asrama, atau
-                Wakasek Kesiswaan dengan NIP.
+                Pembina, Pegawai, Staff Asrama, Kepala Asrama, Wakasek
+                Kesiswaan, Guru, Wakasek Akademik, atau Kepala Sekolah. NIP wajib
+                diisi saat menambah akun manual.
               </span>
             </span>
           </label>
@@ -155,10 +156,13 @@ export function AccountCreateForm() {
                 className="h-10 w-full rounded-lg border border-input bg-transparent px-2.5 py-1 text-base transition-colors outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 md:text-sm dark:bg-input/30"
               >
                 <option value="PEMBINA">Pembina / Pendamping</option>
-                <option value="STAFF_ASRAMA">Staff Pegawai</option>
+                <option value="STAFF_ASRAMA">Pegawai</option>
                 <option value="STAFF_ASRAMA_TAMBAHAN">Staff Asrama</option>
                 <option value="KEPALA_ASRAMA">Kepala Asrama</option>
                 <option value="WAKASEK_KESISWAAN">Wakasek Kesiswaan</option>
+                <option value="GURU">Guru</option>
+                <option value="WAKASEK_AKADEMIK">Wakasek Akademik</option>
+                <option value="KEPALA_SEKOLAH">Kepala Sekolah</option>
               </select>
               <FieldError message={errors?.role?.[0]} />
             </div>
@@ -296,7 +300,7 @@ export function AccountCreateForm() {
               </p>
               <p className="text-xs leading-relaxed">
                 Saat pertama kali masuk, pengguna akan diminta membuat username
-                pribadi (3-6 karakter) dan password sendiri. Perubahan
+                pribadi (maksimal 8 karakter) dan password sendiri. Perubahan
                 tersebut langsung tersimpan di database.
               </p>
             </div>

@@ -1,7 +1,7 @@
 /** Password awal yang digunakan untuk setiap akun baru. */
 export const INITIAL_PASSWORD = "123456";
 
-/** Panjang maksimal username baru, baik otomatis maupun pilihan pengguna. */
+/** Panjang maksimal username yang dibuat otomatis oleh sistem. */
 export const GENERATED_USERNAME_MAX_LENGTH = 6;
 
 const MIN_GENERATED_USERNAME_LENGTH = 3;

@@ -226,7 +226,7 @@ export async function updateAccountAction(
     if (!kelas.success) {
       fieldErrors.kelas = kelas.error.issues.map((issue) => issue.message);
     }
-  } else if (account.role !== "ADMIN") {
+  } else if (account.role !== "ADMIN" && data.nip) {
     const nip = nipSchema.safeParse(data.nip);
 
     if (!nip.success) {
@@ -252,7 +252,7 @@ export async function updateAccountAction(
           },
           select: { userId: true },
         })
-      : account.role !== "ADMIN"
+      : account.role !== "ADMIN" && data.nip
         ? await prisma.staffProfile.findFirst({
             where: {
               nip: data.nip,
@@ -305,11 +305,11 @@ export async function updateAccountAction(
         await tx.staffProfile.upsert({
           where: { userId: account.id },
           update: {
-            nip: data.nip,
+            nip: data.nip || null,
           },
           create: {
             userId: account.id,
-            nip: data.nip,
+            nip: data.nip || null,
             canBeMentor: account.role === "PEMBINA",
           },
         });
@@ -774,7 +774,7 @@ export async function importStaffAccountsAction(
       prisma.staffProfile.findMany({
         where: {
           nip: {
-            in: parsed.rows.map((row) => row.nip),
+            in: parsed.rows.map((row) => row.nip).filter(Boolean),
           },
         },
         select: { nip: true },
@@ -783,11 +783,13 @@ export async function importStaffAccountsAction(
 
     const takenUsernames = allUsers.map((user) => user.username);
     const existingNips = new Set(
-      existingStaff.map((staff) => staff.nip.toLowerCase()),
+      existingStaff.flatMap((staff) =>
+        staff.nip ? [staff.nip.toLowerCase()] : [],
+      ),
     );
 
     return parsed.rows.flatMap((row) => {
-      if (existingNips.has(row.nip.toLowerCase())) {
+      if (row.nip && existingNips.has(row.nip.toLowerCase())) {
         errors.push({
           row: row.rowNumber,
           message: `NIP "${row.nip}" sudah terdaftar.`,
@@ -826,7 +828,7 @@ export async function importStaffAccountsAction(
                 mustChangePassword: true,
                 staffProfile: {
                   create: {
-                    nip: row.nip,
+                    nip: row.nip || null,
                     canBeMentor: row.role === "PEMBINA",
                   },
                 },

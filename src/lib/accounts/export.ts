@@ -29,7 +29,7 @@ export type ExportStaffAccount = {
   fullName: string;
   username: string;
   role: AppRole;
-  staffProfile: { nip: string } | null;
+  staffProfile: { nip: string | null } | null;
 };
 
 export type StaffAccountExportMeta = {
@@ -242,9 +242,7 @@ export async function buildStaffExportWorkbook(
   accounts: readonly ExportStaffAccount[],
   meta: StaffAccountExportMeta,
 ): Promise<Buffer> {
-  const staff = [...accounts]
-    .filter((account) => Boolean(account.staffProfile?.nip.trim()))
-    .sort((a, b) => {
+  const staff = [...accounts].sort((a, b) => {
       const byRole = collator.compare(ROLE_LABELS[a.role], ROLE_LABELS[b.role]);
 
       return byRole !== 0 ? byRole : collator.compare(a.fullName, b.fullName);

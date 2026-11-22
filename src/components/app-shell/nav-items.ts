@@ -92,6 +92,9 @@ const navigationByRole: Record<AppRole, NavSection[]> = {
   STAFF_ASRAMA_TAMBAHAN: staffSections,
   KEPALA_ASRAMA: staffSections,
   WAKASEK_KESISWAAN: staffSections,
+  GURU: staffSections,
+  WAKASEK_AKADEMIK: staffSections,
+  KEPALA_SEKOLAH: staffSections,
   ADMIN: [
     { title: "Ringkasan", items: [dashboardItem] },
     {

@@ -265,16 +265,16 @@ export default async function ManageAccountsPage({
               Impor akun tenaga pendidik dari Excel
             </p>
             <p className="text-xs text-muted-foreground">
-              Isi Nama Lengkap, Nama Peran, dan NIP lalu unggah kembali.
+              Isi Nama Lengkap dan Nama Peran; NIP opsional.
             </p>
           </div>
           <ChevronRight className="size-4 shrink-0 text-muted-foreground transition-transform group-open:rotate-90" />
         </summary>
         <div className="space-y-3 border-t px-4 py-4">
           <p className="text-xs text-muted-foreground">
-            Isi sheet Akun Pendidik pada template Excel. Kolom Nama Lengkap,
-            Nama Peran, dan NIP wajib ada. Nama peran boleh ditulis dengan label
-            (misalnya Pembina) atau kode peran (PEMBINA). Username dibuat
+            Isi sheet Akun Pendidik pada template Excel. Kolom Nama Lengkap dan
+            Nama Peran wajib ada; NIP boleh dikosongkan. Nama peran boleh ditulis dengan label
+            (misalnya Pegawai) atau kode peran (STAFF_ASRAMA). Username dibuat
             otomatis dari nama dan password awal 123456; akun Pembina otomatis
             dapat menjadi penyetuju izin. Akun yang sudah ada tidak akan
             ditimpa.
@@ -418,9 +418,11 @@ export default async function ManageAccountsPage({
               ? [profile.nis, profile.kelas, profile.grha]
                   .filter(Boolean)
                   .join(" · ")
-              : staff
+              : staff?.nip
                 ? `NIP ${staff.nip}`
-                : account.role === "ADMIN"
+                : staff
+                  ? "Tanpa NIP"
+                  : account.role === "ADMIN"
                   ? ""
                   : "Data profil belum lengkap";
 

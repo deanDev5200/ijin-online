@@ -65,7 +65,7 @@ export default async function ChangePasswordPage() {
               </CardTitle>
               <CardDescription>
                 {forced
-                  ? "Buat username pribadi (3-6 karakter) dan password sendiri sebelum mulai menggunakan aplikasi."
+                  ? "Buat username pribadi (maksimal 8 karakter) dan password sendiri sebelum mulai menggunakan aplikasi."
                   : "Perbarui password akun Anda secara berkala untuk menjaga keamanan."}
               </CardDescription>
             </div>
@@ -92,9 +92,9 @@ export default async function ChangePasswordPage() {
             <ShieldCheck className="mt-0.5 size-4 shrink-0" />
             <p>
               Akun Anda masih memakai username sementara dan password awal.
-              Username yang Anda buat cukup 3-6 karakter, misalnya dhika atau
-              kadek. Username dan password disimpan otomatis dan dipakai untuk
-              login berikutnya.
+              Username yang Anda buat cukup maksimal 8 karakter, misalnya dhika
+              atau kadek. Username dan password disimpan otomatis dan dipakai
+              untuk login berikutnya.
             </p>
           </div>
         ) : (

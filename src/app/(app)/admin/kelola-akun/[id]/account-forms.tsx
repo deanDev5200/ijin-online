@@ -72,7 +72,7 @@ type AccountDetails = {
   fullName: string;
   username: string;
   nis: string;
-  nip: string;
+  nip: string | null;
   grha: string;
   kelas: string;
 };
@@ -172,11 +172,13 @@ export function AccountDetailsForm({ account }: { account: AccountDetails }) {
           <Input
             id="nip"
             name="nip"
-            defaultValue={state.values?.nip ?? account.nip}
-            required
+            defaultValue={state.values?.nip ?? account.nip ?? ""}
             aria-invalid={Boolean(errors?.nip?.[0])}
             className="h-10"
           />
+          <p className="text-xs text-muted-foreground">
+            Boleh dikosongkan untuk akun yang diimpor tanpa NIP.
+          </p>
           <FieldError message={errors?.nip?.[0]} />
         </div>
       )}

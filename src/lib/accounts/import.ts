@@ -310,17 +310,21 @@ export async function parseStaffImportWorkbook(
     }
 
     const data = parsed.data;
-    const existingNipRow = seenNip.get(data.nip.toLowerCase());
 
-    if (existingNipRow) {
-      errors.push({
-        row: rowNumber,
-        message: `NIP "${data.nip}" duplikat dengan baris ${existingNipRow}.`,
-      });
-      continue;
+    if (data.nip) {
+      const existingNipRow = seenNip.get(data.nip.toLowerCase());
+
+      if (existingNipRow) {
+        errors.push({
+          row: rowNumber,
+          message: `NIP "${data.nip}" duplikat dengan baris ${existingNipRow}.`,
+        });
+        continue;
+      }
+
+      seenNip.set(data.nip.toLowerCase(), rowNumber);
     }
 
-    seenNip.set(data.nip.toLowerCase(), rowNumber);
     rows.push({ rowNumber, ...data });
   }
 
@@ -431,8 +435,8 @@ function addImportGuideSheet(workbook: ExcelJS.Workbook): void {
         (option) => option.value,
       ).join(", ")} juga diterima.`,
     ],
-    ["Akun Pendidik", "NIP", "Wajib. Nomor Induk Pegawai, harus unik. Gunakan format teks agar angka nol di depan tidak hilang."],
-    ["Akun Pendidik", "Contoh baris", "Siti Rahmawati | Pembina | 19870101"],
+    ["Akun Pendidik", "NIP", "Opsional. Nomor Induk Pegawai, harus unik jika diisi. Baris tanpa NIP tetap dibuat sebagai akun tanpa NIP. Gunakan format teks agar angka nol di depan tidak hilang."],
+    ["Akun Pendidik", "Contoh baris", "Siti Rahmawati | Pembina | 19870101 (NIP boleh dikosongkan)"],
     ["Umum", "Username", "Dibuat otomatis dari kata terakhir nama lengkap (huruf kecil, maksimal 6 karakter). Tidak perlu diisi."],
     ["Umum", "Password", "Password awal otomatis 123456. Pengguna wajib membuat username dan password pribadi saat login pertama."],
     ["Umum", "Cara pakai", "Isi sheet Akun Siswa atau Akun Pendidik sesuai kebutuhan, lalu unggah melalui menu impor yang bersangkutan. Sheet yang tidak dipakai boleh dikosongkan."],

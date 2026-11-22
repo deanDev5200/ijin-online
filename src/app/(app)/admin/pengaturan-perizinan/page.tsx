@@ -184,9 +184,6 @@ export default async function PermissionSettingsPage() {
                       >
                         {type.isActive ? "Aktif" : "Nonaktif"}
                       </Badge>
-                      <Badge variant="secondary" className="text-[10px]">
-                        Urutan {type.sortOrder}
-                      </Badge>
                     </div>
                     <p className="truncate text-xs text-muted-foreground">
                       {type._count.requests} pengajuan menggunakan jenis ini

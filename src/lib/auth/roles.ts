@@ -5,6 +5,9 @@ export const APP_ROLES = [
   "STAFF_ASRAMA_TAMBAHAN",
   "KEPALA_ASRAMA",
   "WAKASEK_KESISWAAN",
+  "GURU",
+  "WAKASEK_AKADEMIK",
+  "KEPALA_SEKOLAH",
   "ADMIN",
 ] as const;
 
@@ -16,6 +19,9 @@ export const STAFF_ROLES = [
   "STAFF_ASRAMA_TAMBAHAN",
   "KEPALA_ASRAMA",
   "WAKASEK_KESISWAAN",
+  "GURU",
+  "WAKASEK_AKADEMIK",
+  "KEPALA_SEKOLAH",
 ] as const satisfies readonly AppRole[];
 
 export type StaffRole = (typeof STAFF_ROLES)[number];
@@ -23,20 +29,26 @@ export type StaffRole = (typeof STAFF_ROLES)[number];
 export const ROLE_LABELS: Record<AppRole, string> = {
   SISWA: "Siswa",
   PEMBINA: "Pembina",
-  STAFF_ASRAMA: "Staff Pegawai",
+  STAFF_ASRAMA: "Pegawai",
   STAFF_ASRAMA_TAMBAHAN: "Staff Asrama",
   KEPALA_ASRAMA: "Kepala Asrama",
   WAKASEK_KESISWAAN: "Wakasek Kesiswaan",
+  GURU: "Guru",
+  WAKASEK_AKADEMIK: "Wakasek Akademik",
+  KEPALA_SEKOLAH: "Kepala Sekolah",
   ADMIN: "Administrator",
 };
 
 export const ROLE_DESCRIPTIONS: Record<AppRole, string> = {
   SISWA: "Mengajukan dan memantau izin asrama",
   PEMBINA: "Dapat ditentukan sebagai penyetuju izin",
-  STAFF_ASRAMA: "Dapat ditentukan sebagai penyetuju izin",
+  STAFF_ASRAMA: "Tenaga kependidikan asrama",
   STAFF_ASRAMA_TAMBAHAN: "Dapat ditentukan sebagai penyetuju izin",
   KEPALA_ASRAMA: "Dapat ditentukan sebagai penyetuju izin",
   WAKASEK_KESISWAAN: "Dapat ditentukan sebagai penyetuju izin",
+  GURU: "Tenaga pendidik di lingkungan sekolah",
+  WAKASEK_AKADEMIK: "Tenaga pendidik bidang akademik",
+  KEPALA_SEKOLAH: "Pimpinan sekolah",
   ADMIN: "Mengelola akun dan pengaturan perizinan",
 };
 
@@ -57,16 +69,23 @@ export const STAFF_ROLE_OPTIONS = STAFF_ROLES.map((role) => ({
   label: ROLE_LABELS[role],
 }));
 
-/** Menerima label ("Pembina") maupun nilai peran ("PEMBINA"). */
+const STAFF_ROLE_ALIASES: Record<string, StaffRole> = {
+  "staff pegawai": "STAFF_ASRAMA",
+  "staff asrama tambahan": "STAFF_ASRAMA_TAMBAHAN",
+};
+
+/** Menerima label ("Pegawai"), label lama, maupun nilai peran ("STAFF_ASRAMA"). */
 export function staffRoleFromLabel(value: string): StaffRole | null {
   const normalized = value.trim().toLowerCase();
 
   return (
+    STAFF_ROLE_ALIASES[normalized] ??
     STAFF_ROLES.find(
       (role) =>
         ROLE_LABELS[role].toLowerCase() === normalized ||
         role.toLowerCase() === normalized,
-    ) ?? null
+    ) ??
+    null
   );
 }
 

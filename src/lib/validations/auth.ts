@@ -2,8 +2,9 @@ import { z } from "zod";
 
 /**
  * Username yang dipakai saat masuk. Akun baru mendapat username otomatis
- * (3-6 karakter) dari sistem, sedangkan username buatan pengguna juga
- * maksimal 6 karakter setelah proses pelengkapan akun pertama kali.
+ * dari sistem (maksimal 6 karakter), sedangkan username buatan pengguna
+ * maksimal 8 karakter. Validasi login tetap longgar agar username lama yang
+ * lebih panjang tidak terkunci.
  */
 export const usernameSchema = z
   .string()
@@ -20,8 +21,8 @@ export const usernameSchema = z
 export const chosenUsernameSchema = z
   .string()
   .trim()
-  .min(3, "Username minimal 3 karakter.")
-  .max(6, "Username maksimal 6 karakter.")
+  .min(1, "Username wajib diisi.")
+  .max(8, "Username maksimal 8 karakter.")
   .regex(
     /^[A-Za-z0-9._]+$/,
     "Username hanya boleh berisi huruf, angka, titik, dan garis bawah.",
@@ -60,7 +61,7 @@ export const changePasswordSchema = z
 
 /**
  * Pelengkapan akun saat login pertama: pengguna membuat username pribadi
- * (3-6 karakter) sekaligus mengganti password awal.
+ * (maksimal 8 karakter) sekaligus mengganti password awal.
  */
 export const accountSetupSchema = z
   .object({

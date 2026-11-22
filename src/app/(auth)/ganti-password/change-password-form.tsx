@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useEffect, useRef, useState } from "react";
 import { useFormStatus } from "react-dom";
 import { KeyRound, Loader2 } from "lucide-react";
 
@@ -56,8 +56,23 @@ export function ChangePasswordForm({
     changePasswordAction,
     INITIAL_ACTION_STATE,
   );
+  const [username, setUsername] = useState("");
+  const [currentPassword, setCurrentPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const confirmInputRef = useRef<HTMLInputElement>(null);
 
   const errors = state.fieldErrors;
+  const confirmError = errors?.confirmPassword?.[0];
+
+  // Jika konfirmasi salah, biarkan field lain tetap terisi dan arahkan kursor
+  // kembali ke kolom konfirmasi agar hanya perlu mengulang kolom tersebut.
+  useEffect(() => {
+    if (confirmError) {
+      confirmInputRef.current?.focus();
+      confirmInputRef.current?.select();
+    }
+  }, [confirmError]);
 
   return (
     <form action={formAction} className="space-y-5" noValidate>
@@ -68,10 +83,11 @@ export function ChangePasswordForm({
             id="username"
             name="username"
             autoComplete="username"
-            placeholder="3-6 karakter"
+            placeholder="Maksimal 8 karakter"
+            value={username}
+            onChange={(event) => setUsername(event.target.value)}
             required
-            minLength={3}
-            maxLength={6}
+            maxLength={8}
             autoFocus
             aria-invalid={Boolean(errors?.username?.[0])}
             className="h-10"
@@ -79,8 +95,8 @@ export function ChangePasswordForm({
           <p className="text-xs text-muted-foreground">
             Username sementara Anda saat ini:{" "}
             <span className="font-medium">{currentUsername}</span>. Silakan
-            ganti dengan username pribadi 3-6 karakter, misalnya dhika atau
-            kadek.
+            ganti dengan username pribadi maksimal 8 karakter, misalnya dhika
+            atau kadek.
           </p>
           <FieldError message={errors?.username?.[0]} />
         </div>
@@ -97,6 +113,8 @@ export function ChangePasswordForm({
           placeholder={
             forced ? "Masukkan password awal (123456)" : "Masukkan password saat ini"
           }
+          value={currentPassword}
+          onChange={(event) => setCurrentPassword(event.target.value)}
           required
           maxLength={72}
           autoFocus={!forced}
@@ -113,6 +131,8 @@ export function ChangePasswordForm({
           name="newPassword"
           autoComplete="new-password"
           placeholder="Minimal 6 karakter"
+          value={newPassword}
+          onChange={(event) => setNewPassword(event.target.value)}
           required
           minLength={6}
           maxLength={72}
@@ -129,17 +149,20 @@ export function ChangePasswordForm({
       <div className="space-y-2">
         <Label htmlFor="confirmPassword">Konfirmasi password baru</Label>
         <PasswordInput
+          ref={confirmInputRef}
           id="confirmPassword"
           name="confirmPassword"
           autoComplete="new-password"
           placeholder="Ulangi password baru"
+          value={confirmPassword}
+          onChange={(event) => setConfirmPassword(event.target.value)}
           required
           minLength={6}
           maxLength={72}
-          aria-invalid={Boolean(errors?.confirmPassword?.[0])}
+          aria-invalid={Boolean(confirmError)}
           className="h-10"
         />
-        <FieldError message={errors?.confirmPassword?.[0]} />
+        <FieldError message={confirmError} />
       </div>
 
       {state.status === "error" && state.message ? (

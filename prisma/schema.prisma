@@ -15,6 +15,9 @@ enum Role {
   WAKASEK_KESISWAAN
   ADMIN
   STAFF_ASRAMA_TAMBAHAN
+  GURU
+  WAKASEK_AKADEMIK
+  KEPALA_SEKOLAH
 }
 
 enum RequestStatus {
@@ -71,9 +74,9 @@ model StudentProfile {
 }
 
 model StaffProfile {
-  userId      String  @id
-  nip         String  @unique
-  canBeMentor Boolean @default(true)
+  userId      String   @id
+  nip         String?  @unique
+  canBeMentor Boolean  @default(true)
   user        User    @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([canBeMentor])

@@ -137,7 +137,7 @@ export default async function AccountDetailPage({
                 @{account.username}
                 {account.studentProfile
                   ? ` · ${account.studentProfile.nis} · ${account.studentProfile.kelas} · ${account.studentProfile.grha}`
-                  : account.staffProfile
+                  : account.staffProfile?.nip
                     ? ` · NIP ${account.staffProfile.nip}`
                     : ""}
               </p>

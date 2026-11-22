@@ -9,7 +9,10 @@ import { prisma } from "@/lib/db";
 import type { ActionState } from "@/lib/form-state";
 import { approvalLabelForRole } from "@/lib/permissions/config";
 import { PermissionWorkflowError } from "@/lib/permissions/errors";
-import { createRequestNotifications } from "@/lib/permissions/notifications";
+import {
+  createRequestNotifications,
+  getActiveUserIdsByRole,
+} from "@/lib/permissions/notifications";
 import {
   canUserActOnRequest,
   getPendingApprovalForUser,
@@ -168,9 +171,22 @@ export async function decidePermissionAction(
             message: `Pengajuan "${request.purpose}" telah disetujui oleh ${currentLabel}. Izin dinyatakan berlaku.`,
           };
 
-      const recipientIds = request.students
-        .map((student) => student.studentId)
-        .filter((userId) => userId !== user.id);
+      const studentRecipientIds = request.students.map(
+        (student) => student.studentId,
+      );
+
+      // Izin yang disetujui selalu dicatat juga ke kepala dan staff asrama,
+      // meskipun mereka tidak tercantum sebagai penyetuju pengajuan ini.
+      const roleRecipientIds = isReject
+        ? []
+        : [
+            ...(await getActiveUserIdsByRole(tx, "KEPALA_ASRAMA")),
+            ...(await getActiveUserIdsByRole(tx, "STAFF_ASRAMA_TAMBAHAN")),
+          ];
+
+      const recipientIds = [
+        ...new Set([...studentRecipientIds, ...roleRecipientIds]),
+      ].filter((userId) => userId !== user.id);
 
       await createRequestNotifications(
         tx,

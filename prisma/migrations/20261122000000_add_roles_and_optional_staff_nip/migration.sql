@@ -1,0 +1,7 @@
+-- Add the new Kelola Akun roles and allow staff accounts without NIP.
+
+ALTER TYPE "Role" ADD VALUE IF NOT EXISTS 'GURU';
+ALTER TYPE "Role" ADD VALUE IF NOT EXISTS 'WAKASEK_AKADEMIK';
+ALTER TYPE "Role" ADD VALUE IF NOT EXISTS 'KEPALA_SEKOLAH';
+
+ALTER TABLE "StaffProfile" ALTER COLUMN "nip" DROP NOT NULL;
