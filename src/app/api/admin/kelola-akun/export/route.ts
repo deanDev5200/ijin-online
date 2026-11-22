@@ -1,4 +1,4 @@
-import { buildAccountExportZip } from "@/lib/accounts/export";
+import { buildAccountExportWorkbook } from "@/lib/accounts/export";
 import {
   buildAccountWhere,
   parseAccountFilters,
@@ -46,18 +46,19 @@ export async function GET(request: Request) {
   const students = accounts.filter((account) =>
     Boolean(account.studentProfile?.kelas.trim()),
   );
-  const buffer = await buildAccountExportZip(students, {
+  const buffer = await buildAccountExportWorkbook(students, {
     exportedBy: `${user.fullName} (@${user.username})`,
     filters,
     limit: EXPORT_LIMIT,
     reachedLimit: accounts.length >= EXPORT_LIMIT,
   });
-  const filename = `daftar-akun-per-kelas-${getTodayInJakarta()}.zip`;
+  const filename = `daftar-akun-${getTodayInJakarta()}.xlsx`;
 
   return new Response(new Uint8Array(buffer), {
     status: 200,
     headers: {
-      "Content-Type": "application/zip",
+      "Content-Type":
+        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
       "Content-Disposition": `attachment; filename="${filename}"`,
       "Content-Length": String(buffer.byteLength),
       "Cache-Control": "no-store",
