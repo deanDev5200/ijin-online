@@ -51,6 +51,25 @@ export function isStaffRole(role: AppRole): role is StaffRole {
   return (STAFF_ROLES as readonly AppRole[]).includes(role);
 }
 
+/** Pilihan peran tenaga pendidik untuk template dan impor Excel. */
+export const STAFF_ROLE_OPTIONS = STAFF_ROLES.map((role) => ({
+  value: role,
+  label: ROLE_LABELS[role],
+}));
+
+/** Menerima label ("Pembina") maupun nilai peran ("PEMBINA"). */
+export function staffRoleFromLabel(value: string): StaffRole | null {
+  const normalized = value.trim().toLowerCase();
+
+  return (
+    STAFF_ROLES.find(
+      (role) =>
+        ROLE_LABELS[role].toLowerCase() === normalized ||
+        role.toLowerCase() === normalized,
+    ) ?? null
+  );
+}
+
 function matchesPrefix(pathname: string, prefix: string): boolean {
   return pathname === prefix || pathname.startsWith(`${prefix}/`);
 }

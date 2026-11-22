@@ -9,7 +9,9 @@ import type {
   ImportAccountsState,
 } from "@/lib/accounts/form-state";
 import {
+  parseStaffImportWorkbook,
   parseStudentImportWorkbook,
+  StaffImportError,
   StudentImportError,
 } from "@/lib/accounts/import";
 import { INITIAL_PASSWORD, generateUsername } from "@/lib/accounts/username";
@@ -692,6 +694,201 @@ export async function importAccountsAction(
       errors.length > 0
         ? `${created} akun berhasil diimpor. ${errors.length} baris dilewati karena tidak valid.`
         : `${created} akun berhasil diimpor. Password awal ${INITIAL_PASSWORD}; pengguna wajib membuat username dan password pribadi saat login pertama.`,
+    result: {
+      created,
+      totalRows: parsed.totalRows,
+      errors,
+    },
+  };
+}
+
+export async function importStaffAccountsAction(
+  _previousState: ImportAccountsState,
+  formData: FormData,
+): Promise<ImportAccountsState> {
+  await requireRole("ADMIN");
+
+  const file = formData.get("file");
+
+  if (!(file instanceof File) || file.size === 0) {
+    return {
+      status: "error",
+      message: "Pilih berkas Excel (.xlsx) yang akan diimpor.",
+    };
+  }
+
+  if (file.size > 5 * 1024 * 1024) {
+    return {
+      status: "error",
+      message: "Ukuran berkas maksimal 5 MB.",
+    };
+  }
+
+  if (!file.name.toLowerCase().endsWith(".xlsx")) {
+    return {
+      status: "error",
+      message: "Format berkas harus .xlsx. Unduh template resmi aplikasi.",
+    };
+  }
+
+  let parsed: Awaited<ReturnType<typeof parseStaffImportWorkbook>>;
+
+  try {
+    parsed = await parseStaffImportWorkbook(await file.arrayBuffer());
+  } catch (error) {
+    if (error instanceof StaffImportError) {
+      return { status: "error", message: error.message };
+    }
+
+    console.error(error);
+
+    return {
+      status: "error",
+      message: "Berkas tidak dapat diproses. Gunakan template resmi aplikasi.",
+    };
+  }
+
+  const errors = [...parsed.errors];
+
+  if (parsed.totalRows === 0) {
+    return {
+      status: "error",
+      message: "Berkas tidak berisi data akun tenaga pendidik.",
+      result: {
+        created: 0,
+        totalRows: 0,
+        errors: [],
+      },
+    };
+  }
+
+  const rowsToCreate = await (async () => {
+    if (parsed.rows.length === 0) {
+      return [];
+    }
+
+    const [allUsers, existingStaff] = await Promise.all([
+      prisma.user.findMany({
+        select: { username: true },
+      }),
+      prisma.staffProfile.findMany({
+        where: {
+          nip: {
+            in: parsed.rows.map((row) => row.nip),
+          },
+        },
+        select: { nip: true },
+      }),
+    ]);
+
+    const takenUsernames = allUsers.map((user) => user.username);
+    const existingNips = new Set(
+      existingStaff.map((staff) => staff.nip.toLowerCase()),
+    );
+
+    return parsed.rows.flatMap((row) => {
+      if (existingNips.has(row.nip.toLowerCase())) {
+        errors.push({
+          row: row.rowNumber,
+          message: `NIP "${row.nip}" sudah terdaftar.`,
+        });
+        return [];
+      }
+
+      try {
+        const username = generateUsername(row.fullName, takenUsernames);
+        return [{ ...row, username }];
+      } catch {
+        errors.push({
+          row: row.rowNumber,
+          message: `Username otomatis tidak dapat dibuat dari nama "${row.fullName}".`,
+        });
+        return [];
+      }
+    });
+  })();
+
+  let created = 0;
+
+  if (rowsToCreate.length > 0) {
+    try {
+      const passwordHash = await hashPassword(INITIAL_PASSWORD);
+
+      await prisma.$transaction(
+        async (tx) => {
+          for (const row of rowsToCreate) {
+            await tx.user.create({
+              data: {
+                username: row.username,
+                passwordHash,
+                role: row.role,
+                fullName: row.fullName,
+                mustChangePassword: true,
+                staffProfile: {
+                  create: {
+                    nip: row.nip,
+                    canBeMentor: row.role === "PEMBINA",
+                  },
+                },
+              },
+            });
+          }
+        },
+        { timeout: 120_000 },
+      );
+
+      created = rowsToCreate.length;
+    } catch (error) {
+      console.error(error);
+
+      if (isUniqueConstraintError(error)) {
+        return {
+          status: "error",
+          message:
+            "Impor dibatalkan karena ada NIP atau username yang sudah digunakan. Tidak ada akun yang dibuat.",
+          result: {
+            created: 0,
+            totalRows: parsed.totalRows,
+            errors,
+          },
+        };
+      }
+
+      return {
+        status: "error",
+        message:
+          "Impor dibatalkan karena terjadi kesalahan. Tidak ada akun yang dibuat.",
+        result: {
+          created: 0,
+          totalRows: parsed.totalRows,
+          errors,
+        },
+      };
+    }
+  }
+
+  revalidatePath("/admin/kelola-akun");
+  revalidatePath("/admin/pengaturan-perizinan");
+  revalidatePath("/", "layout");
+
+  if (created === 0) {
+    return {
+      status: "error",
+      message: `Tidak ada akun yang diimpor. ${errors.length} baris perlu diperbaiki.`,
+      result: {
+        created: 0,
+        totalRows: parsed.totalRows,
+        errors,
+      },
+    };
+  }
+
+  return {
+    status: "success",
+    message:
+      errors.length > 0
+        ? `${created} akun tenaga pendidik berhasil diimpor. ${errors.length} baris dilewati karena tidak valid.`
+        : `${created} akun tenaga pendidik berhasil diimpor. Password awal ${INITIAL_PASSWORD}; pengguna wajib membuat username dan password pribadi saat login pertama.`,
     result: {
       created,
       totalRows: parsed.totalRows,

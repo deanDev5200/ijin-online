@@ -1,5 +1,7 @@
 import { z } from "zod";
 
+import { STAFF_ROLE_OPTIONS, staffRoleFromLabel } from "@/lib/auth/roles";
+
 import { timeOfDaySchema } from "./permission";
 
 export const ACCOUNT_ROLES = [
@@ -151,6 +153,30 @@ export const importStudentRowSchema = z.object({
   nis: nisSchema,
   grha: grhaSchema,
   kelas: kelasSchema,
+});
+
+export const importStaffRowSchema = z.object({
+  fullName: fullNameSchema,
+  role: z
+    .string()
+    .trim()
+    .min(1, "Nama peran wajib diisi.")
+    .transform((value, ctx) => {
+      const role = staffRoleFromLabel(value);
+
+      if (!role) {
+        ctx.addIssue({
+          code: "custom",
+          message: `Nama peran tidak dikenal. Pilih: ${STAFF_ROLE_OPTIONS.map(
+            (option) => option.label,
+          ).join(", ")}.`,
+        });
+        return z.NEVER;
+      }
+
+      return role;
+    }),
+  nip: nipSchema,
 });
 
 export const permissionTypeSchema = z.object({

@@ -25,6 +25,20 @@ export type AccountClassGroup = {
   accounts: ExportAccount[];
 };
 
+export type ExportStaffAccount = {
+  fullName: string;
+  username: string;
+  role: AppRole;
+  staffProfile: { nip: string } | null;
+};
+
+export type StaffAccountExportMeta = {
+  exportedBy: string;
+  filters: AccountFilters;
+  limit: number;
+  reachedLimit: boolean;
+};
+
 const collator = new Intl.Collator("id", {
   numeric: true,
   sensitivity: "base",
@@ -219,6 +233,119 @@ export async function buildAccountExportWorkbook(
       );
     }
   }
+
+  return Buffer.from(await workbook.xlsx.writeBuffer());
+}
+
+/** Ekspor seluruh tenaga pendidik dalam satu sheet, lengkap dengan kredensial awal. */
+export async function buildStaffExportWorkbook(
+  accounts: readonly ExportStaffAccount[],
+  meta: StaffAccountExportMeta,
+): Promise<Buffer> {
+  const staff = [...accounts]
+    .filter((account) => Boolean(account.staffProfile?.nip.trim()))
+    .sort((a, b) => {
+      const byRole = collator.compare(ROLE_LABELS[a.role], ROLE_LABELS[b.role]);
+
+      return byRole !== 0 ? byRole : collator.compare(a.fullName, b.fullName);
+    });
+
+  const workbook = new ExcelJS.Workbook();
+  workbook.creator = "E-Dispen";
+  workbook.created = new Date();
+
+  const { filters } = meta;
+  const summary = workbook.addWorksheet(SUMMARY_SHEET_NAME);
+  summary.columns = [{ width: 26 }, { width: 68 }];
+  summary.addRow(["Diekspor pada", formatDateTime(new Date())]);
+  summary.addRow(["Diekspor oleh", meta.exportedBy]);
+  summary.addRow(["Kata kunci", filters.q || "-"]);
+  summary.addRow([
+    "Peran",
+    filters.role === "ALL" ? "Semua peran" : ROLE_LABELS[filters.role],
+  ]);
+  summary.addRow([
+    "Status",
+    filters.status === "ALL"
+      ? "Semua status"
+      : filters.status === "active"
+        ? "Aktif"
+        : "Nonaktif",
+  ]);
+  summary.addRow(["Jumlah akun", staff.length]);
+
+  const roleCounts = new Map<string, number>();
+  for (const account of staff) {
+    const label = ROLE_LABELS[account.role];
+    roleCounts.set(label, (roleCounts.get(label) ?? 0) + 1);
+  }
+  summary.addRow([
+    "Rincian per peran",
+    roleCounts.size === 0
+      ? "-"
+      : Array.from(roleCounts, ([label, count]) => `${label}: ${count}`).join(
+          ", ",
+        ),
+  ]);
+  summary.addRow([
+    "Catatan",
+    `Password Awal adalah kata sandi bawaan ${INITIAL_PASSWORD} untuk akun baru atau yang di-reset; kata sandi aktual akun yang sudah diubah tidak dapat diekspor.${
+      meta.reachedLimit
+        ? ` Ekspor dibatasi ${meta.limit} baris; persempit filter untuk mengambil data lain.`
+        : ""
+    }`,
+  ]);
+  summary.getColumn(1).font = { bold: true };
+
+  const sheet = workbook.addWorksheet("Akun Pendidik", {
+    views: [{ state: "frozen", ySplit: 1 }],
+  });
+  sheet.columns = [
+    { header: "No", key: "no", width: 6 },
+    { header: "Nama Lengkap", key: "fullName", width: 30 },
+    { header: "Nama Peran", key: "role", width: 22 },
+    { header: "NIP", key: "nip", width: 18 },
+    { header: "Username", key: "username", width: 18 },
+    { header: "Password Awal", key: "initialPassword", width: 18 },
+  ];
+
+  const headerRow = sheet.getRow(1);
+  headerRow.height = 22;
+  headerRow.eachCell((cell) => {
+    cell.font = { bold: true, color: { argb: "FFFFFFFF" } };
+    cell.fill = {
+      type: "pattern",
+      pattern: "solid",
+      fgColor: { argb: "FF2563EB" },
+    };
+    cell.alignment = { vertical: "middle", wrapText: true };
+  });
+
+  staff.forEach((account, index) => {
+    sheet.addRow({
+      no: index + 1,
+      fullName: account.fullName,
+      role: ROLE_LABELS[account.role],
+      nip: account.staffProfile?.nip ?? "",
+      username: account.username,
+      initialPassword: INITIAL_PASSWORD,
+    });
+  });
+
+  sheet.getColumn("nip").numFmt = "@";
+  sheet.getColumn("username").numFmt = "@";
+  sheet.getColumn("initialPassword").numFmt = "@";
+  sheet.autoFilter = {
+    from: "A1",
+    to: `F${Math.max(1, staff.length + 1)}`,
+  };
+  sheet.eachRow((row, rowNumber) => {
+    if (rowNumber === 1) {
+      return;
+    }
+
+    row.alignment = { vertical: "middle", wrapText: true };
+  });
 
   return Buffer.from(await workbook.xlsx.writeBuffer());
 }

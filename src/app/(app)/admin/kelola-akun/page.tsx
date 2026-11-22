@@ -38,6 +38,7 @@ import { prisma } from "@/lib/db";
 import { cn } from "@/lib/utils";
 
 import { AccountImportForm } from "./import-form";
+import { StaffAccountImportForm } from "./staff-import-form";
 
 export const metadata: Metadata = {
   title: "Kelola Akun",
@@ -149,6 +150,20 @@ export default async function ManageAccountsPage({
             Template Excel
           </a>
         </Button>
+        <Button variant="outline" asChild>
+          <a href="/api/admin/kelola-akun/template-pendidik">
+            <Download />
+            Template Pendidik
+          </a>
+        </Button>
+        <Button variant="outline" asChild>
+          <a
+            href={`/api/admin/kelola-akun/export-pendidik${buildAccountQuery(filters)}`}
+          >
+            <FileSpreadsheet />
+            Ekspor Pendidik
+          </a>
+        </Button>
         <Button asChild>
           <Link href="/admin/kelola-akun/baru">
             <UserPlus />
@@ -238,6 +253,33 @@ export default async function ManageAccountsPage({
             pertama. Akun yang sudah ada tidak akan ditimpa.
           </p>
           <AccountImportForm />
+        </div>
+      </details>
+
+      <details className="group rounded-xl bg-card ring-1 ring-foreground/10 transition-shadow hover:shadow-sm">
+        <summary className="flex cursor-pointer list-none items-center gap-3 px-4 py-3.5 [&::-webkit-details-marker]:hidden">
+          <div className="flex size-9 items-center justify-center rounded-xl bg-primary/10 text-primary">
+            <UsersRound className="size-4" />
+          </div>
+          <div className="min-w-0 flex-1">
+            <p className="text-sm font-medium">
+              Impor akun tenaga pendidik dari Excel
+            </p>
+            <p className="text-xs text-muted-foreground">
+              Isi Nama Lengkap, Nama Peran, dan NIP lalu unggah kembali.
+            </p>
+          </div>
+          <ChevronRight className="size-4 shrink-0 text-muted-foreground transition-transform group-open:rotate-90" />
+        </summary>
+        <div className="space-y-3 border-t px-4 py-4">
+          <p className="text-xs text-muted-foreground">
+            Impor ini khusus tenaga pendidik. Kolom Nama Lengkap, Nama Peran,
+            dan NIP wajib ada. Nama peran boleh ditulis dengan label (misalnya
+            Pembina) atau kode peran (PEMBINA). Username dibuat otomatis dari
+            nama dan password awal 123456; akun Pembina otomatis dapat menjadi
+            penyetuju izin. Akun yang sudah ada tidak akan ditimpa.
+          </p>
+          <StaffAccountImportForm />
         </div>
       </details>
 
