@@ -119,7 +119,7 @@ export async function GET(request: Request) {
   ]);
 
   const workbook = new ExcelJS.Workbook();
-  workbook.creator = "Ijin Online";
+  workbook.creator = "E-Dispen";
   workbook.created = new Date();
 
   const sheet = workbook.addWorksheet("Indeks Izin", {

@@ -17,7 +17,7 @@ const geistMono = Geist_Mono({
   display: "swap",
 });
 
-const appName = process.env.NEXT_PUBLIC_APP_NAME ?? "Ijin Online";
+const appName = process.env.NEXT_PUBLIC_APP_NAME ?? "E-Dispen";
 const schoolName = process.env.NEXT_PUBLIC_SCHOOL_NAME ?? "Sekolah Asrama";
 
 export const metadata: Metadata = {

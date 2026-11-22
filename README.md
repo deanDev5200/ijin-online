@@ -1,4 +1,4 @@
-# Ijin Online
+# E-Dispen
 
 A school dormitory permission-request system with a Bahasa Indonesia interface.
 Students choose a permission type; each type has its own form fields, labels,
@@ -50,7 +50,7 @@ ADMIN_USERNAME="admin"
 ADMIN_PASSWORD="123456"
 ADMIN_FULL_NAME="Administrator"
 NEXT_PUBLIC_SCHOOL_NAME="Sekolah Asrama"
-NEXT_PUBLIC_APP_NAME="Ijin Online"
+NEXT_PUBLIC_APP_NAME="E-Dispen"
 SEED_DEMO="true"
 ```
 

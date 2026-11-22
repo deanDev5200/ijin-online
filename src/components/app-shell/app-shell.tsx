@@ -43,7 +43,7 @@ import {
 } from "./nav-items";
 
 const schoolName = process.env.NEXT_PUBLIC_SCHOOL_NAME ?? "Sekolah Asrama";
-const appName = process.env.NEXT_PUBLIC_APP_NAME ?? "Ijin Online";
+const appName = process.env.NEXT_PUBLIC_APP_NAME ?? "E-Dispen";
 
 function getInitials(fullName: string): string {
   const parts = fullName.trim().split(/\s+/).filter(Boolean);

@@ -22,7 +22,7 @@ const loginFont = Plus_Jakarta_Sans({
 });
 
 const schoolName = process.env.NEXT_PUBLIC_SCHOOL_NAME ?? "Sekolah Asrama";
-const appName = process.env.NEXT_PUBLIC_APP_NAME ?? "Ijin Online";
+const appName = process.env.NEXT_PUBLIC_APP_NAME ?? "E-Dispen";
 
 const features = [
   {

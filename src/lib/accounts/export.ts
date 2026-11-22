@@ -164,7 +164,7 @@ export async function buildAccountExportWorkbook(
   const groups = groupAccountsByKelas(accounts);
 
   const workbook = new ExcelJS.Workbook();
-  workbook.creator = "Ijin Online";
+  workbook.creator = "E-Dispen";
   workbook.created = new Date();
 
   const { filters } = meta;

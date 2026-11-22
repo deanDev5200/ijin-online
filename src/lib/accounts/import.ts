@@ -186,7 +186,7 @@ export async function parseStudentImportWorkbook(
 
 export async function buildStudentImportTemplate(): Promise<Buffer> {
   const workbook = new ExcelJS.Workbook();
-  workbook.creator = "Ijin Online";
+  workbook.creator = "E-Dispen";
   workbook.created = new Date();
 
   const sheet = workbook.addWorksheet("Akun Siswa", {
