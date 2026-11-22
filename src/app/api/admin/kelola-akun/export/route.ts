@@ -1,4 +1,4 @@
-import { buildAccountExportWorkbook } from "@/lib/accounts/export";
+import { buildAccountExportZip } from "@/lib/accounts/export";
 import {
   buildAccountWhere,
   parseAccountFilters,
@@ -25,7 +25,10 @@ export async function GET(request: Request) {
   );
 
   const accounts = await prisma.user.findMany({
-    where: buildAccountWhere(filters),
+    where: {
+      ...buildAccountWhere(filters),
+      studentProfile: { isNot: null },
+    },
     orderBy: { fullName: "asc" },
     take: EXPORT_LIMIT,
     select: {
@@ -40,19 +43,21 @@ export async function GET(request: Request) {
     },
   });
 
-  const buffer = await buildAccountExportWorkbook(accounts, {
+  const students = accounts.filter((account) =>
+    Boolean(account.studentProfile?.kelas.trim()),
+  );
+  const buffer = await buildAccountExportZip(students, {
     exportedBy: `${user.fullName} (@${user.username})`,
     filters,
     limit: EXPORT_LIMIT,
     reachedLimit: accounts.length >= EXPORT_LIMIT,
   });
-  const filename = `daftar-akun-${getTodayInJakarta()}.xlsx`;
+  const filename = `daftar-akun-per-kelas-${getTodayInJakarta()}.zip`;
 
   return new Response(new Uint8Array(buffer), {
     status: 200,
     headers: {
-      "Content-Type":
-        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      "Content-Type": "application/zip",
       "Content-Disposition": `attachment; filename="${filename}"`,
       "Content-Length": String(buffer.byteLength),
       "Cache-Control": "no-store",

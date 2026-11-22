@@ -140,7 +140,7 @@ export default async function ManageAccountsPage({
         <Button variant="outline" asChild>
           <a href={exportHref}>
             <FileSpreadsheet />
-            Ekspor Excel
+            Ekspor per Kelas
           </a>
         </Button>
         <Button variant="outline" asChild>

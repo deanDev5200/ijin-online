@@ -1,8 +1,9 @@
 import ExcelJS from "exceljs";
+import JSZip from "jszip";
 
 import type { AccountFilters } from "@/lib/admin/account-filters";
 import { ROLE_LABELS, type AppRole } from "@/lib/auth/roles";
-import { formatDateTime } from "@/lib/permissions/dates";
+import { formatDateTime, getTodayInJakarta } from "@/lib/permissions/dates";
 
 import { INITIAL_PASSWORD } from "./username";
 
@@ -18,6 +19,11 @@ export type AccountExportMeta = {
   filters: AccountFilters;
   limit: number;
   reachedLimit: boolean;
+};
+
+export type AccountClassGroup = {
+  kelas: string;
+  accounts: ExportAccount[];
 };
 
 const collator = new Intl.Collator("id", {
@@ -49,12 +55,41 @@ export function sortAccountsByKelas(
   return [...accounts].sort(compareByKelas);
 }
 
-export async function buildAccountExportWorkbook(
+/** Mengelompokkan hanya akun siswa yang memiliki kelas, urut per kelas lalu nama. */
+export function groupAccountsByKelas(
+  accounts: readonly ExportAccount[],
+): AccountClassGroup[] {
+  const grouped = new Map<string, ExportAccount[]>();
+
+  for (const account of accounts) {
+    const kelas = account.studentProfile?.kelas.trim();
+
+    if (!kelas) {
+      continue;
+    }
+
+    const members = grouped.get(kelas) ?? [];
+    members.push(account);
+    grouped.set(kelas, members);
+  }
+
+  return Array.from(grouped, ([kelas, members]) => ({
+    kelas,
+    accounts: [...members].sort((a, b) =>
+      collator.compare(a.fullName, b.fullName),
+    ),
+  })).sort((a, b) => collator.compare(a.kelas, b.kelas));
+}
+
+function sanitizeFilename(value: string): string {
+  return value.replace(/[\\/:*?"<>|]/g, "-").replace(/\s+/g, " ").trim();
+}
+
+async function buildWorkbook(
   accounts: readonly ExportAccount[],
   meta: AccountExportMeta,
+  kelas: string | null,
 ): Promise<Buffer> {
-  const sortedAccounts = sortAccountsByKelas(accounts);
-
   const workbook = new ExcelJS.Workbook();
   workbook.creator = "Ijin Online";
   workbook.created = new Date();
@@ -83,7 +118,7 @@ export async function buildAccountExportWorkbook(
     cell.alignment = { vertical: "middle", wrapText: true };
   });
 
-  sortedAccounts.forEach((account, index) => {
+  accounts.forEach((account, index) => {
     sheet.addRow({
       no: index + 1,
       fullName: account.fullName,
@@ -98,7 +133,7 @@ export async function buildAccountExportWorkbook(
   sheet.getColumn("initialPassword").numFmt = "@";
   sheet.autoFilter = {
     from: "A1",
-    to: `F${Math.max(1, sortedAccounts.length + 1)}`,
+    to: `F${Math.max(1, accounts.length + 1)}`,
   };
   sheet.eachRow((row, rowNumber) => {
     if (rowNumber === 1) {
@@ -113,6 +148,7 @@ export async function buildAccountExportWorkbook(
   summary.columns = [{ width: 26 }, { width: 68 }];
   summary.addRow(["Diekspor pada", formatDateTime(new Date())]);
   summary.addRow(["Diekspor oleh", meta.exportedBy]);
+  summary.addRow(["Kelas", kelas ?? "Semua kelas"]);
   summary.addRow(["Kata kunci", filters.q || "-"]);
   summary.addRow([
     "Peran",
@@ -126,11 +162,8 @@ export async function buildAccountExportWorkbook(
         ? "Aktif"
         : "Nonaktif",
   ]);
-  summary.addRow([
-    "Urutan",
-    "Kelas (urutan alami A–Z/angka), lalu nama lengkap. Akun tanpa kelas berada di bagian bawah.",
-  ]);
-  summary.addRow(["Jumlah baris", sortedAccounts.length]);
+  summary.addRow(["Urutan", "Nama lengkap (A–Z) di dalam kelas ini."]);
+  summary.addRow(["Jumlah baris", accounts.length]);
   summary.addRow([
     "Catatan",
     `Password Awal adalah kata sandi bawaan ${INITIAL_PASSWORD} untuk akun baru atau yang di-reset. Kata sandi aktual akun yang sudah diubah tidak dapat diekspor.${
@@ -142,4 +175,43 @@ export async function buildAccountExportWorkbook(
   summary.getColumn(1).font = { bold: true };
 
   return Buffer.from(await workbook.xlsx.writeBuffer());
+}
+
+/** Satu workbook untuk semua akun (dipertahankan untuk kebutuhan lain). */
+export async function buildAccountExportWorkbook(
+  accounts: readonly ExportAccount[],
+  meta: AccountExportMeta,
+): Promise<Buffer> {
+  return buildWorkbook(sortAccountsByKelas(accounts), meta, null);
+}
+
+/** Satu berkas ZIP berisi satu .xlsx untuk tiap kelas. */
+export async function buildAccountExportZip(
+  accounts: readonly ExportAccount[],
+  meta: AccountExportMeta,
+): Promise<Buffer> {
+  const groups = groupAccountsByKelas(accounts);
+  const zip = new JSZip();
+  const date = getTodayInJakarta();
+
+  for (const group of groups) {
+    const buffer = await buildWorkbook(group.accounts, meta, group.kelas);
+    zip.file(
+      `daftar-akun-${sanitizeFilename(group.kelas)}-${date}.xlsx`,
+      buffer,
+    );
+  }
+
+  if (groups.length === 0) {
+    zip.file(
+      "Tidak ada data.txt",
+      "Tidak ditemukan akun siswa dengan data kelas pada filter yang dipilih.",
+    );
+  }
+
+  return zip.generateAsync({
+    type: "nodebuffer",
+    compression: "DEFLATE",
+    compressionOptions: { level: 6 },
+  });
 }
