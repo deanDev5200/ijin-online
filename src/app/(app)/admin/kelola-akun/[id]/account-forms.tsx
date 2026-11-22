@@ -23,7 +23,7 @@ import { INITIAL_PASSWORD } from "@/lib/accounts/username";
 import { ROLE_LABELS } from "@/lib/auth/roles";
 
 import {
-  resetAccountPasswordAction,
+  resetAccountCredentialsAction,
   setAccountActiveAction,
   updateAccountAction,
 } from "../actions";
@@ -115,7 +115,7 @@ export function AccountDetailsForm({ account }: { account: AccountDetails }) {
             className="h-10 bg-muted/40"
           />
           <p id="username-hint" className="text-xs text-muted-foreground">
-            Username dikelola pengguna melalui halaman setup akun.
+            Username dapat dikembalikan ke awal melalui kartu Reset kredensial.
           </p>
         </div>
       </div>
@@ -195,21 +195,19 @@ export function AccountDetailsForm({ account }: { account: AccountDetails }) {
   );
 }
 
-export function ResetPasswordForm({
+export function ResetCredentialsForm({
   accountId,
   fullName,
-  disabled,
-  disabledReason,
+  isSelf,
 }: {
   accountId: string;
   fullName: string;
-  disabled?: boolean;
-  disabledReason?: string;
+  isSelf?: boolean;
 }) {
   const [state, formAction] = useActionState<
     AccountActionState,
     FormData
-  >(resetAccountPasswordAction, INITIAL_ACCOUNT_ACTION_STATE);
+  >(resetAccountCredentialsAction, INITIAL_ACCOUNT_ACTION_STATE);
 
   return (
     <form
@@ -220,41 +218,34 @@ export function ResetPasswordForm({
     >
       <input type="hidden" name="accountId" value={accountId} />
 
-      {disabled ? (
-        <p className="rounded-lg border bg-muted/40 px-3 py-2 text-xs text-muted-foreground">
-          {disabledReason}
-        </p>
-      ) : (
-        <>
-          <div className="flex items-start gap-2.5 rounded-lg border border-primary/20 bg-primary/5 px-3 py-3 text-sm">
-            <KeyRound className="mt-0.5 size-4 shrink-0 text-primary" />
-            <div className="space-y-1 text-muted-foreground">
-              <p>
-                Password akan direset ke{" "}
-                <span className="font-mono font-semibold text-foreground">
-                  {INITIAL_PASSWORD}
-                </span>
-                .
-              </p>
-              <p className="text-xs leading-relaxed">
-                Pengguna {fullName} wajib membuat username dan password pribadi
-                saat login berikutnya. Sesi aktif akan diakhiri.
-              </p>
-            </div>
-          </div>
+      <div className="flex items-start gap-2.5 rounded-lg border border-primary/20 bg-primary/5 px-3 py-3 text-sm">
+        <KeyRound className="mt-0.5 size-4 shrink-0 text-primary" />
+        <div className="space-y-1 text-muted-foreground">
+          <p>
+            Username dibuat ulang dari nama lengkap dan password direset ke{" "}
+            <span className="font-mono font-semibold text-foreground">
+              {INITIAL_PASSWORD}
+            </span>
+            .
+          </p>
+          <p className="text-xs leading-relaxed">
+            {isSelf
+              ? "Ini adalah akun Anda. Setelah reset, sesi ini akan berakhir dan Anda harus login ulang dengan username baru serta password 123456, lalu membuat kredensial pribadi."
+              : `Pengguna ${fullName} wajib membuat username dan password pribadi saat login berikutnya. Sesi aktif akan diakhiri.`}
+          </p>
+        </div>
+      </div>
 
-          <FormFeedback state={state} />
+      <FormFeedback state={state} />
 
-          <div className="flex justify-end">
-            <PendingButton
-              label="Reset password"
-              pendingLabel="Menyimpan..."
-              variant="outline"
-              icon={<KeyRound />}
-            />
-          </div>
-        </>
-      )}
+      <div className="flex justify-end">
+        <PendingButton
+          label="Reset kredensial"
+          pendingLabel="Menyimpan..."
+          variant="outline"
+          icon={<KeyRound />}
+        />
+      </div>
     </form>
   );
 }

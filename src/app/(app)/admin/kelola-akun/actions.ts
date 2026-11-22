@@ -342,7 +342,7 @@ export async function updateAccountAction(
   };
 }
 
-export async function resetAccountPasswordAction(
+export async function resetAccountCredentialsAction(
   _previousState: AccountActionState,
   formData: FormData,
 ): Promise<AccountActionState> {
@@ -357,40 +357,74 @@ export async function resetAccountPasswordAction(
     };
   }
 
-  if (accountId.data === admin.id) {
-    return {
-      status: "error",
-      message:
-        "Gunakan halaman Profil untuk mengganti password akun Anda sendiri.",
-    };
-  }
-
   const account = await prisma.user.findUnique({
     where: { id: accountId.data },
-    select: { id: true, fullName: true },
+    select: { id: true, fullName: true, username: true },
   });
 
   if (!account) {
     return { status: "error", message: "Akun tidak ditemukan." };
   }
 
+  const allUsers = await prisma.user.findMany({
+    where: { id: { not: account.id } },
+    select: { username: true },
+  });
+
+  let username: string;
+
+  try {
+    username = generateUsername(
+      account.fullName,
+      allUsers.map((user) => user.username),
+    );
+  } catch {
+    return {
+      status: "error",
+      message: "Username awal tidak dapat dibuat dari nama akun tersebut.",
+    };
+  }
+
   const passwordHash = await hashPassword(INITIAL_PASSWORD);
 
-  await prisma.user.update({
-    where: { id: account.id },
-    data: {
-      passwordHash,
-      mustChangePassword: true,
-      sessionVersion: { increment: 1 },
-    },
-  });
+  try {
+    await prisma.user.update({
+      where: { id: account.id },
+      data: {
+        username,
+        passwordHash,
+        mustChangePassword: true,
+        sessionVersion: { increment: 1 },
+      },
+    });
+  } catch (error) {
+    if (isUniqueConstraintError(error)) {
+      return {
+        status: "error",
+        message: "Username awal sudah digunakan. Coba ulangi beberapa saat lagi.",
+      };
+    }
+
+    console.error(error);
+
+    return {
+      status: "error",
+      message: "Terjadi kesalahan saat mereset kredensial akun.",
+    };
+  }
 
   revalidatePath("/admin/kelola-akun");
   revalidatePath(`/admin/kelola-akun/${account.id}`);
+  revalidatePath("/", "layout");
+
+  if (account.id === admin.id) {
+    // Mengubah kredensial sendiri mengakhiri sesi agar kata sandi lama tidak berlaku.
+    redirect("/api/auth/clear-session");
+  }
 
   return {
     status: "success",
-    message: `Password ${account.fullName} berhasil direset ke ${INITIAL_PASSWORD}. Pengguna wajib membuat username dan password baru saat login berikutnya.`,
+    message: `Username ${account.fullName} berhasil direset menjadi ${username} dan passwordnya menjadi ${INITIAL_PASSWORD}. Pengguna wajib membuat username dan password baru saat login berikutnya.`,
   };
 }
 

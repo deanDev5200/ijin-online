@@ -102,7 +102,7 @@ export default async function LoginPage({
 
           <div className="space-y-2.5">
             <h1 className="text-3xl leading-tight font-semibold tracking-tight text-balance text-white xl:text-4xl">
-              Perizinan sekolah &amp; asrama jadi lebih tertata.
+              Proses dispensasi lebih cepat, transparan, dan rapi.
             </h1>
             <p className="max-w-lg text-sm leading-relaxed text-blue-100/80">
               Ajukan dispensasi kegiatan, pantau persetujuan, dan simpan riwayat

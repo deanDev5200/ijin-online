@@ -27,7 +27,7 @@ import { formatDateTime } from "@/lib/permissions/dates";
 import {
   AccountDetailsForm,
   AccountStatusForm,
-  ResetPasswordForm,
+  ResetCredentialsForm,
 } from "./account-forms";
 
 export const metadata: Metadata = {
@@ -91,7 +91,7 @@ export default async function AccountDetailPage({
     <div className="space-y-6">
       <PageHeader
         title="Detail Akun"
-        description="Perbarui identitas akun, reset password, atau ubah status akses tanpa menghapus riwayat."
+        description="Perbarui identitas akun, reset kredensial, atau ubah status akses tanpa menghapus riwayat."
       >
         <Button variant="outline" asChild>
           <Link href="/admin/kelola-akun">
@@ -162,8 +162,8 @@ export default async function AccountDetailPage({
             <div className="min-w-0 flex-1 space-y-1">
               <CardTitle className="text-base">Data akun</CardTitle>
               <CardDescription>
-                Username dikelola pengguna saat setup pertama. NIS atau NIP
-                harus unik di antara seluruh akun.
+                Username dapat direset melalui kartu Reset kredensial. NIS atau
+                NIP harus unik di antara seluruh akun.
               </CardDescription>
             </div>
           </CardHeader>
@@ -190,18 +190,17 @@ export default async function AccountDetailPage({
                 <KeyRound className="size-4" />
               </div>
               <div className="min-w-0 flex-1 space-y-1">
-                <CardTitle className="text-base">Reset password</CardTitle>
+                <CardTitle className="text-base">Reset kredensial</CardTitle>
                 <CardDescription>
-                  Kembalikan password ke 123456 dan paksa setup akun saat login.
+                  Buat ulang username dari nama dan kembalikan password ke 123456, lalu paksa setup akun saat login.
                 </CardDescription>
               </div>
             </CardHeader>
             <CardContent>
-              <ResetPasswordForm
+              <ResetCredentialsForm
                 accountId={account.id}
                 fullName={account.fullName}
-                disabled={isSelf}
-                disabledReason="Gunakan halaman Profil untuk mengganti password akun Anda sendiri."
+                isSelf={isSelf}
               />
             </CardContent>
           </Card>
