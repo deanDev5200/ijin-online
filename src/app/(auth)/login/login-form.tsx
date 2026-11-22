@@ -19,7 +19,7 @@ function SubmitButton() {
     <Button
       type="submit"
       size="lg"
-      className="h-10 w-full rounded-xl shadow-lg shadow-blue-600/25 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-xl hover:shadow-blue-600/30 active:translate-y-0"
+      className="h-10 w-full rounded-xl bg-linear-to-r from-blue-600 to-blue-700 shadow-md shadow-blue-600/20 transition-all duration-200 hover:-translate-y-0.5 hover:from-blue-700 hover:to-blue-800 hover:shadow-lg hover:shadow-blue-600/30 active:translate-y-0"
       disabled={pending}
     >
       {pending ? (
@@ -76,7 +76,7 @@ export function LoginForm({
               minLength={3}
               maxLength={20}
               aria-invalid={Boolean(usernameError)}
-              className="h-10 rounded-xl bg-primary/[0.03] pl-10 hover:border-primary/30 focus-visible:border-primary/60 focus-visible:ring-4 focus-visible:ring-primary/20"
+              className="h-10 rounded-xl border-slate-200 bg-slate-50/80 pl-10 hover:border-blue-300 focus-visible:border-blue-500 focus-visible:bg-white focus-visible:ring-4 focus-visible:ring-blue-500/10"
             />
           </div>
           {usernameError ? (
@@ -101,7 +101,7 @@ export function LoginForm({
             required
             maxLength={72}
             aria-invalid={Boolean(passwordError)}
-            className="h-10 rounded-xl bg-primary/[0.03] pr-11 hover:border-primary/30 focus-visible:border-primary/60 focus-visible:ring-4 focus-visible:ring-primary/20"
+            className="h-10 rounded-xl border-slate-200 bg-slate-50/80 pr-11 hover:border-blue-300 focus-visible:border-blue-500 focus-visible:bg-white focus-visible:ring-4 focus-visible:ring-blue-500/10"
           />
           {passwordError ? (
             <p className="text-xs text-destructive">{passwordError}</p>

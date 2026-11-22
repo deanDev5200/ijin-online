@@ -88,7 +88,7 @@ export default async function LoginPage({
           </div>
           <div>
             <p className="text-[11px] font-semibold tracking-[0.2em] text-blue-200 uppercase">
-              {schoolName}
+              PORTAL PERIZINAN
             </p>
             <p className="text-sm font-medium text-white">{appName}</p>
           </div>
@@ -132,14 +132,15 @@ export default async function LoginPage({
           </ul>
         </div>
 
-        <p className="relative text-[11px] text-blue-200/70">
-          © {new Date().getFullYear()} {schoolName}. Seluruh hak cipta
-          dilindungi.
+        <p className="relative text-xs text-blue-200/70">
+          © {new Date().getFullYear()} {appName} · Dikembangkan oleh Dhika Sumarta
         </p>
       </aside>
 
-      <main className="relative flex items-center justify-center overflow-hidden bg-linear-to-br from-background via-background to-primary/[0.06] px-5 py-8 sm:px-8 lg:py-4">
-        <div className="pointer-events-none absolute -top-28 -right-24 size-80 rounded-full bg-primary/10 blur-3xl" />
+      <main className="relative flex items-center justify-center overflow-hidden bg-linear-to-br from-slate-100 via-blue-50/70 to-indigo-100/50 px-5 py-8 sm:px-8 lg:py-4">
+        <div className="pointer-events-none absolute inset-0 opacity-70 [background-image:radial-gradient(rgba(59,130,246,0.22)_1px,transparent_1px)] [background-size:22px_22px]" />
+        <div className="pointer-events-none absolute -top-28 -right-24 size-80 rounded-full bg-blue-400/10 blur-3xl" />
+        <div className="pointer-events-none absolute -bottom-32 -left-24 size-80 rounded-full bg-indigo-400/10 blur-3xl" />
         <div className="relative w-full max-w-md">
           <div className="mb-5 flex items-center gap-3 lg:hidden">
             <div className="flex size-10 items-center justify-center rounded-xl bg-linear-to-br from-blue-600 to-indigo-600 text-primary-foreground shadow-md shadow-blue-600/25">
@@ -166,7 +167,8 @@ export default async function LoginPage({
             </p>
           </div>
 
-          <div className="rounded-2xl border border-border/70 bg-card/80 p-4 shadow-[0_24px_60px_-36px_rgba(37,99,235,0.5)] backdrop-blur-sm sm:p-5">
+          <div className="relative overflow-hidden rounded-2xl border border-slate-200/90 bg-white/95 p-4 shadow-xl shadow-blue-950/10 backdrop-blur-sm sm:p-5">
+            <div className="absolute inset-x-0 top-0 h-1.5 bg-linear-to-r from-blue-600 to-cyan-400" />
             <LoginForm next={next} showDemo={showDemo} />
           </div>
 
@@ -175,7 +177,7 @@ export default async function LoginPage({
           </p>
 
           <p className="mt-5 text-center text-[11px] text-muted-foreground lg:hidden">
-            © {new Date().getFullYear()} {schoolName}
+            © {new Date().getFullYear()} {appName} · Dikembangkan oleh Dhika Sumarta
           </p>
         </div>
       </main>

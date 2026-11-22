@@ -175,8 +175,8 @@ function SidebarContent({
           </div>
           <span className="size-2 shrink-0 rounded-full bg-primary/80 ring-4 ring-primary/10" />
         </div>
-        <p className="px-1 pt-3 text-[10px] text-muted-foreground">
-          {appName} · Fase 1
+        <p className="px-1 pt-3 text-[11px] text-muted-foreground">
+          {appName} · Dikembangkan oleh Dhika Sumarta
         </p>
       </div>
     </div>
