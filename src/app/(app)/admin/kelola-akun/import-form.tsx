@@ -55,7 +55,8 @@ export function AccountImportForm() {
         />
         <p className="flex items-center gap-1.5 text-xs text-muted-foreground">
           <FileSpreadsheet className="size-3.5" />
-          Gunakan template resmi. Maksimal 200 baris dan 5 MB per berkas.
+          Gunakan sheet Akun Siswa pada template resmi. Maksimal 200 baris dan 5
+          MB per berkas.
         </p>
       </div>
 

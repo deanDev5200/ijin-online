@@ -1,5 +1,5 @@
 import { getCurrentUser } from "@/lib/auth/current-user";
-import { buildStudentImportTemplate } from "@/lib/accounts/import";
+import { buildAccountImportTemplate } from "@/lib/accounts/import";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -11,8 +11,8 @@ export async function GET() {
     return new Response("Akses ditolak.", { status: 403 });
   }
 
-  const buffer = await buildStudentImportTemplate();
-  const filename = "template-impor-akun-siswa.xlsx";
+  const buffer = await buildAccountImportTemplate();
+  const filename = "template-impor-akun.xlsx";
 
   return new Response(new Uint8Array(buffer), {
     status: 200,

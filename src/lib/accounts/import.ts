@@ -327,22 +327,7 @@ export async function parseStaffImportWorkbook(
   return { rows, errors, totalRows };
 }
 
-export async function buildStudentImportTemplate(): Promise<Buffer> {
-  const workbook = new ExcelJS.Workbook();
-  workbook.creator = "E-Dispen";
-  workbook.created = new Date();
-
-  const sheet = workbook.addWorksheet("Akun Siswa", {
-    views: [{ state: "frozen", ySplit: 1 }],
-  });
-
-  sheet.columns = [
-    { header: "Nama Lengkap", key: "fullName", width: 30 },
-    { header: "NIS", key: "nis", width: 16 },
-    { header: "Grha", key: "grha", width: 18 },
-    { header: "Kelas", key: "kelas", width: 18 },
-  ];
-
+function styleTemplateHeader(sheet: ExcelJS.Worksheet): void {
   const headerRow = sheet.getRow(1);
   headerRow.height = 22;
   headerRow.eachCell((cell) => {
@@ -357,7 +342,20 @@ export async function buildStudentImportTemplate(): Promise<Buffer> {
       bottom: { style: "thin", color: { argb: "FF1D4ED8" } },
     };
   });
+}
 
+function addStudentImportSheet(workbook: ExcelJS.Workbook): void {
+  const sheet = workbook.addWorksheet("Akun Siswa", {
+    views: [{ state: "frozen", ySplit: 1 }],
+  });
+
+  sheet.columns = [
+    { header: "Nama Lengkap", key: "fullName", width: 30 },
+    { header: "NIS", key: "nis", width: 16 },
+    { header: "Grha", key: "grha", width: 18 },
+    { header: "Kelas", key: "kelas", width: 18 },
+  ];
+  styleTemplateHeader(sheet);
   sheet.getColumn("nis").numFmt = "@";
 
   for (let rowNumber = 2; rowNumber <= IMPORT_MAX_ROWS + 1; rowNumber += 1) {
@@ -371,43 +369,9 @@ export async function buildStudentImportTemplate(): Promise<Buffer> {
       error: "Nama lengkap harus 3-100 karakter.",
     };
   }
-
-  const guide = workbook.addWorksheet("Petunjuk");
-  guide.columns = [{ width: 24 }, { width: 80 }];
-  guide.addRow(["Kolom", "Keterangan"]);
-  guide.getRow(1).font = { bold: true };
-
-  const guideRows: Array<[string, string]> = [
-    ["Nama Lengkap", "Wajib. Nama lengkap siswa, 3-100 karakter."],
-    ["NIS", "Wajib. Nomor Induk Siswa, harus unik. Gunakan format teks agar angka nol di depan tidak hilang."],
-    ["Grha", "Wajib. Nama grha/asrama, 2-50 karakter. Kolom ini harus ada agar impor bisa dilakukan."],
-    ["Kelas", "Wajib. Kelas siswa, maksimal 50 karakter."],
-    ["Username", "Dibuat otomatis dari kata terakhir nama lengkap (huruf kecil, maksimal 6 karakter). Tidak perlu diisi."],
-    ["Password", "Password awal otomatis 123456. Pengguna wajib membuat username dan password pribadi saat login pertama."],
-    ["Contoh baris", "Ahmad Fauzi | 24001 | Grha A | X IPA 1"],
-  ];
-
-  for (const [label, description] of guideRows) {
-    guide.addRow([label, description]);
-  }
-
-  guide.eachRow((row, rowNumber) => {
-    row.alignment = { vertical: "top", wrapText: true };
-    if (rowNumber === 1) {
-      row.font = { bold: true };
-    }
-  });
-
-  const buffer = await workbook.xlsx.writeBuffer();
-
-  return Buffer.from(buffer);
 }
 
-export async function buildStaffImportTemplate(): Promise<Buffer> {
-  const workbook = new ExcelJS.Workbook();
-  workbook.creator = "E-Dispen";
-  workbook.created = new Date();
-
+function addStaffImportSheet(workbook: ExcelJS.Workbook): void {
   const sheet = workbook.addWorksheet("Akun Pendidik", {
     views: [{ state: "frozen", ySplit: 1 }],
   });
@@ -417,22 +381,7 @@ export async function buildStaffImportTemplate(): Promise<Buffer> {
     { header: "Nama Peran", key: "role", width: 24 },
     { header: "NIP", key: "nip", width: 18 },
   ];
-
-  const headerRow = sheet.getRow(1);
-  headerRow.height = 22;
-  headerRow.eachCell((cell) => {
-    cell.font = { bold: true, color: { argb: "FFFFFFFF" } };
-    cell.fill = {
-      type: "pattern",
-      pattern: "solid",
-      fgColor: { argb: "FF2563EB" },
-    };
-    cell.alignment = { vertical: "middle", horizontal: "left" };
-    cell.border = {
-      bottom: { style: "thin", color: { argb: "FF1D4ED8" } },
-    };
-  });
-
+  styleTemplateHeader(sheet);
   sheet.getColumn("nip").numFmt = "@";
 
   const roleOptions = STAFF_ROLE_OPTIONS.map((option) => option.label).join(",");
@@ -458,15 +407,23 @@ export async function buildStaffImportTemplate(): Promise<Buffer> {
       ).join(", ")}.`,
     };
   }
+}
 
+function addImportGuideSheet(workbook: ExcelJS.Workbook): void {
   const guide = workbook.addWorksheet("Petunjuk");
-  guide.columns = [{ width: 24 }, { width: 80 }];
-  guide.addRow(["Kolom", "Keterangan"]);
-  guide.getRow(1).font = { bold: true };
+  guide.columns = [{ width: 20 }, { width: 22 }, { width: 76 }];
+  guide.addRow(["Sheet", "Kolom", "Keterangan"]);
+  styleTemplateHeader(guide);
 
-  const guideRows: Array<[string, string]> = [
-    ["Nama Lengkap", "Wajib. Nama lengkap tenaga pendidik, 3-100 karakter."],
+  const guideRows: Array<[string, string, string]> = [
+    ["Akun Siswa", "Nama Lengkap", "Wajib. Nama lengkap siswa, 3-100 karakter."],
+    ["Akun Siswa", "NIS", "Wajib. Nomor Induk Siswa, harus unik. Gunakan format teks agar angka nol di depan tidak hilang."],
+    ["Akun Siswa", "Grha", "Wajib. Nama grha/asrama, 2-50 karakter."],
+    ["Akun Siswa", "Kelas", "Wajib. Kelas siswa, maksimal 50 karakter."],
+    ["Akun Siswa", "Contoh baris", "Ahmad Fauzi | 24001 | Grha A | X IPA 1"],
+    ["Akun Pendidik", "Nama Lengkap", "Wajib. Nama lengkap tenaga pendidik, 3-100 karakter."],
     [
+      "Akun Pendidik",
       "Nama Peran",
       `Wajib. Pilih salah satu: ${STAFF_ROLE_OPTIONS.map(
         (option) => option.label,
@@ -474,24 +431,38 @@ export async function buildStaffImportTemplate(): Promise<Buffer> {
         (option) => option.value,
       ).join(", ")} juga diterima.`,
     ],
-    ["NIP", "Wajib. Nomor Induk Pegawai, harus unik. Gunakan format teks agar angka nol di depan tidak hilang."],
-    ["Username", "Dibuat otomatis dari kata terakhir nama lengkap (huruf kecil, maksimal 6 karakter). Tidak perlu diisi."],
-    ["Password", "Password awal otomatis 123456. Pengguna wajib membuat username dan password pribadi saat login pertama."],
-    ["Contoh baris", "Siti Rahmawati | Pembina | 19870101"],
+    ["Akun Pendidik", "NIP", "Wajib. Nomor Induk Pegawai, harus unik. Gunakan format teks agar angka nol di depan tidak hilang."],
+    ["Akun Pendidik", "Contoh baris", "Siti Rahmawati | Pembina | 19870101"],
+    ["Umum", "Username", "Dibuat otomatis dari kata terakhir nama lengkap (huruf kecil, maksimal 6 karakter). Tidak perlu diisi."],
+    ["Umum", "Password", "Password awal otomatis 123456. Pengguna wajib membuat username dan password pribadi saat login pertama."],
+    ["Umum", "Cara pakai", "Isi sheet Akun Siswa atau Akun Pendidik sesuai kebutuhan, lalu unggah melalui menu impor yang bersangkutan. Sheet yang tidak dipakai boleh dikosongkan."],
   ];
 
-  for (const [label, description] of guideRows) {
-    guide.addRow([label, description]);
+  for (const [sheet, column, description] of guideRows) {
+    guide.addRow([sheet, column, description]);
   }
 
   guide.eachRow((row, rowNumber) => {
     row.alignment = { vertical: "top", wrapText: true };
     if (rowNumber === 1) {
-      row.font = { bold: true };
+      return;
     }
+
+    row.getCell(1).font = { bold: true };
   });
-
-  const buffer = await workbook.xlsx.writeBuffer();
-
-  return Buffer.from(buffer);
 }
+
+/** Satu template untuk siswa dan tenaga pendidik, masing-masing pada sheet tersendiri. */
+export async function buildAccountImportTemplate(): Promise<Buffer> {
+  const workbook = new ExcelJS.Workbook();
+  workbook.creator = "E-Dispen";
+  workbook.created = new Date();
+
+  addStudentImportSheet(workbook);
+  addStaffImportSheet(workbook);
+  addImportGuideSheet(workbook);
+
+  return Buffer.from(await workbook.xlsx.writeBuffer());
+}
+
+

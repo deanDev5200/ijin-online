@@ -138,25 +138,13 @@ export default async function ManageAccountsPage({
         title="Kelola Akun"
         description="Buat, perbarui, dan nonaktifkan akun siswa serta tenaga kependidikan."
       >
-        <Button variant="outline" asChild>
+        <Button size="sm" variant="outline" asChild>
           <a href={exportHref}>
             <FileSpreadsheet />
             Ekspor per Kelas
           </a>
         </Button>
-        <Button variant="outline" asChild>
-          <a href="/api/admin/kelola-akun/template">
-            <Download />
-            Template Excel
-          </a>
-        </Button>
-        <Button variant="outline" asChild>
-          <a href="/api/admin/kelola-akun/template-pendidik">
-            <Download />
-            Template Pendidik
-          </a>
-        </Button>
-        <Button variant="outline" asChild>
+        <Button size="sm" variant="outline" asChild>
           <a
             href={`/api/admin/kelola-akun/export-pendidik${buildAccountQuery(filters)}`}
           >
@@ -164,7 +152,18 @@ export default async function ManageAccountsPage({
             Ekspor Pendidik
           </a>
         </Button>
-        <Button asChild>
+        <Button
+          size="sm"
+          variant="outline"
+          asChild
+          title="Template akun siswa dan tenaga pendidik"
+        >
+          <a href="/api/admin/kelola-akun/template">
+            <Download />
+            Template Excel
+          </a>
+        </Button>
+        <Button size="sm" asChild>
           <Link href="/admin/kelola-akun/baru">
             <UserPlus />
             Tambah akun
@@ -247,10 +246,10 @@ export default async function ManageAccountsPage({
         </summary>
         <div className="space-y-3 border-t px-4 py-4">
           <p className="text-xs text-muted-foreground">
-            Impor ini khusus akun siswa. Kolom Nama Lengkap, NIS, Grha, dan
-            Kelas wajib ada. Username dibuat otomatis dari nama dan password
-            awal 123456; pengguna wajib membuat kredensial pribadi saat login
-            pertama. Akun yang sudah ada tidak akan ditimpa.
+            Isi sheet Akun Siswa pada template Excel. Kolom Nama Lengkap, NIS,
+            Grha, dan Kelas wajib ada. Username dibuat otomatis dari nama dan
+            password awal 123456; pengguna wajib membuat kredensial pribadi saat
+            login pertama. Akun yang sudah ada tidak akan ditimpa.
           </p>
           <AccountImportForm />
         </div>
@@ -273,11 +272,12 @@ export default async function ManageAccountsPage({
         </summary>
         <div className="space-y-3 border-t px-4 py-4">
           <p className="text-xs text-muted-foreground">
-            Impor ini khusus tenaga pendidik. Kolom Nama Lengkap, Nama Peran,
-            dan NIP wajib ada. Nama peran boleh ditulis dengan label (misalnya
-            Pembina) atau kode peran (PEMBINA). Username dibuat otomatis dari
-            nama dan password awal 123456; akun Pembina otomatis dapat menjadi
-            penyetuju izin. Akun yang sudah ada tidak akan ditimpa.
+            Isi sheet Akun Pendidik pada template Excel. Kolom Nama Lengkap,
+            Nama Peran, dan NIP wajib ada. Nama peran boleh ditulis dengan label
+            (misalnya Pembina) atau kode peran (PEMBINA). Username dibuat
+            otomatis dari nama dan password awal 123456; akun Pembina otomatis
+            dapat menjadi penyetuju izin. Akun yang sudah ada tidak akan
+            ditimpa.
           </p>
           <StaffAccountImportForm />
         </div>
