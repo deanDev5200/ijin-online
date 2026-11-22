@@ -2,12 +2,12 @@ import type { Metadata } from "next";
 import { Plus_Jakarta_Sans } from "next/font/google";
 import {
   CalendarCheck2,
-  GraduationCap,
   History,
   Route,
   ShieldCheck,
 } from "lucide-react";
 
+import { EdispenLogo } from "@/components/edispen-logo";
 import { requireGuest } from "@/lib/auth/guards";
 
 import { LoginForm } from "./login-form";
@@ -83,9 +83,7 @@ export default async function LoginPage({
         />
 
         <div className="relative flex items-center gap-3">
-          <div className="flex size-10 items-center justify-center rounded-2xl bg-white/15 shadow-lg shadow-blue-950/20 ring-1 ring-white/25 backdrop-blur-xl">
-            <GraduationCap className="size-5" />
-          </div>
+          <EdispenLogo className="size-10 shrink-0 shadow-lg shadow-blue-950/20 ring-1 ring-white/25" />
           <div>
             <p className="text-[11px] font-semibold tracking-[0.2em] text-blue-200 uppercase">
               PORTAL PERIZINAN
@@ -132,8 +130,8 @@ export default async function LoginPage({
           </ul>
         </div>
 
-        <p className="relative text-xs text-blue-200/70">
-          © {new Date().getFullYear()} {appName} · Dikembangkan oleh Dhika Sumarta
+        <p className="invisible relative text-xs text-blue-200/70" aria-hidden="true">
+          &nbsp;
         </p>
       </aside>
 
@@ -141,11 +139,11 @@ export default async function LoginPage({
         <div className="pointer-events-none absolute inset-0 opacity-70 [background-image:radial-gradient(rgba(59,130,246,0.22)_1px,transparent_1px)] [background-size:22px_22px]" />
         <div className="pointer-events-none absolute -top-28 -right-24 size-80 rounded-full bg-blue-400/10 blur-3xl" />
         <div className="pointer-events-none absolute -bottom-32 -left-24 size-80 rounded-full bg-indigo-400/10 blur-3xl" />
+        <div className="pointer-events-none absolute top-1/4 left-1/2 size-[28rem] -translate-x-1/2 rounded-full bg-linear-to-br from-white/85 via-sky-100/35 to-transparent blur-3xl" />
+        <div className="pointer-events-none absolute inset-x-0 bottom-0 h-56 bg-linear-to-t from-white/70 via-white/20 to-transparent" />
         <div className="relative w-full max-w-md">
           <div className="mb-5 flex items-center gap-3 lg:hidden">
-            <div className="flex size-10 items-center justify-center rounded-xl bg-linear-to-br from-blue-600 to-indigo-600 text-primary-foreground shadow-md shadow-blue-600/25">
-              <GraduationCap className="size-5" />
-            </div>
+            <EdispenLogo className="size-10 shrink-0 shadow-md shadow-blue-600/25" />
             <div>
               <p className="text-[10px] font-semibold tracking-[0.18em] text-muted-foreground uppercase">
                 {schoolName}
@@ -168,7 +166,8 @@ export default async function LoginPage({
           </div>
 
           <div className="relative overflow-hidden rounded-2xl border border-slate-200/90 bg-white/95 p-4 shadow-xl shadow-blue-950/10 backdrop-blur-sm sm:p-5">
-            <div className="absolute inset-x-0 top-0 h-1.5 bg-linear-to-r from-blue-600 to-cyan-400" />
+            <div className="pointer-events-none absolute inset-x-0 top-0 h-24 bg-linear-to-b from-blue-500/20 via-sky-200/10 to-transparent" />
+            <div className="absolute inset-x-0 top-0 h-1 bg-linear-to-r from-blue-600 via-blue-500 to-cyan-400" />
             <LoginForm next={next} showDemo={showDemo} />
           </div>
 
@@ -176,10 +175,14 @@ export default async function LoginPage({
             Belum punya akun? Hubungi administrator sekolah atau asrama.
           </p>
 
-          <p className="mt-5 text-center text-[11px] text-muted-foreground lg:hidden">
+          <p className="mt-5 text-center text-[11px] text-slate-500/80 lg:hidden">
             © {new Date().getFullYear()} {appName} · Dikembangkan oleh Dhika Sumarta
           </p>
         </div>
+
+        <p className="absolute inset-x-0 bottom-12 hidden text-center text-[11px] text-slate-500/80 lg:block">
+          © {new Date().getFullYear()} {appName} · Dikembangkan oleh Dhika Sumarta
+        </p>
       </main>
     </div>
   );

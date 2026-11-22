@@ -6,13 +6,13 @@ import { usePathname } from "next/navigation";
 import {
   Bell,
   ChevronDown,
-  GraduationCap,
   KeyRound,
   LogOut,
   Menu,
   UserRound,
 } from "lucide-react";
 
+import { EdispenLogo } from "@/components/edispen-logo";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import {
@@ -123,9 +123,7 @@ function SidebarContent({
   return (
     <div className="flex h-full flex-col bg-linear-to-b from-sidebar via-sidebar to-primary/10">
       <div className="flex h-16 items-center gap-3 border-b border-primary/15 bg-linear-to-r from-primary/10 to-transparent px-5">
-        <div className="flex size-9 items-center justify-center rounded-xl bg-linear-to-br from-primary to-chart-2 text-primary-foreground shadow-md shadow-primary/30 ring-1 ring-white/20">
-          <GraduationCap className="size-5" />
-        </div>
+        <EdispenLogo className="size-9 shrink-0 shadow-md shadow-primary/30 ring-1 ring-white/20" />
         <div className="min-w-0">
           <p className="truncate text-[10px] font-semibold tracking-[0.16em] text-muted-foreground uppercase">
             {schoolName}
