@@ -14,7 +14,6 @@ import {
   UsersRound,
 } from "lucide-react";
 
-import type { Prisma } from "@/generated/prisma/client";
 import { PageHeader } from "@/components/page-header";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
@@ -28,8 +27,13 @@ import {
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import {
+  buildAccountQuery,
+  buildAccountWhere,
+  parseAccountFilters,
+} from "@/lib/admin/account-filters";
 import { requireRole } from "@/lib/auth/guards";
-import { APP_ROLES, ROLE_LABELS, isAppRole } from "@/lib/auth/roles";
+import { APP_ROLES, ROLE_LABELS } from "@/lib/auth/roles";
 import { prisma } from "@/lib/db";
 import { cn } from "@/lib/utils";
 
@@ -74,51 +78,12 @@ export default async function ManageAccountsPage({
   const admin = await requireRole("ADMIN");
   const query = await searchParams;
 
-  const q = getString(query.q).trim().slice(0, 100);
-  const roleValue = getString(query.role);
-  const role = isAppRole(roleValue) ? roleValue : "ALL";
-  const statusValue = getString(query.status);
-  const status =
-    statusValue === "active" || statusValue === "inactive"
-      ? statusValue
-      : "ALL";
+  const filters = parseAccountFilters(query);
+  const { q, role, status } = filters;
   const pageValue = Number.parseInt(getString(query.page), 10);
   const page = Number.isFinite(pageValue) && pageValue > 0 ? pageValue : 1;
 
-  const where: Prisma.UserWhereInput = {};
-
-  if (q) {
-    where.OR = [
-      { fullName: { contains: q, mode: "insensitive" } },
-      { username: { contains: q, mode: "insensitive" } },
-      {
-        studentProfile: {
-          is: {
-            OR: [
-              { nis: { contains: q, mode: "insensitive" } },
-              { kelas: { contains: q, mode: "insensitive" } },
-              { grha: { contains: q, mode: "insensitive" } },
-            ],
-          },
-        },
-      },
-      {
-        staffProfile: {
-          is: {
-            nip: { contains: q, mode: "insensitive" },
-          },
-        },
-      },
-    ];
-  }
-
-  if (role !== "ALL") {
-    where.role = role;
-  }
-
-  if (status !== "ALL") {
-    where.isActive = status === "active";
-  }
+  const where = buildAccountWhere(filters);
 
   const [total, activeCount, inactiveCount] = await Promise.all([
     prisma.user.count({ where }),
@@ -161,27 +126,9 @@ export default async function ManageAccountsPage({
 
   const buildQuery = (
     overrides: Partial<Record<"q" | "role" | "status" | "page", string>> = {},
-  ) => {
-    const params = new URLSearchParams();
+  ) => buildAccountQuery(filters, overrides);
 
-    const values = {
-      q,
-      role: role === "ALL" ? "" : role,
-      status: status === "ALL" ? "" : status,
-      page: "",
-      ...overrides,
-    };
-
-    if (values.q) params.set("q", values.q);
-    if (values.role) params.set("role", values.role);
-    if (values.status) params.set("status", values.status);
-    if (values.page) params.set("page", values.page);
-
-    const search = params.toString();
-
-    return search ? `?${search}` : "";
-  };
-
+  const exportHref = `/api/admin/kelola-akun/export${buildAccountQuery(filters)}`;
   const isFiltered = Boolean(q) || role !== "ALL" || status !== "ALL";
 
   return (
@@ -190,6 +137,12 @@ export default async function ManageAccountsPage({
         title="Kelola Akun"
         description="Buat, perbarui, dan nonaktifkan akun siswa serta tenaga kependidikan."
       >
+        <Button variant="outline" asChild>
+          <a href={exportHref}>
+            <FileSpreadsheet />
+            Ekspor Excel
+          </a>
+        </Button>
         <Button variant="outline" asChild>
           <a href="/api/admin/kelola-akun/template">
             <Download />
