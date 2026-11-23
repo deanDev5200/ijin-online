@@ -1,8 +1,4 @@
 import { buildStaffExportWorkbook } from "@/lib/accounts/export";
-import {
-  buildAccountWhere,
-  parseAccountFilters,
-} from "@/lib/admin/account-filters";
 import { getCurrentUser } from "@/lib/auth/current-user";
 import { prisma } from "@/lib/db";
 import { getTodayInJakarta } from "@/lib/permissions/dates";
@@ -12,23 +8,17 @@ export const dynamic = "force-dynamic";
 
 const EXPORT_LIMIT = 5000;
 
-export async function GET(request: Request) {
+export async function GET() {
   const user = await getCurrentUser();
 
   if (!user || user.role !== "ADMIN" || user.mustChangePassword) {
     return new Response("Akses ditolak.", { status: 403 });
   }
 
-  const url = new URL(request.url);
-  const filters = parseAccountFilters(
-    Object.fromEntries(url.searchParams.entries()),
-  );
-
+  // Ekspor selalu memakai seluruh akun pendidik yang sudah terdaftar,
+  // tanpa dipengaruhi filter yang sedang aktif di halaman Kelola Akun.
   const accounts = await prisma.user.findMany({
-    where: {
-      ...buildAccountWhere(filters),
-      staffProfile: { isNot: null },
-    },
+    where: { staffProfile: { isNot: null } },
     orderBy: { fullName: "asc" },
     take: EXPORT_LIMIT,
     select: {

@@ -131,7 +131,6 @@ export default async function ManageAccountsPage({
     overrides: Partial<Record<"q" | "role" | "status" | "page", string>> = {},
   ) => buildAccountQuery(filters, overrides);
 
-  const exportHref = `/api/admin/kelola-akun/export${buildAccountQuery(filters)}`;
   const isFiltered = Boolean(q) || role !== "ALL" || status !== "ALL";
 
   return (
@@ -141,15 +140,13 @@ export default async function ManageAccountsPage({
         description="Buat, perbarui, dan hapus akun siswa serta tenaga kependidikan."
       >
         <Button size="sm" variant="outline" asChild>
-          <a href={exportHref}>
+          <a href="/api/admin/kelola-akun/export">
             <FileSpreadsheet />
             Ekspor per Kelas
           </a>
         </Button>
         <Button size="sm" variant="outline" asChild>
-          <a
-            href={`/api/admin/kelola-akun/export-pendidik${buildAccountQuery(filters)}`}
-          >
+          <a href="/api/admin/kelola-akun/export-pendidik">
             <FileSpreadsheet />
             Ekspor Pendidik
           </a>
