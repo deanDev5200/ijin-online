@@ -273,7 +273,8 @@ export default async function ManageAccountsPage({
         <div className="space-y-3 border-t px-4 py-4">
           <p className="text-xs text-muted-foreground">
             Isi sheet Akun Pendidik pada template Excel. Kolom Nama Lengkap dan
-            Nama Peran wajib ada; NIP boleh dikosongkan. Nama peran boleh ditulis dengan label
+            Nama Peran wajib ada; NIP boleh dikosongkan atau kolomnya tidak
+            disertakan. Nama peran boleh ditulis dengan label
             (misalnya Pegawai) atau kode peran (STAFF_ASRAMA). Username dibuat
             otomatis dari nama dan password awal 123456; akun Pembina otomatis
             dapat menjadi penyetuju izin. Akun yang sudah ada tidak akan

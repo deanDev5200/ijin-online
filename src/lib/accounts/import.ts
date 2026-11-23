@@ -46,9 +46,13 @@ export type StudentImportParseResult = {
   totalRows: number;
 };
 
-export const STAFF_IMPORT_HEADERS = [
+export const REQUIRED_STAFF_IMPORT_HEADERS = [
   "Nama Lengkap",
   "Nama Peran",
+] as const;
+
+export const STAFF_IMPORT_HEADERS = [
+  ...REQUIRED_STAFF_IMPORT_HEADERS,
   "NIP",
 ] as const;
 
@@ -253,7 +257,7 @@ export async function parseStaffImportWorkbook(
     }
   }
 
-  const missingHeaders = STAFF_IMPORT_HEADERS.filter(
+  const missingHeaders = REQUIRED_STAFF_IMPORT_HEADERS.filter(
     (header) => !headerIndex.has(header.toLowerCase()),
   );
 
@@ -263,8 +267,10 @@ export async function parseStaffImportWorkbook(
     );
   }
 
-  const getColumn = (header: (typeof STAFF_IMPORT_HEADERS)[number]) =>
+  const getColumn = (header: (typeof REQUIRED_STAFF_IMPORT_HEADERS)[number]) =>
     headerIndex.get(header.toLowerCase()) ?? 0;
+
+  const nipColumn = headerIndex.get("nip") ?? 0;
 
   const rows: ParsedStaffRow[] = [];
   const errors: ImportIssue[] = [];
@@ -276,7 +282,7 @@ export async function parseStaffImportWorkbook(
     const raw = {
       fullName: getCellText(row.getCell(getColumn("Nama Lengkap"))),
       role: getCellText(row.getCell(getColumn("Nama Peran"))),
-      nip: getCellText(row.getCell(getColumn("NIP"))),
+      nip: nipColumn ? getCellText(row.getCell(nipColumn)) : "",
     };
 
     if (Object.values(raw).every((value) => value.length === 0)) {
@@ -435,7 +441,7 @@ function addImportGuideSheet(workbook: ExcelJS.Workbook): void {
         (option) => option.value,
       ).join(", ")} juga diterima.`,
     ],
-    ["Akun Pendidik", "NIP", "Opsional. Nomor Induk Pegawai, harus unik jika diisi. Baris tanpa NIP tetap dibuat sebagai akun tanpa NIP. Gunakan format teks agar angka nol di depan tidak hilang."],
+    ["Akun Pendidik", "NIP", "Opsional. Nomor Induk Pegawai, harus unik jika diisi. Kolom NIP boleh dikosongkan atau tidak disertakan; baris tanpa NIP tetap dibuat sebagai akun tanpa NIP. Gunakan format teks agar angka nol di depan tidak hilang."],
     ["Akun Pendidik", "Contoh baris", "Siti Rahmawati | Pembina | 19870101 (NIP boleh dikosongkan)"],
     ["Umum", "Username", "Dibuat otomatis dari kata terakhir nama lengkap (huruf kecil, maksimal 6 karakter). Tidak perlu diisi."],
     ["Umum", "Password", "Password awal otomatis 123456. Pengguna wajib membuat username dan password pribadi saat login pertama."],
