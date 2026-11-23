@@ -121,9 +121,9 @@ function SidebarContent({
   const sections = getNavigation(user.role);
 
   return (
-    <div className="flex h-full flex-col bg-linear-to-b from-sidebar via-sidebar to-primary/10">
-      <div className="flex h-16 items-center gap-3 border-b border-primary/15 bg-linear-to-r from-primary/10 to-transparent px-5">
-        <EdispenLogo className="size-9 shrink-0 shadow-md shadow-primary/30 ring-1 ring-white/20" />
+    <div className="flex h-full flex-col bg-sidebar">
+      <div className="flex h-16 items-center gap-3 border-b px-5">
+        <EdispenLogo className="size-10 shrink-0" />
         <div className="min-w-0">
           <p className="truncate text-[10px] font-semibold tracking-[0.16em] text-muted-foreground uppercase">
             {schoolName}
@@ -200,13 +200,13 @@ export function AppShell({
     : "Notifikasi";
 
   return (
-    <div className="min-h-svh bg-linear-to-br from-primary/[0.07] via-background to-primary/[0.09]">
-      <aside className="fixed inset-y-0 left-0 z-40 hidden w-72 border-r border-primary/15 lg:block">
+    <div className="min-h-svh bg-background">
+      <aside className="fixed inset-y-0 left-0 z-40 hidden w-72 border-r lg:block">
         <SidebarContent user={user} unreadCount={unreadCount} />
       </aside>
 
       <div className="lg:pl-72">
-        <header className="sticky top-0 z-30 flex h-16 items-center gap-2 border-b border-primary/15 bg-linear-to-r from-primary/[0.12] via-background/90 to-background/75 px-3 shadow-[0_1px_0_rgba(37,99,235,0.08)] backdrop-blur-xl sm:gap-3 sm:px-6">
+        <header className="sticky top-0 z-30 flex h-16 items-center gap-2 border-b bg-background/90 px-3 backdrop-blur sm:gap-3 sm:px-6">
           <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
             <SheetTrigger asChild>
               <Button

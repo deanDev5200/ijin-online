@@ -83,7 +83,7 @@ export default async function LoginPage({
         />
 
         <div className="relative flex items-center gap-3">
-          <EdispenLogo className="size-10 shrink-0 shadow-lg shadow-blue-950/20 ring-1 ring-white/25" />
+          <EdispenLogo className="size-10 shrink-0" />
           <div>
             <p className="text-[11px] font-semibold tracking-[0.2em] text-blue-200 uppercase">
               PORTAL PERIZINAN
@@ -143,7 +143,7 @@ export default async function LoginPage({
         <div className="pointer-events-none absolute inset-x-0 bottom-0 h-56 bg-linear-to-t from-white/70 via-white/20 to-transparent" />
         <div className="relative w-full max-w-md">
           <div className="mb-5 flex items-center gap-3 lg:hidden">
-            <EdispenLogo className="size-10 shrink-0 shadow-md shadow-blue-600/25" />
+            <EdispenLogo className="size-10 shrink-0" />
             <div>
               <p className="text-[10px] font-semibold tracking-[0.18em] text-muted-foreground uppercase">
                 {schoolName}
