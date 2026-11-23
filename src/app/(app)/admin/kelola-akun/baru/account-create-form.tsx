@@ -27,7 +27,11 @@ import {
   INITIAL_ACCOUNT_ACTION_STATE,
   type AccountActionState,
 } from "@/lib/accounts/form-state";
-import { generateUsername, INITIAL_PASSWORD } from "@/lib/accounts/username";
+import {
+  generateStaffUsername,
+  generateUsername,
+  INITIAL_PASSWORD,
+} from "@/lib/accounts/username";
 import { cn } from "@/lib/utils";
 
 import { createAccountAction } from "../actions";
@@ -72,7 +76,9 @@ export function AccountCreateForm() {
 
   const errors = state.fieldErrors;
   const usernamePreview = fullName.trim()
-    ? generateUsername(fullName)
+    ? kind === "STAFF"
+      ? generateStaffUsername(fullName)
+      : generateUsername(fullName)
     : "—";
   const staffRole =
     state.values?.role && state.values.role !== "SISWA"
@@ -177,8 +183,8 @@ export function AccountCreateForm() {
             Identitas akun
           </CardTitle>
           <CardDescription>
-            Username dibuat otomatis dari nama lengkap (maksimal 6 karakter),
-            sehingga hanya nama yang perlu diisi.
+            Username dibuat otomatis dari nama lengkap, sehingga hanya nama
+            yang perlu diisi.
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -209,8 +215,10 @@ export function AccountCreateForm() {
                 {usernamePreview}
               </div>
               <p className="text-xs text-muted-foreground">
-                Diambil dari kata terakhir nama, huruf kecil, maksimal 6
-                karakter. Jika bentrok, angka unik ditambahkan otomatis.
+                {kind === "STAFF"
+                  ? "Diambil dari dua kata pertama nama (tanpa awalan I/Ni), huruf kecil, maksimal 9 karakter. Contoh: Gede Sucipta, S.Pd → gedesucip."
+                  : "Diambil dari kata terakhir nama, huruf kecil, maksimal 6 karakter."}{" "}
+                Jika bentrok, angka unik ditambahkan otomatis.
               </p>
             </div>
           </div>

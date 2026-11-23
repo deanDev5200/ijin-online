@@ -443,7 +443,7 @@ function addImportGuideSheet(workbook: ExcelJS.Workbook): void {
     ],
     ["Akun Pendidik", "NIP", "Opsional. Nomor Induk Pegawai, harus unik jika diisi. Kolom NIP boleh dikosongkan atau tidak disertakan; baris tanpa NIP tetap dibuat sebagai akun tanpa NIP. Gunakan format teks agar angka nol di depan tidak hilang."],
     ["Akun Pendidik", "Contoh baris", "Siti Rahmawati | Pembina | 19870101 (NIP boleh dikosongkan)"],
-    ["Umum", "Username", "Dibuat otomatis dari kata terakhir nama lengkap (huruf kecil, maksimal 6 karakter). Tidak perlu diisi."],
+    ["Umum", "Username", "Dibuat otomatis dari nama lengkap. Akun siswa: kata terakhir, maksimal 6 karakter. Akun pendidik: dua kata pertama tanpa awalan 'I'/'Ni', maksimal 9 karakter (mis. Gede Sucipta, S.Pd menjadi gedesucip). Tidak perlu diisi."],
     ["Umum", "Password", "Password awal otomatis 123456. Pengguna wajib membuat username dan password pribadi saat login pertama."],
     ["Umum", "Cara pakai", "Isi sheet Akun Siswa atau Akun Pendidik sesuai kebutuhan, lalu unggah melalui menu impor yang bersangkutan. Sheet yang tidak dipakai boleh dikosongkan."],
   ];

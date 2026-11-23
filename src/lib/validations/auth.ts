@@ -2,9 +2,9 @@ import { z } from "zod";
 
 /**
  * Username yang dipakai saat masuk. Akun baru mendapat username otomatis
- * dari sistem (maksimal 6 karakter), sedangkan username buatan pengguna
- * maksimal 8 karakter. Validasi login tetap longgar agar username lama yang
- * lebih panjang tidak terkunci.
+ * dari sistem (maksimal 6 karakter untuk siswa, 9 untuk tenaga pendidik),
+ * sedangkan username buatan pengguna maksimal 8 karakter. Validasi login
+ * tetap longgar agar username lama yang lebih panjang tidak terkunci.
  */
 export const usernameSchema = z
   .string()

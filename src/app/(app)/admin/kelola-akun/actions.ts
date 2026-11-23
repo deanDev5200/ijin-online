@@ -14,13 +14,18 @@ import {
   StaffImportError,
   StudentImportError,
 } from "@/lib/accounts/import";
-import { INITIAL_PASSWORD, generateUsername } from "@/lib/accounts/username";
+import {
+  INITIAL_PASSWORD,
+  generateStaffUsername,
+  generateUsername,
+} from "@/lib/accounts/username";
 import {
   buildAccountQuery,
   parseAccountFilters,
 } from "@/lib/admin/account-filters";
 import { requireRole } from "@/lib/auth/guards";
 import { hashPassword } from "@/lib/auth/password";
+import { isStaffRole } from "@/lib/auth/roles";
 import { prisma } from "@/lib/db";
 import {
   accountIdSchema,
@@ -110,7 +115,8 @@ export async function createAccountAction(
   let username: string;
 
   try {
-    username = generateUsername(
+    const generate = isStaffRole(data.role) ? generateStaffUsername : generateUsername;
+    username = generate(
       data.fullName,
       existingUsers.map((user) => user.username),
     );
@@ -365,7 +371,7 @@ export async function resetAccountCredentialsAction(
 
   const account = await prisma.user.findUnique({
     where: { id: accountId.data },
-    select: { id: true, fullName: true, username: true },
+    select: { id: true, fullName: true, username: true, role: true },
   });
 
   if (!account) {
@@ -380,7 +386,10 @@ export async function resetAccountCredentialsAction(
   let username: string;
 
   try {
-    username = generateUsername(
+    const generate = isStaffRole(account.role)
+      ? generateStaffUsername
+      : generateUsername;
+    username = generate(
       account.fullName,
       allUsers.map((user) => user.username),
     );
@@ -817,7 +826,7 @@ export async function importStaffAccountsAction(
       }
 
       try {
-        const username = generateUsername(row.fullName, takenUsernames);
+        const username = generateStaffUsername(row.fullName, takenUsernames);
         return [{ ...row, username }];
       } catch {
         errors.push({
