@@ -43,12 +43,7 @@ export async function GET(request: Request) {
     },
   });
 
-  const buffer = await buildStaffExportWorkbook(accounts, {
-    exportedBy: `${user.fullName} (@${user.username})`,
-    filters,
-    limit: EXPORT_LIMIT,
-    reachedLimit: accounts.length >= EXPORT_LIMIT,
-  });
+  const buffer = await buildStaffExportWorkbook(accounts);
   const filename = `daftar-akun-pendidik-${getTodayInJakarta()}.xlsx`;
 
   return new Response(new Uint8Array(buffer), {

@@ -10,6 +10,7 @@ import {
 } from "lucide-react";
 
 import type { Role } from "@/generated/prisma/enums";
+import type { AccountFilters } from "@/lib/admin/account-filters";
 import { FormFeedback } from "@/components/form-feedback";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -254,11 +255,15 @@ export function ResetCredentialsForm({
 export function DeleteAccountForm({
   accountId,
   fullName,
+  filters,
+  page,
   disabled,
   disabledReason,
 }: {
   accountId: string;
   fullName: string;
+  filters: AccountFilters;
+  page: number;
   disabled?: boolean;
   disabledReason?: string;
 }) {
@@ -282,6 +287,10 @@ export function DeleteAccountForm({
       }}
     >
       <input type="hidden" name="accountId" value={accountId} />
+      <input type="hidden" name="q" value={filters.q} />
+      <input type="hidden" name="role" value={filters.role} />
+      <input type="hidden" name="status" value={filters.status} />
+      <input type="hidden" name="page" value={page} />
 
       <div className="flex items-start gap-3 rounded-lg border border-destructive/20 bg-destructive/5 px-3 py-2.5">
         <Trash2 className="mt-0.5 size-4 shrink-0 text-destructive" />

@@ -447,7 +447,7 @@ export default async function ManageAccountsPage({
             return (
               <Link
                 key={account.id}
-                href={`/admin/kelola-akun/${account.id}`}
+                href={`/admin/kelola-akun/${account.id}${buildQuery({ page: String(safePage) })}`}
                 className={cn(
                   "group flex items-start gap-3 rounded-xl border bg-card p-4 shadow-xs transition-all hover:border-primary/30 hover:bg-accent/30 hover:shadow-sm sm:items-center",
                   !account.isActive && "bg-muted/20",

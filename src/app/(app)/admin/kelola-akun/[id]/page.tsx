@@ -20,6 +20,10 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import {
+  buildAccountQuery,
+  parseAccountFilters,
+} from "@/lib/admin/account-filters";
 import { requireRole } from "@/lib/auth/guards";
 import { ROLE_LABELS } from "@/lib/auth/roles";
 import { prisma } from "@/lib/db";
@@ -35,13 +39,31 @@ export const metadata: Metadata = {
   title: "Detail Akun",
 };
 
+type SearchParams = Promise<{
+  q?: string | string[];
+  role?: string | string[];
+  status?: string | string[];
+  page?: string | string[];
+}>;
+
+function getString(value: string | string[] | undefined): string {
+  return Array.isArray(value) ? value[0] ?? "" : value ?? "";
+}
+
 export default async function AccountDetailPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ id: string }>;
+  searchParams: SearchParams;
 }) {
   const admin = await requireRole("ADMIN");
   const { id } = await params;
+  const query = await searchParams;
+  const filters = parseAccountFilters(query);
+  const pageValue = Number.parseInt(getString(query.page), 10);
+  const page = Number.isFinite(pageValue) && pageValue > 0 ? pageValue : 1;
+  const returnQuery = buildAccountQuery(filters, { page: String(page) });
 
   const account = await prisma.user.findUnique({
     where: { id },
@@ -95,7 +117,7 @@ export default async function AccountDetailPage({
         description="Perbarui identitas akun, reset kredensial, atau hapus akun secara permanen beserta riwayatnya."
       >
         <Button variant="outline" asChild>
-          <Link href="/admin/kelola-akun">
+          <Link href={`/admin/kelola-akun${returnQuery}`}>
             <ArrowLeft />
             Kembali
           </Link>
@@ -223,6 +245,8 @@ export default async function AccountDetailPage({
               <DeleteAccountForm
                 accountId={account.id}
                 fullName={account.fullName}
+                filters={filters}
+                page={page}
                 disabled={deleteDisabled}
                 disabledReason={deleteDisabledReason}
               />

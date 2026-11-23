@@ -73,9 +73,11 @@ export function buildAccountWhere(
   return where;
 }
 
+type AccountQueryKey = "q" | "role" | "status" | "page" | "deleted" | "created";
+
 export function buildAccountQuery(
   filters: AccountFilters,
-  overrides: Partial<Record<"q" | "role" | "status" | "page", string>> = {},
+  overrides: Partial<Record<AccountQueryKey, string>> = {},
 ): string {
   const params = new URLSearchParams();
   const values = {
@@ -83,6 +85,8 @@ export function buildAccountQuery(
     role: filters.role === "ALL" ? "" : filters.role,
     status: filters.status === "ALL" ? "" : filters.status,
     page: "",
+    deleted: "",
+    created: "",
     ...overrides,
   };
 
@@ -90,6 +94,8 @@ export function buildAccountQuery(
   if (values.role) params.set("role", values.role);
   if (values.status) params.set("status", values.status);
   if (values.page) params.set("page", values.page);
+  if (values.deleted) params.set("deleted", values.deleted);
+  if (values.created) params.set("created", values.created);
 
   const search = params.toString();
 

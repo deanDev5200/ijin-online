@@ -32,13 +32,6 @@ export type ExportStaffAccount = {
   staffProfile: { nip: string | null } | null;
 };
 
-export type StaffAccountExportMeta = {
-  exportedBy: string;
-  filters: AccountFilters;
-  limit: number;
-  reachedLimit: boolean;
-};
-
 const collator = new Intl.Collator("id", {
   numeric: true,
   sensitivity: "base",
@@ -125,9 +118,9 @@ function addClassSheet(
   sheet.columns = [
     { header: "No", key: "no", width: 6 },
     { header: "Nama Lengkap", key: "fullName", width: 30 },
+    { header: "Kelas", key: "kelas", width: 18 },
     { header: "Username", key: "username", width: 18 },
     { header: "Password Awal", key: "initialPassword", width: 18 },
-    { header: "Peran", key: "role", width: 22 },
   ];
 
   const headerRow = sheet.getRow(1);
@@ -146,9 +139,9 @@ function addClassSheet(
     sheet.addRow({
       no: index + 1,
       fullName: account.fullName,
+      kelas: account.studentProfile?.kelas ?? "",
       username: account.username,
       initialPassword: INITIAL_PASSWORD,
-      role: ROLE_LABELS[account.role],
     });
   });
 
@@ -240,60 +233,16 @@ export async function buildAccountExportWorkbook(
 /** Ekspor seluruh tenaga pendidik dalam satu sheet, lengkap dengan kredensial awal. */
 export async function buildStaffExportWorkbook(
   accounts: readonly ExportStaffAccount[],
-  meta: StaffAccountExportMeta,
 ): Promise<Buffer> {
   const staff = [...accounts].sort((a, b) => {
-      const byRole = collator.compare(ROLE_LABELS[a.role], ROLE_LABELS[b.role]);
+    const byRole = collator.compare(ROLE_LABELS[a.role], ROLE_LABELS[b.role]);
 
-      return byRole !== 0 ? byRole : collator.compare(a.fullName, b.fullName);
-    });
+    return byRole !== 0 ? byRole : collator.compare(a.fullName, b.fullName);
+  });
 
   const workbook = new ExcelJS.Workbook();
   workbook.creator = "E-Dispen";
   workbook.created = new Date();
-
-  const { filters } = meta;
-  const summary = workbook.addWorksheet(SUMMARY_SHEET_NAME);
-  summary.columns = [{ width: 26 }, { width: 68 }];
-  summary.addRow(["Diekspor pada", formatDateTime(new Date())]);
-  summary.addRow(["Diekspor oleh", meta.exportedBy]);
-  summary.addRow(["Kata kunci", filters.q || "-"]);
-  summary.addRow([
-    "Peran",
-    filters.role === "ALL" ? "Semua peran" : ROLE_LABELS[filters.role],
-  ]);
-  summary.addRow([
-    "Status",
-    filters.status === "ALL"
-      ? "Semua status"
-      : filters.status === "active"
-        ? "Aktif"
-        : "Nonaktif",
-  ]);
-  summary.addRow(["Jumlah akun", staff.length]);
-
-  const roleCounts = new Map<string, number>();
-  for (const account of staff) {
-    const label = ROLE_LABELS[account.role];
-    roleCounts.set(label, (roleCounts.get(label) ?? 0) + 1);
-  }
-  summary.addRow([
-    "Rincian per peran",
-    roleCounts.size === 0
-      ? "-"
-      : Array.from(roleCounts, ([label, count]) => `${label}: ${count}`).join(
-          ", ",
-        ),
-  ]);
-  summary.addRow([
-    "Catatan",
-    `Password Awal adalah kata sandi bawaan ${INITIAL_PASSWORD} untuk akun baru atau yang di-reset; kata sandi aktual akun yang sudah diubah tidak dapat diekspor.${
-      meta.reachedLimit
-        ? ` Ekspor dibatasi ${meta.limit} baris; persempit filter untuk mengambil data lain.`
-        : ""
-    }`,
-  ]);
-  summary.getColumn(1).font = { bold: true };
 
   const sheet = workbook.addWorksheet("Akun Pendidik", {
     views: [{ state: "frozen", ySplit: 1 }],
@@ -301,7 +250,7 @@ export async function buildStaffExportWorkbook(
   sheet.columns = [
     { header: "No", key: "no", width: 6 },
     { header: "Nama Lengkap", key: "fullName", width: 30 },
-    { header: "Nama Peran", key: "role", width: 22 },
+    { header: "Jabatan / Peran", key: "role", width: 24 },
     { header: "NIP", key: "nip", width: 18 },
     { header: "Username", key: "username", width: 18 },
     { header: "Password Awal", key: "initialPassword", width: 18 },

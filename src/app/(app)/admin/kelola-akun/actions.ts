@@ -15,6 +15,10 @@ import {
   StudentImportError,
 } from "@/lib/accounts/import";
 import { INITIAL_PASSWORD, generateUsername } from "@/lib/accounts/username";
+import {
+  buildAccountQuery,
+  parseAccountFilters,
+} from "@/lib/admin/account-filters";
 import { requireRole } from "@/lib/auth/guards";
 import { hashPassword } from "@/lib/auth/password";
 import { prisma } from "@/lib/db";
@@ -507,7 +511,18 @@ export async function deleteAccountAction(
   revalidatePath("/admin/kelola-akun");
   revalidatePath("/", "layout");
 
-  redirect("/admin/kelola-akun?deleted=1");
+  const returnFilters = parseAccountFilters({
+    q: getFormValue(formData, "q"),
+    role: getFormValue(formData, "role"),
+    status: getFormValue(formData, "status"),
+  });
+  const returnPage = getFormValue(formData, "page") || "1";
+  const returnQuery = buildAccountQuery(returnFilters, {
+    page: returnPage,
+    deleted: "1",
+  });
+
+  redirect(`/admin/kelola-akun${returnQuery}`);
 }
 
 export async function importAccountsAction(
