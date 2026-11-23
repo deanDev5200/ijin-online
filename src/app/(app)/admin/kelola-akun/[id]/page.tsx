@@ -6,6 +6,7 @@ import {
   CalendarClock,
   KeyRound,
   ShieldCheck,
+  Trash2,
   UserRound,
 } from "lucide-react";
 
@@ -26,7 +27,7 @@ import { formatDateTime } from "@/lib/permissions/dates";
 
 import {
   AccountDetailsForm,
-  AccountStatusForm,
+  DeleteAccountForm,
   ResetCredentialsForm,
 } from "./account-forms";
 
@@ -81,17 +82,17 @@ export default async function AccountDetailPage({
         })
       : 2;
 
-  const statusDisabled =
+  const deleteDisabled =
     isSelf || (account.role === "ADMIN" && activeAdmins <= 1);
-  const statusDisabledReason = isSelf
-    ? "Anda tidak dapat mengubah status akun sendiri."
-    : "Akun administrator aktif terakhir tidak dapat dinonaktifkan.";
+  const deleteDisabledReason = isSelf
+    ? "Anda tidak dapat menghapus akun sendiri."
+    : "Akun administrator aktif terakhir tidak dapat dihapus.";
 
   return (
     <div className="space-y-6">
       <PageHeader
         title="Detail Akun"
-        description="Perbarui identitas akun, reset kredensial, atau ubah status akses tanpa menghapus riwayat."
+        description="Perbarui identitas akun, reset kredensial, atau hapus akun secara permanen beserta riwayatnya."
       >
         <Button variant="outline" asChild>
           <Link href="/admin/kelola-akun">
@@ -207,22 +208,23 @@ export default async function AccountDetailPage({
 
           <Card>
             <CardHeader className="grid-cols-[auto_1fr] items-start gap-3">
-              <div className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
-                <ShieldCheck className="size-4" />
+              <div className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-destructive/10 text-destructive">
+                <Trash2 className="size-4" />
               </div>
               <div className="min-w-0 flex-1 space-y-1">
-                <CardTitle className="text-base">Status akun</CardTitle>
+                <CardTitle className="text-base">Hapus akun</CardTitle>
                 <CardDescription>
-                  Menonaktifkan akun tidak menghapus riwayat pengajuan.
+                  Hapus akun beserta pengajuan dan notifikasi terkait secara
+                  permanen. Setelah dihapus, akun tidak muncul lagi di daftar.
                 </CardDescription>
               </div>
             </CardHeader>
             <CardContent>
-              <AccountStatusForm
+              <DeleteAccountForm
                 accountId={account.id}
-                isActive={account.isActive}
-                disabled={statusDisabled}
-                disabledReason={statusDisabledReason}
+                fullName={account.fullName}
+                disabled={deleteDisabled}
+                disabledReason={deleteDisabledReason}
               />
             </CardContent>
           </Card>

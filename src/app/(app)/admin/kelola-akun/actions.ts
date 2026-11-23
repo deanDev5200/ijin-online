@@ -19,7 +19,7 @@ import { requireRole } from "@/lib/auth/guards";
 import { hashPassword } from "@/lib/auth/password";
 import { prisma } from "@/lib/db";
 import {
-  accountStatusSchema,
+  accountIdSchema,
   createAccountSchema,
   grhaSchema,
   kelasSchema,
@@ -430,21 +430,20 @@ export async function resetAccountCredentialsAction(
   };
 }
 
-export async function setAccountActiveAction(
+export async function deleteAccountAction(
   _previousState: AccountActionState,
   formData: FormData,
 ): Promise<AccountActionState> {
   const admin = await requireRole("ADMIN");
 
-  const parsed = accountStatusSchema.safeParse({
+  const parsed = accountIdSchema.safeParse({
     accountId: getFormValue(formData, "accountId"),
-    isActive: getFormValue(formData, "isActive"),
   });
 
   if (!parsed.success) {
     return {
       status: "error",
-      message: "Permintaan perubahan status tidak valid.",
+      message: "Permintaan hapus akun tidak valid.",
     };
   }
 
@@ -462,16 +461,14 @@ export async function setAccountActiveAction(
     return { status: "error", message: "Akun tidak ditemukan." };
   }
 
-  const nextActive = parsed.data.isActive === "true";
-
-  if (!nextActive && account.id === admin.id) {
+  if (account.id === admin.id) {
     return {
       status: "error",
-      message: "Anda tidak dapat menonaktifkan akun sendiri.",
+      message: "Anda tidak dapat menghapus akun sendiri.",
     };
   }
 
-  if (!nextActive && account.isActive && account.role === "ADMIN") {
+  if (account.isActive && account.role === "ADMIN") {
     const activeAdmins = await prisma.user.count({
       where: { role: "ADMIN", isActive: true },
     });
@@ -479,31 +476,38 @@ export async function setAccountActiveAction(
     if (activeAdmins <= 1) {
       return {
         status: "error",
-        message:
-          "Akun administrator aktif terakhir tidak dapat dinonaktifkan.",
+        message: "Akun administrator aktif terakhir tidak dapat dihapus.",
       };
     }
   }
 
-  await prisma.user.update({
-    where: { id: account.id },
-    data: {
-      isActive: nextActive,
-      sessionVersion: { increment: 1 },
+  await prisma.$transaction(
+    async (tx) => {
+      // Hapus pengajuan yang dibuat akun ini beserta approval, notifikasi,
+      // dan relasi siswa di dalamnya (kaskade dari schema.prisma).
+      await tx.permissionRequest.deleteMany({
+        where: { requesterId: account.id },
+      });
+
+      // Lepakkan akun ini dari pengajuan orang lain yang turut melibatkannya.
+      await tx.permissionRequestStudent.deleteMany({
+        where: { studentId: account.id },
+      });
+
+      // Notifikasi milik akun ini tidak ikut terhapus saat pengajuan lain dihapus.
+      await tx.notification.deleteMany({ where: { userId: account.id } });
+
+      // Profil siswa/pegawai ikut terhapus; referensi mentor dan approver
+      // pada data lain otomatis menjadi null (onDelete: SetNull).
+      await tx.user.delete({ where: { id: account.id } });
     },
-  });
+    { timeout: 120_000 },
+  );
 
   revalidatePath("/admin/kelola-akun");
-  revalidatePath(`/admin/kelola-akun/${account.id}`);
-  revalidatePath("/admin/pengaturan-perizinan");
   revalidatePath("/", "layout");
 
-  return {
-    status: "success",
-    message: nextActive
-      ? `Akun ${account.fullName} berhasil diaktifkan.`
-      : `Akun ${account.fullName} berhasil dinonaktifkan. Riwayat tetap tersimpan.`,
-  };
+  redirect("/admin/kelola-akun?deleted=1");
 }
 
 export async function importAccountsAction(

@@ -167,9 +167,8 @@ export const updateAccountSchema = z.object({
   nip: z.string().trim().optional().default(""),
 });
 
-export const accountStatusSchema = z.object({
+export const accountIdSchema = z.object({
   accountId: z.string().min(1),
-  isActive: z.enum(["true", "false"]),
 });
 
 export const importStudentRowSchema = z.object({

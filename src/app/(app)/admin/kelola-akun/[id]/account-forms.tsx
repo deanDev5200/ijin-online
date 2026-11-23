@@ -6,8 +6,7 @@ import {
   KeyRound,
   Loader2,
   Save,
-  ShieldCheck,
-  UserRoundX,
+  Trash2,
 } from "lucide-react";
 
 import type { Role } from "@/generated/prisma/enums";
@@ -23,8 +22,8 @@ import { INITIAL_PASSWORD } from "@/lib/accounts/username";
 import { ROLE_LABELS } from "@/lib/auth/roles";
 
 import {
+  deleteAccountAction,
   resetAccountCredentialsAction,
-  setAccountActiveAction,
   updateAccountAction,
 } from "../actions";
 
@@ -252,21 +251,21 @@ export function ResetCredentialsForm({
   );
 }
 
-export function AccountStatusForm({
+export function DeleteAccountForm({
   accountId,
-  isActive,
+  fullName,
   disabled,
   disabledReason,
 }: {
   accountId: string;
-  isActive: boolean;
+  fullName: string;
   disabled?: boolean;
   disabledReason?: string;
 }) {
   const [state, formAction] = useActionState<
     AccountActionState,
     FormData
-  >(setAccountActiveAction, INITIAL_ACCOUNT_ACTION_STATE);
+  >(deleteAccountAction, INITIAL_ACCOUNT_ACTION_STATE);
 
   return (
     <form
@@ -274,9 +273,8 @@ export function AccountStatusForm({
       className="space-y-4"
       onSubmit={(event) => {
         if (
-          isActive &&
           !window.confirm(
-            "Nonaktifkan akun ini? Pengguna tidak dapat masuk, tetapi seluruh riwayat tetap tersimpan.",
+            `Hapus akun ${fullName}? Tindakan ini tidak dapat dibatalkan. Akun, profil, pengajuan yang dibuatnya, dan notifikasi terkait akan terhapus permanen.`,
           )
         ) {
           event.preventDefault();
@@ -284,14 +282,14 @@ export function AccountStatusForm({
       }}
     >
       <input type="hidden" name="accountId" value={accountId} />
-      <input type="hidden" name="isActive" value={isActive ? "false" : "true"} />
 
-      <div className="flex items-start gap-3 rounded-lg border bg-muted/40 px-3 py-2.5">
-        <ShieldCheck className="mt-0.5 size-4 shrink-0 text-muted-foreground" />
+      <div className="flex items-start gap-3 rounded-lg border border-destructive/20 bg-destructive/5 px-3 py-2.5">
+        <Trash2 className="mt-0.5 size-4 shrink-0 text-destructive" />
         <p className="text-xs leading-relaxed text-muted-foreground">
-          {isActive
-            ? "Akun aktif dapat masuk ke aplikasi. Menonaktifkan akun akan mengakhiri sesi aktif tanpa menghapus data."
-            : "Akun sedang nonaktif dan tidak dapat masuk. Aktifkan kembali untuk memberi akses tanpa kehilangan riwayat."}
+          Menghapus akun akan menghapus profil, notifikasi, dan seluruh
+          pengajuan yang dibuat akun ini secara permanen. Akun juga akan dilepaskan
+          dari pengajuan orang lain yang turut melibatkannya. Tindakan ini tidak
+          dapat dibatalkan.
         </p>
       </div>
 
@@ -303,16 +301,16 @@ export function AccountStatusForm({
 
       <div className="flex justify-end">
         {disabled ? (
-          <Button type="button" variant="outline" disabled>
-            <UserRoundX />
-            {isActive ? "Nonaktifkan akun" : "Aktifkan akun"}
+          <Button type="button" variant="destructive" disabled>
+            <Trash2 />
+            Hapus akun
           </Button>
         ) : (
           <PendingButton
-            label={isActive ? "Nonaktifkan akun" : "Aktifkan akun"}
-            pendingLabel="Memproses..."
-            variant={isActive ? "destructive" : "default"}
-            icon={isActive ? <UserRoundX /> : <ShieldCheck />}
+            label="Hapus akun"
+            pendingLabel="Menghapus..."
+            variant="destructive"
+            icon={<Trash2 />}
           />
         )}
       </div>

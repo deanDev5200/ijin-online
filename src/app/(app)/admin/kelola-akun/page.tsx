@@ -10,6 +10,7 @@ import {
   Inbox,
   Search,
   ShieldCheck,
+  Trash2,
   UserPlus,
   UsersRound,
 } from "lucide-react";
@@ -52,6 +53,7 @@ type SearchParams = Promise<{
   status?: string | string[];
   page?: string | string[];
   created?: string | string[];
+  deleted?: string | string[];
 }>;
 
 function getString(value: string | string[] | undefined): string {
@@ -136,7 +138,7 @@ export default async function ManageAccountsPage({
     <div className="space-y-6">
       <PageHeader
         title="Kelola Akun"
-        description="Buat, perbarui, dan nonaktifkan akun siswa serta tenaga kependidikan."
+        description="Buat, perbarui, dan hapus akun siswa serta tenaga kependidikan."
       >
         <Button size="sm" variant="outline" asChild>
           <a href={exportHref}>
@@ -181,6 +183,21 @@ export default async function ManageAccountsPage({
             <p className="text-primary/80">
               Password awal 123456. Pengguna wajib membuat username dan password
               pribadi saat login pertama.
+            </p>
+          </div>
+        </div>
+      ) : null}
+
+      {getString(query.deleted) === "1" ? (
+        <div className="flex items-start gap-3 rounded-xl border border-destructive/20 bg-destructive/5 px-4 py-3 text-sm text-destructive shadow-xs">
+          <div className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-destructive/10 ring-1 ring-destructive/10">
+            <Trash2 className="size-4" />
+          </div>
+          <div>
+            <p className="font-medium">Akun berhasil dihapus</p>
+            <p className="text-destructive/80">
+              Akun, profil, pengajuan yang dibuatnya, dan notifikasi terkait telah
+              terhapus permanen.
             </p>
           </div>
         </div>
